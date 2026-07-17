@@ -1,10 +1,12 @@
 {
   "name": "goldilocks",
-  "version": "0.1.0+codex.20260717133504",
+  "version": "0.1.0+codex.20260717134439",
   "description": "A dynamic minimum-process workflow that preserves constant quality, safety, and verification standards.",
   "author": {
     "name": "Goldilocks contributors"
   },
+  "homepage": "https://github.com/blackstone2333/goldilocks#readme",
+  "repository": "https://github.com/blackstone2333/goldilocks",
   "license": "MIT",
   "keywords": [
     "workflow",

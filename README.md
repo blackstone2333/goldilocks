@@ -10,9 +10,21 @@ The project is intended to replace ceremony-heavy workflow stacks rather than si
 
 - `v0.1`: renamed, independently packaged baseline of the validated Just Necessary workflow.
 - `v0.2`: Capability & Trigger Engine under RED evaluation before implementation.
-- Remote GitHub repository, release, and marketplace publication are intentionally not created yet.
+- Public repository: https://github.com/blackstone2333/goldilocks
+- A tagged release is intentionally deferred until the v0.2 trigger work reaches GREEN.
 
 The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 50 fresh-context scenarios.
+
+## Install the plugin
+
+Add the public repository as a Codex marketplace, then install Goldilocks:
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks
+codex plugin add goldilocks@goldilocks-local
+```
+
+Start a new Codex thread after installation so the new skill context is loaded. During local development, this repository remains the source of truth; refresh the cachebuster and reinstall rather than editing a second plugin copy.
 
 ## Principle
 
