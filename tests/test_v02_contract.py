@@ -15,14 +15,17 @@ RESULTS = ROOT / "evals" / "results" / "red-baseline.jsonl"
 ENGINES = {"align", "diagnose", "build", "orchestrate", "prove", "evolve"}
 ENTRIES = {
     "brainstorming",
-    "debugging",
-    "tdd",
-    "planning",
-    "worktrees",
-    "parallel",
-    "review",
-    "verification",
-    "finishing",
+    "writing-plans",
+    "executing-plans",
+    "test-driven-development",
+    "systematic-debugging",
+    "using-git-worktrees",
+    "dispatching-parallel-agents",
+    "subagent-driven-development",
+    "requesting-code-review",
+    "receiving-code-review",
+    "verification-before-completion",
+    "finishing-a-development-branch",
     "writing-skills",
 }
 MODES = {"Direct", "Guarded", "Critical"}
@@ -132,12 +135,24 @@ for entry in sorted(ENTRIES):
     if path.is_file() and body_word_count(path) > 80:
         fail(f"thin entry exceeds 80 body words: {entry}")
 
+skill_docs = sorted(SKILLS.glob("*/SKILL.md")) if SKILLS.is_dir() else []
+skill_names = {path.parent.name for path in skill_docs}
+expected_skill_names = ENTRIES | {"goldilocks"}
+if skill_names != expected_skill_names:
+    fail(
+        "visible skill set mismatch: "
+        f"expected {sorted(expected_skill_names)}, found {sorted(skill_names)}"
+    )
+
+main_metadata = SKILLS / "goldilocks" / "agents" / "openai.yaml"
+require_file(main_metadata)
+if main_metadata.is_file() and "allow_implicit_invocation: false" not in main_metadata.read_text(encoding="utf-8"):
+    fail("goldilocks router must disable implicit invocation")
+
 if MAIN.is_file() and word_count(MAIN) > 650:
     fail(f"main router exceeds 650 words: {word_count(MAIN)}")
 
-docs = []
-if SKILLS.is_dir():
-    docs = list(SKILLS.glob("*/SKILL.md")) + list((SKILLS / "goldilocks" / "references").glob("*.md"))
+docs = skill_docs + list((SKILLS / "goldilocks" / "references").glob("*.md"))
 if docs:
     total_words = sum(word_count(path) for path in docs)
     if total_words > 6000:

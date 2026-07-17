@@ -1,50 +1,46 @@
 ---
 name: goldilocks
-description: Use when Codex must plan or execute project or coding work while minimizing unnecessary process, tokens, latency, or orchestration without reducing final quality. Applies when deciding whether to brainstorm, grill decisions, reuse existing solutions, plan, test, create a worktree, delegate, parallelize, review, verify, or record follow-up ideas.
+description: Use when explicitly asked to apply Goldilocks, choose a project workflow, replace Superpowers, or decide how much brainstorming, planning, testing, isolation, delegation, review, and verification a task actually needs.
 ---
 
 # Goldilocks
 
-**Minimum process. Constant quality.** Use the smallest workflow that can still produce the same high-standard result.
+Use the minimum process that preserves the same high quality, safety, authorization, and evidence floor.
 
-Process may shrink when the task or model is capable enough; required evidence cannot. A stronger worker may need fewer instructions, but it does not get weaker acceptance, safety, authorization, or verification standards.
+A capable worker may need fewer instructions. A simple task may need fewer stages. Neither gets weaker acceptance criteria.
 
-## Route each stage, not the whole project
+## Route the current stage
 
-Inspect enough of the request and touched project flow to avoid guessing. At each stage, assess:
+Re-evaluate as facts change; do not assign one workflow depth to an entire project.
 
-- **Ambiguity:** Are unresolved decisions likely to change the result?
-- **Risk:** Could this affect security, permissions, money, production, data, public contracts, accessibility, or irreversible/external actions?
-- **Coordination:** Would isolation, delegation, or parallel work save more than it costs?
-
-Choose a quality mode for the current stage and re-evaluate when facts change. When multiple modes match, apply the strongest applicable risk gate. Add Orchestrated as an execution shape when coordination has positive net value; it can combine with Guarded or Critical and never weakens them.
-
-| Mode | Observable shape | Default response |
+| Mode | Observable condition | Default shape |
 |---|---|---|
-| **Direct** | Clear, local, reversible, low-risk | Act directly; run one relevant check |
-| **Guarded** | Non-trivial behavior, bug, limited ambiguity, or a clearly authorized low-impact reversible external action | State assumptions; use a short plan and focused tests |
-| **Orchestrated** | Multiple coherent workstreams or meaningful integration | Overlay the applicable quality mode; define interfaces and isolate/delegate/parallelize only for net benefit |
-| **Critical** | Security, permissions, money, migrations, production, data loss, high-impact or irreversible destructive/external action, or costly architecture | Resolve authority and design; use strict risk-specific tests and independent review |
+| Direct | Clear, local, reversible, low-risk | Act inline; inspect output and run one relevant check |
+| Guarded | Behavior change, bug, multi-file work, or limited ambiguity | State assumptions; use a short plan and focused evidence |
+| Critical | Security, permissions, money, production, migration, data loss, public contract, or costly architecture | Resolve authority/design; add risk-specific tests and independent review |
 
-Do not automatically chain brainstorming, a written plan, worktrees, TDD, subagents, review, and branch finishing. Load the next process only when its trigger becomes observable.
+Add orchestration only when isolation, delegation, or parallelism has positive net value after setup, context transfer, review, and integration cost.
 
-## Execute the minimum complete loop
+## Load only the needed engine
 
-1. **Define the end state.** Extract acceptance criteria, constraints, evidence needed, and non-goals. If material decisions remain, read [alignment-and-grilling.md](references/alignment-and-grilling.md).
-2. **Inspect before inventing.** Trace the real flow and search existing project mechanisms. Before choosing architecture or adding code, read [reuse-and-planning.md](references/reuse-and-planning.md).
-3. **Choose execution shape.** Work inline by default. For worktrees, delegation, parallelism, and capability routing, read [execution-and-model-routing.md](references/execution-and-model-routing.md).
-4. **Preserve the quality floor.** Direct trivial prose/config work may inspect the output or diff and run one targeted check without loading another reference. For behavior changes, bugs, Orchestrated/Critical work, or runtime claims, read [testing-and-verification.md](references/testing-and-verification.md).
-5. **Protect scope without losing ideas.** When a new idea appears during execution, classify it using [idea-ledger.md](references/idea-ledger.md).
+- Material product, design, architecture, scope, or authority decisions: read [align.md](references/align.md).
+- Bugs, failures, unexpected behavior, or unclear causality: read [diagnose.md](references/diagnose.md).
+- Reuse, planning, implementation, or test-first development: read [build.md](references/build.md).
+- Worktrees, parallel work, subagents, or capability routing: read [orchestrate.md](references/orchestrate.md).
+- Review, runtime evidence, completion claims, or branch integration: read [prove.md](references/prove.md).
+- Mid-flight ideas, skill authoring, or workflow improvement: read [evolve.md](references/evolve.md).
 
-## Interaction rules
+Load multiple engines only when the stage genuinely crosses their boundaries. Explicit compatibility skills route directly to the same engines.
 
-- Investigate facts that tools or the project can answer; ask the user for decisions or authority.
-- Ask only when an answer changes the end state, safety boundary, external effect, or a costly-to-reverse choice. Otherwise state a safe assumption and continue.
-- Honor explicit user choices about scope, tools, delegation, testing, and delivery unless they conflict with safety, authorization, or applicable quality gates. If the user forbids necessary verification, respect the constraint, state the result is unverified, and do not claim completion.
-- Keep updates proportional. Do not spend more words narrating the process than the task needs.
+## Minimum complete loop
 
-## Constant gates
+1. Define the requested end state, constraints, non-goals, and acceptance evidence.
+2. Inspect the real project flow and existing solutions before inventing.
+3. Choose the smallest safe execution shape.
+4. Implement the smallest coherent change.
+5. Obtain fresh evidence for every completion claim.
+6. Separate useful follow-up ideas from delivered scope.
 
-Never optimize away applicable acceptance checks, regression evidence, trust-boundary validation, security, accessibility, data-loss prevention, integration checks, real-runtime validation, external authorization, destructive-action confirmation, or fresh verification.
+Ask only when the answer changes the end state, authority, external effect, safety boundary, or a costly-to-reverse choice. Investigate project facts yourself. Honor explicit scope and tool constraints; when a necessary check is forbidden or unavailable, report the exact unverified claim.
 
-If evidence cannot be obtained, report the exact unverified claim. Do not substitute confidence, model capability, review prose, or an old passing result.
+Never optimize away acceptance, regression evidence, security, accessibility, trust-boundary validation, data-loss prevention, integration checks, real-runtime evidence, destructive-action confirmation, or explicit authority for external effects.

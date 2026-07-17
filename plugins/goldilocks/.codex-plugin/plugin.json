@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.1.0+codex.20260717142105",
-  "description": "A dynamic minimum-process workflow that preserves constant quality, safety, and verification standards.",
+  "version": "0.2.0+codex.20260717150328",
+  "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
   "author": {
     "name": "Charles Roc"
   },
@@ -14,13 +14,14 @@
     "testing",
     "verification",
     "delegation",
-    "minimalism"
+    "minimalism",
+    "superpowers-compatible"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Goldilocks",
     "shortDescription": "Minimum process with constant quality",
-    "longDescription": "Dynamically routes each project stage through Direct, Guarded, Orchestrated, or Critical workflow depth while preserving acceptance, safety, authorization, testing, integration, and fresh verification gates.",
+    "longDescription": "Provides thirteen familiar workflow entry skills plus a Goldilocks router backed by six shared progressive-disclosure engines. It preserves brainstorming, planning, debugging, TDD, worktrees, delegation, review, verification, branch finishing, and skill-writing coverage while avoiding unnecessary ceremony and context loading.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [
@@ -31,7 +32,7 @@
     "defaultPrompt": [
       "Use the smallest workflow that preserves full quality.",
       "Plan and execute this without unnecessary process overhead.",
-      "Decide whether this task needs grilling, delegation, or direct action."
+      "Replace a Superpowers workflow with the equivalent Goldilocks entry."
     ],
     "brandColor": "#D4A72C",
     "composerIcon": "./assets/icon.png",

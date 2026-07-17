@@ -1,0 +1,7 @@
+interface:
+  display_name: "Writing Skills"
+  short_description: "Create lean behavior-changing skills"
+  icon_small: "./assets/icon.png"
+  icon_large: "./assets/logo.png"
+  brand_color: "#D4A72C"
+  default_prompt: "Use $writing-skills to create or improve this Skill with behavioral evidence."

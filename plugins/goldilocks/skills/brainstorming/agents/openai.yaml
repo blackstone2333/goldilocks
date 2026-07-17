@@ -1,0 +1,7 @@
+interface:
+  display_name: "Brainstorming"
+  short_description: "Clarify decisions before implementation"
+  icon_small: "./assets/icon.png"
+  icon_large: "./assets/logo.png"
+  brand_color: "#D4A72C"
+  default_prompt: "Use $brainstorming to shape this idea into a clear, proportionate design."

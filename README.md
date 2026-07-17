@@ -2,18 +2,16 @@
 
 Not too much process. Not too little rigor. Just right.
 
-Goldilocks is a Codex workflow skill packaged as a plugin. It applies **The Just-Necessary Principle**: use the minimum process that preserves a constant quality, safety, authorization, and verification floor.
+Goldilocks is a Codex workflow suite packaged as a plugin. It applies **The Just-Necessary Principle**: use the minimum process that preserves a constant quality, safety, authorization, and verification floor.
 
 The project is intended to replace ceremony-heavy workflow stacks rather than sit beside them. Feature parity does not require ceremony parity.
 
 ## Current status
 
-- `v0.1`: renamed, independently packaged baseline of the validated Just Necessary workflow.
-- `v0.2`: Capability & Trigger Engine under RED evaluation before implementation.
+- `v0.2`: complete Superpowers-compatible entry surface backed by six shared lean engines.
 - Public repository: https://github.com/blackstone2333/goldilocks
-- A tagged release is intentionally deferred until the v0.2 trigger work reaches GREEN.
 
-The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 50 fresh-context scenarios.
+The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 52 scenarios.
 
 ## Install the plugin
 
@@ -30,9 +28,25 @@ Start a new Codex thread after installation so the new skill context is loaded. 
 
 **Minimum process. Constant quality.** A stronger worker may need fewer instructions; it does not get weaker acceptance criteria or evidence. Worktrees, plans, TDD, grilling, review, subagents, and parallelism are selected only when their expected value exceeds their coordination cost.
 
-## v0.2 direction
+## Compatibility surface
 
-Goldilocks compresses workflow coverage into six capability engines:
+Goldilocks exposes the familiar workflow entry names so it can replace Superpowers without copying fourteen long procedures:
+
+- `brainstorming`
+- `writing-plans`
+- `executing-plans`
+- `test-driven-development`
+- `systematic-debugging`
+- `using-git-worktrees`
+- `dispatching-parallel-agents`
+- `subagent-driven-development`
+- `requesting-code-review`
+- `receiving-code-review`
+- `verification-before-completion`
+- `finishing-a-development-branch`
+- `writing-skills`
+
+The explicit `goldilocks` router replaces `using-superpowers`. It is not implicitly injected, so trivial tasks pay no router cost. The thirteen compatibility entries route into six capability engines:
 
 1. Align
 2. Diagnose
@@ -41,7 +55,7 @@ Goldilocks compresses workflow coverage into six capability engines:
 5. Prove
 6. Evolve
 
-Thin explicit entry skills will preserve discoverability without loading an entire workflow stack. See `docs/v0.2-capability-trigger-engine.md`.
+Each entry contains no more than 80 body words and loads only the engine needed for that task. See `docs/v0.2-capability-trigger-engine.md`.
 
 ## Local validation
 
@@ -49,7 +63,7 @@ Thin explicit entry skills will preserve discoverability without loading an enti
 python3 tests/test_v02_contract.py
 ```
 
-During the RED milestone this command is expected to fail on missing v0.2 engine and thin-entry files. The evaluation data and v0.1 plugin remain independently inspectable.
+The contract validates the exact 14-Skill surface, trigger scenarios, progressive-disclosure engines, and token budgets.
 
 ## License and influences
 

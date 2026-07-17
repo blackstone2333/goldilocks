@@ -16,7 +16,7 @@ The CLI prompt inspection confirmed that Superpowers, Ponytail, Grill, qclaw, us
 
 - `PASS`: expected quality and process budget were met.
 - `FAIL`: an observable quality, triggering, token, latency, authority, or proportionality contract was missed.
-- A new engine or thin entry may be implemented only when a valid FAIL names it in `gap_engines` or `gap_entries`.
+- A new engine or thin entry may be implemented only when a valid behavioral or static capability FAIL names it in `gap_engines` or `gap_entries`.
 - One pilot failure is a RED candidate, not a final wording decision. Reproduce wording changes with a no-skill control and at least five fresh runs before GREEN.
 
-Raw CLI thread IDs and token usage are recorded in `results/red-baseline.jsonl`. Total and cached input tokens are kept separate because cached context still measures loaded context but may have different billing and latency effects.
+Raw CLI thread IDs and token usage are recorded for behavioral runs in `results/red-baseline.jsonl`; deterministic missing-surface failures may use a static audit without a thread ID. Total and cached input tokens are kept separate because cached context still measures loaded context but may have different billing and latency effects.
