@@ -1,9 +1,9 @@
 {
   "name": "goldilocks",
-  "version": "0.1.0+codex.20260717134439",
+  "version": "0.1.0+codex.20260717142105",
   "description": "A dynamic minimum-process workflow that preserves constant quality, safety, and verification standards.",
   "author": {
-    "name": "Goldilocks contributors"
+    "name": "Charles Roc"
   },
   "homepage": "https://github.com/blackstone2333/goldilocks#readme",
   "repository": "https://github.com/blackstone2333/goldilocks",
@@ -21,7 +21,7 @@
     "displayName": "Goldilocks",
     "shortDescription": "Minimum process with constant quality",
     "longDescription": "Dynamically routes each project stage through Direct, Guarded, Orchestrated, or Critical workflow depth while preserving acceptance, safety, authorization, testing, integration, and fresh verification gates.",
-    "developerName": "Goldilocks Contributors",
+    "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [
       "Interactive",
@@ -33,6 +33,8 @@
       "Plan and execute this without unnecessary process overhead.",
       "Decide whether this task needs grilling, delegation, or direct action."
     ],
-    "brandColor": "#D4A72C"
+    "brandColor": "#D4A72C",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png"
   }
 }
