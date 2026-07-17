@@ -102,6 +102,72 @@ def auth_home() -> Path:
     return Path.home() / ".codex"
 
 
+def provider_config_source() -> Path:
+    return _env_path("THREE_BEARS_CODEX_CONFIG", auth_home() / "config.toml")
+
+
+def _toml_string(raw: str) -> str:
+    raw = raw.strip()
+    if raw.startswith('"'):
+        return str(json.loads(raw))
+    if raw.startswith("'") and raw.endswith("'"):
+        return raw[1:-1]
+    return raw.split("#", 1)[0].strip()
+
+
+def _toml_key(value: str) -> str:
+    return value if re.fullmatch(r"[A-Za-z0-9_-]+", value) else json.dumps(value, ensure_ascii=False)
+
+
+def selected_provider() -> tuple[str, list[str], list[str]] | None:
+    source = provider_config_source()
+    if not source.is_file():
+        return None
+    lines = source.read_text(encoding="utf-8").splitlines()
+    name = os.environ.get("THREE_BEARS_MODEL_PROVIDER")
+    top_level: list[str] = []
+    for line in lines:
+        if line.lstrip().startswith("["):
+            break
+        match = re.match(r"^\s*([A-Za-z0-9_-]+)\s*=\s*(.+?)\s*$", line)
+        if not match:
+            continue
+        key, value = match.groups()
+        if key == "model_provider" and not name:
+            name = _toml_string(value)
+        elif key in {"disable_response_storage", "service_tier"}:
+            top_level.append(line)
+    if not name:
+        return None
+    provider_lines: list[str] = []
+    inside = False
+    header = re.compile(r"^\s*\[model_providers\.([^]]+)\]\s*$")
+    for line in lines:
+        match = header.match(line)
+        if match:
+            inside = _toml_string(match.group(1)) == name
+            continue
+        if inside and line.lstrip().startswith("["):
+            break
+        if inside:
+            provider_lines.append(line)
+    return (name, top_level, provider_lines) if any(line.strip() for line in provider_lines) else None
+
+
+def write_minimal_provider_config(codex_home: Path) -> str | None:
+    selected = selected_provider()
+    if selected is None:
+        return None
+    name, top_level, provider_lines = selected
+    lines = [f"model_provider = {json.dumps(name, ensure_ascii=False)}", *top_level]
+    lines.extend(["", f"[model_providers.{_toml_key(name)}]", *provider_lines])
+    target = codex_home / "config.toml"
+    descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(lines) + "\n")
+    return name
+
+
 def prepare_codex_home(arm: str, home: Path) -> Path:
     codex_home = home / ".codex"
     skills_home = codex_home / "skills"
@@ -116,6 +182,8 @@ def prepare_codex_home(arm: str, home: Path) -> Path:
                 target.symlink_to(source)
             except OSError:
                 shutil.copy2(source, target)
+
+    write_minimal_provider_config(codex_home)
 
     for source in arm_skill_dirs(arm):
         target = skills_home / source.name
@@ -364,6 +432,14 @@ def _median(records: list[dict[str, Any]], key: str):
     return round(statistics.median(values), 3) if values else None
 
 
+def completed_model_turn(record: dict[str, Any]) -> bool:
+    return (
+        record.get("turn_completed") is True
+        and record.get("returncode") in (None, 0)
+        and not record.get("timed_out", False)
+    )
+
+
 def aggregate(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for record in records:
@@ -371,25 +447,33 @@ def aggregate(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         groups[("all", record.get("arm", "unknown"))].append(record)
     rows = []
     for (level, arm), cells in sorted(groups.items()):
-        n = len(cells)
+        completed = [cell for cell in cells if completed_model_turn(cell)]
+        attempted = len(cells)
+        n = len(completed)
+
+        def rate(key: str) -> float | None:
+            return round(sum(int(cell.get(key, 0)) for cell in completed) / n, 3) if n else None
+
         rows.append(
             {
                 "level": level,
                 "arm": arm,
                 "n": n,
-                "quality_rate": round(sum(int(cell.get("quality", 0)) for cell in cells) / n, 3),
-                "safe_rate": round(sum(int(cell.get("safe", 0)) for cell in cells) / n, 3),
-                "scope_rate": round(sum(int(cell.get("scope", 0)) for cell in cells) / n, 3),
-                "reuse_rate": round(sum(int(cell.get("reuse", 0)) for cell in cells) / n, 3),
-                "process_rate": round(sum(int(cell.get("process", 0)) for cell in cells) / n, 3),
-                "tokens_median": _median(cells, "total_tokens"),
-                "uncached_tokens_median": _median(cells, "uncached_input_tokens"),
-                "cached_tokens_median": _median(cells, "cached_input_tokens"),
-                "duration_median": _median(cells, "duration_seconds"),
-                "source_added_lines_median": _median(cells, "source_added_lines"),
-                "test_added_lines_median": _median(cells, "test_added_lines"),
-                "tool_calls_median": _median(cells, "tool_calls"),
-                "skill_activity_median": _median(cells, "skill_activity_count"),
+                "attempted": attempted,
+                "infrastructure_failures": attempted - n,
+                "quality_rate": rate("quality"),
+                "safe_rate": rate("safe"),
+                "scope_rate": rate("scope"),
+                "reuse_rate": rate("reuse"),
+                "process_rate": rate("process"),
+                "tokens_median": _median(completed, "total_tokens"),
+                "uncached_tokens_median": _median(completed, "uncached_input_tokens"),
+                "cached_tokens_median": _median(completed, "cached_input_tokens"),
+                "duration_median": _median(completed, "duration_seconds"),
+                "source_added_lines_median": _median(completed, "source_added_lines"),
+                "test_added_lines_median": _median(completed, "test_added_lines"),
+                "tool_calls_median": _median(completed, "tool_calls"),
+                "skill_activity_median": _median(completed, "skill_activity_count"),
             }
         )
     return rows
@@ -409,11 +493,12 @@ def print_summary(rows: list[dict[str, Any]]) -> None:
         if not selected:
             continue
         print(f"\n=== {level.upper()} ===")
-        print("  arm           n  quality safe reuse process tokens uncached  sec  +src tools skills")
+        print("  arm         valid/try quality safe reuse process tokens uncached  sec  +src tools skills")
         for row in sorted(selected, key=lambda item: ARM_ORDER.index(item["arm"])):
             print(
-                f"  {row['arm']:<13} {row['n']:>2}  {row['quality_rate']:>7.3f} "
-                f"{row['safe_rate']:>4.2f} {row['reuse_rate']:>5.2f} {row['process_rate']:>7.2f} "
+                f"  {row['arm']:<13} {row['n']:>2}/{row['attempted']:<3} "
+                f"{_format(row['quality_rate'], 3):>7} {_format(row['safe_rate'], 2):>4} "
+                f"{_format(row['reuse_rate'], 2):>5} {_format(row['process_rate'], 2):>7} "
                 f"{_format(row['tokens_median'], 0):>6} {_format(row['uncached_tokens_median'], 0):>8} "
                 f"{_format(row['duration_median']):>5} "
                 f"{_format(row['source_added_lines_median'], 0):>5} {_format(row['tool_calls_median'], 0):>5} "
@@ -432,6 +517,15 @@ def write_report(run_dir: Path, rows: list[dict[str, Any]], metadata: dict[str, 
         "Quality gates must be read before efficiency. Fewer tokens or lines do not count as a win when quality, safety, scope, reuse, or decision process drops.",
         "",
     ]
+    if metadata.get("matrix_aborted"):
+        lines.extend(
+            [
+                "> Matrix stopped after an incomplete model turn to protect quota. "
+                f"Unstarted cells: {metadata['matrix_aborted'].get('unstarted_cells', 0)}. "
+                "Infrastructure failures are excluded from quality and efficiency aggregates.",
+                "",
+            ]
+        )
     for level in ("baby", "mama", "papa", "all"):
         selected = [row for row in rows if row["level"] == level]
         if not selected:
@@ -440,21 +534,23 @@ def write_report(run_dir: Path, rows: list[dict[str, Any]], metadata: dict[str, 
             [
                 f"## {level.title()}",
                 "",
-                "| Arm | n | Quality | Safe | Scope | Reuse | Process | Median tokens | Median uncached input | Median cached input | Median seconds | Median source +LOC | Median test +LOC | Median tools | Median skills |",
-                "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+                "| Arm | Valid / attempted | Infra failures | Quality | Safe | Scope | Reuse | Process | Median tokens | Median uncached input | Median cached input | Median seconds | Median source +LOC | Median test +LOC | Median tools | Median skills |",
+                "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
             ]
         )
         for row in sorted(selected, key=lambda item: ARM_ORDER.index(item["arm"])):
             lines.append(
-                "| {arm} | {n} | {quality_rate:.3f} | {safe_rate:.3f} | {scope_rate:.3f} | "
-                "{reuse_rate:.3f} | {process_rate:.3f} | {tokens} | {uncached} | {cached} | {seconds} | {loc} | {test_loc} | {tools} | {skills} |".format(
+                "| {arm} | {n} / {attempted} | {infra} | {quality} | {safe} | {scope} | "
+                "{reuse} | {process} | {tokens} | {uncached} | {cached} | {seconds} | {loc} | {test_loc} | {tools} | {skills} |".format(
                     arm=row["arm"],
                     n=row["n"],
-                    quality_rate=row["quality_rate"],
-                    safe_rate=row["safe_rate"],
-                    scope_rate=row["scope_rate"],
-                    reuse_rate=row["reuse_rate"],
-                    process_rate=row["process_rate"],
+                    attempted=row["attempted"],
+                    infra=row["infrastructure_failures"],
+                    quality=_format(row["quality_rate"], 3),
+                    safe=_format(row["safe_rate"], 3),
+                    scope=_format(row["scope_rate"], 3),
+                    reuse=_format(row["reuse_rate"], 3),
+                    process=_format(row["process_rate"], 3),
                     tokens=_format(row["tokens_median"], 0),
                     uncached=_format(row["uncached_tokens_median"], 0),
                     cached=_format(row["cached_tokens_median"], 0),
@@ -490,6 +586,11 @@ def validate_environment(arms: list[str], require_auth: bool) -> int:
     except RuntimeError as error:
         print(f"XX  codex                  {error}")
         failures += 1
+    provider = selected_provider()
+    if provider is None:
+        print("ok  model provider         default account authentication")
+    else:
+        print(f"ok  model provider         {provider[0]} from {provider_config_source()}")
     for arm in arms:
         paths = arm_skill_dirs(arm)
         okay = arm == "baseline" or bool(paths)
@@ -617,6 +718,7 @@ def main() -> None:
         "seed": args.seed,
         "tasks": task_ids,
         "arms": arms,
+        "model_provider": selected_provider()[0] if selected_provider() else None,
         "sources": source_manifest(arms),
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -675,33 +777,63 @@ def main() -> None:
         write_report(run_dir, rows, metadata)
         raise SystemExit("first cell failed before a completed model turn; matrix stopped to protect quota")
 
-    remaining = cells[1:]
+    remaining = iter(cells[1:])
+    unstarted = len(cells) - 1
+    stopped = False
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
-        futures = {pool.submit(execute, cell): cell for cell in remaining}
-        for index, future in enumerate(concurrent.futures.as_completed(futures), 2):
-            task_id, arm, run_number = futures[future]
-            try:
-                record = future.result()
-            except Exception as error:
-                record = {
-                    "task": task_id,
-                    "level": TASKS[task_id]["level"],
-                    "track": TASKS[task_id]["track"],
-                    "arm": arm,
-                    "model": args.model,
-                    "reasoning": args.reasoning,
-                    "run": run_number,
-                    "quality": 0,
-                    "correct": 0,
-                    "safe": 0,
-                    "scope": 0,
-                    "reuse": 0,
-                    "process": 0,
-                    "turn_completed": False,
-                    "errors": [str(error)],
-                    "error": str(error),
-                }
-            record_result(index, task_id, arm, record)
+        futures: dict[concurrent.futures.Future, tuple[str, str, int]] = {}
+
+        def fill_workers() -> None:
+            nonlocal unstarted
+            while not stopped and len(futures) < max(1, args.workers):
+                try:
+                    spec = next(remaining)
+                except StopIteration:
+                    return
+                futures[pool.submit(execute, spec)] = spec
+                unstarted -= 1
+
+        fill_workers()
+        index = 2
+        while futures:
+            done, _ = concurrent.futures.wait(futures, return_when=concurrent.futures.FIRST_COMPLETED)
+            for future in done:
+                task_id, arm, run_number = futures.pop(future)
+                try:
+                    record = future.result()
+                except Exception as error:
+                    record = {
+                        "task": task_id,
+                        "level": TASKS[task_id]["level"],
+                        "track": TASKS[task_id]["track"],
+                        "arm": arm,
+                        "model": args.model,
+                        "reasoning": args.reasoning,
+                        "run": run_number,
+                        "quality": 0,
+                        "correct": 0,
+                        "safe": 0,
+                        "scope": 0,
+                        "reuse": 0,
+                        "process": 0,
+                        "turn_completed": False,
+                        "errors": [str(error)],
+                        "error": str(error),
+                    }
+                record_result(index, task_id, arm, record)
+                index += 1
+                if not completed_model_turn(record) and not stopped:
+                    stopped = True
+                    metadata["matrix_aborted"] = {
+                        "task": task_id,
+                        "arm": arm,
+                        "errors": record.get("errors", []),
+                        "unstarted_cells": unstarted,
+                    }
+                    (run_dir / "metadata.json").write_text(
+                        json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+                    )
+            fill_workers()
 
     rows = aggregate(records)
     (run_dir / "summary.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")

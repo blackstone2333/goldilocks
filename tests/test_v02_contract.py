@@ -154,6 +154,14 @@ require_file(main_metadata)
 if main_metadata.is_file() and "allow_implicit_invocation: false" not in main_metadata.read_text(encoding="utf-8"):
     fail("goldilocks router must disable implicit invocation")
 
+verification_entry = SKILLS / "verification-before-completion" / "SKILL.md"
+if verification_entry.is_file():
+    verification_text = verification_entry.read_text(encoding="utf-8")
+    if "Do not invoke for a clear Direct edit" not in verification_text:
+        fail("verification entry must exclude clear Direct edits from implicit triggering")
+    if "For clear Direct work, do not load another engine" not in verification_text:
+        fail("verification entry must degrade safely when Direct work invokes it explicitly")
+
 if MAIN.is_file() and word_count(MAIN) > 650:
     fail(f"main router exceeds 650 words: {word_count(MAIN)}")
 

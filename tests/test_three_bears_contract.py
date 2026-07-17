@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import os
 import tempfile
 from collections import Counter
 from pathlib import Path
@@ -37,6 +38,38 @@ assert Counter(task["level"] for task in tasks.TASKS.values()) == {
     "mama": 3,
     "papa": 3,
 }
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    source = root / "source.toml"
+    source.write_text(
+        'model_provider = "custom"\n'
+        'service_tier = "priority"\n'
+        '[model_providers.custom]\n'
+        'name = "example"\n'
+        'wire_api = "responses"\n'
+        'requires_openai_auth = true\n'
+        'base_url = "https://example.invalid/v1"\n'
+        'experimental_bearer_token = "secret-value"\n'
+        '[mcp_servers.should_not_copy]\n'
+        'url = "https://example.invalid/mcp"\n',
+        encoding="utf-8",
+    )
+    old_config = os.environ.get("THREE_BEARS_CODEX_CONFIG")
+    os.environ["THREE_BEARS_CODEX_CONFIG"] = str(source)
+    try:
+        codex_home = runner.prepare_codex_home("baseline", root / "home")
+    finally:
+        if old_config is None:
+            os.environ.pop("THREE_BEARS_CODEX_CONFIG", None)
+        else:
+            os.environ["THREE_BEARS_CODEX_CONFIG"] = old_config
+    copied = (codex_home / "config.toml").read_text(encoding="utf-8")
+    assert 'model_provider = "custom"' in copied
+    assert '[model_providers.custom]' in copied
+    assert 'experimental_bearer_token = "secret-value"' in copied
+    assert "mcp_servers" not in copied
+    assert oct((codex_home / "config.toml").stat().st_mode & 0o777) == "0o600"
 
 required_fields = {
     "level",
@@ -110,5 +143,36 @@ with tempfile.TemporaryDirectory() as tmp:
     assert failed["turn_completed"] is False
     assert failed["tool_calls"] == 0
     assert any("unsupported model" in error for error in failed["errors"])
+
+valid_record = {
+    "level": "baby",
+    "arm": "goldilocks",
+    "turn_completed": True,
+    "returncode": 0,
+    "quality": 1,
+    "safe": 1,
+    "scope": 1,
+    "reuse": 1,
+    "process": 1,
+    "total_tokens": 10,
+}
+invalid_record = {
+    **valid_record,
+    "turn_completed": False,
+    "returncode": 1,
+    "quality": 0,
+    "total_tokens": 0,
+    "errors": ["usage limit"],
+}
+row = next(
+    row
+    for row in runner.aggregate([valid_record, invalid_record])
+    if row["level"] == "baby" and row["arm"] == "goldilocks"
+)
+assert row["n"] == 1
+assert row["attempted"] == 2
+assert row["infrastructure_failures"] == 1
+assert row["quality_rate"] == 1
+assert row["tokens_median"] == 10
 
 print("Three Bears contract passed: 9 tasks, 5 arms, all reference instruments valid.")

@@ -4,7 +4,7 @@ An agentic benchmark for the question Goldilocks is supposed to answer: can a wo
 
 Every cell starts a real headless Codex session in a newly generated git repository. No task reuses a previous project's history, conversation, dependencies, working tree, or plugin cache. Workspaces and raw event streams are retained under `runs/` for audit and offline rescoring.
 
-The randomized first cell doubles as a live model/account preflight. If it cannot complete a model turn, the matrix stops before launching the remaining cells, protecting quota from unsupported-model or authentication failures.
+The randomized first cell doubles as a live model/account preflight. If it cannot complete a model turn, the matrix stops before launching the remaining cells. After preflight, only `--workers` cells remain in flight; an incomplete model turn stops new scheduling. Infrastructure failures are reported separately and excluded from quality and efficiency aggregates.
 
 ## Bears
 
@@ -52,7 +52,7 @@ Fewer tokens, seconds, or lines do not count as a win when any applicable qualit
 
 ## Run
 
-The harness uses the bundled Codex CLI when available. Authentication is linked into a temporary home and never copied into a kept run. Set `CODEX_BIN` or `THREE_BEARS_AUTH_HOME` when discovery differs on your machine.
+The harness uses the bundled Codex CLI when available. Authentication is linked into a temporary home and never copied into a kept run. The selected provider from `$CODEX_HOME/config.toml` is reduced to a temporary provider-only config with mode `0600`; MCP servers, plugins, marketplaces, and unrelated user settings are not copied. Set `CODEX_BIN`, `THREE_BEARS_AUTH_HOME`, `THREE_BEARS_CODEX_CONFIG`, or `THREE_BEARS_MODEL_PROVIDER` when discovery differs on your machine.
 
 Validate everything without a model call:
 
@@ -107,6 +107,7 @@ Each run retains `metadata.json`, cell repositories, raw `events.jsonl`, stderr,
 Published exploratory results:
 
 - [2026-07-18 — GPT-5.6 Terra round 1](results/2026-07-18-gpt-5.6-terra-round-1.md)
+- [2026-07-18 — Custom-provider Terra reasoning sweep](results/2026-07-18-custom-terra-reasoning-sweep.md)
 
 ## Interpretation limits
 

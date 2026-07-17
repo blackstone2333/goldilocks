@@ -8,10 +8,10 @@ The project is intended to replace ceremony-heavy workflow stacks rather than si
 
 ## Current status
 
-- `v0.2.1`: complete Superpowers-compatible entry surface, conditional idea capture across every execution engine, and the Three Bears agentic benchmark.
+- `v0.2.2`: complete Superpowers-compatible entry surface, conditional idea capture across every execution engine, and a lean Direct completion path that avoids loading the full proof engine for obvious one-check edits.
 - Public repository: https://github.com/blackstone2333/goldilocks
 
-The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 52 scenarios.
+The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 53 scenarios.
 
 ## Install the plugin
 
