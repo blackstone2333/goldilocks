@@ -240,7 +240,7 @@ def _score_offline_design(root: Path, final: str) -> Score:
     questions = final.count("?") + final.count("？")
     has_scope = any(term in lower for term in ("offline scope", "data scope", "which records", "data set", "哪些数据", "离线范围"))
     has_conflict = any(term in lower for term in ("conflict", "source of truth", "server authoritative", "冲突", "事实来源", "服务器权威"))
-    has_recommendation = any(term in lower for term in ("recommend", "建议", "recommended"))
+    has_recommendation = any(term in lower for term in ("recommend", "recommended", "default", "建议", "默认"))
     process = 1 <= questions <= 2 and (has_scope or has_conflict) and has_recommendation
     return {"correct": int(process), "process": int(process), "reason": "one material decision surfaced before architecture"}
 

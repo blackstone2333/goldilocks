@@ -181,6 +181,8 @@ def parse_events(events_path: Path, stderr_path: Path) -> dict[str, Any]:
     command_calls = 0
     skill_reads: set[str] = set()
     commands: list[str] = []
+    errors: list[str] = []
+    turn_completed = False
 
     if events_path.is_file():
         for raw in events_path.read_text(encoding="utf-8", errors="ignore").splitlines():
@@ -190,6 +192,8 @@ def parse_events(events_path: Path, stderr_path: Path) -> dict[str, Any]:
                 continue
             if event.get("type") == "thread.started":
                 thread_id = event.get("thread_id")
+            if event.get("type") == "error":
+                errors.append(str(event.get("message", "unknown error")))
             item = event.get("item") or {}
             if event.get("type") == "item.completed":
                 item_type = item.get("type")
@@ -202,10 +206,15 @@ def parse_events(events_path: Path, stderr_path: Path) -> dict[str, Any]:
                     commands.append(command)
                     for match in re.findall(r"/skills/([^/]+)/SKILL\.md", command):
                         skill_reads.add(match)
-                elif item_type:
+                elif item_type == "error":
+                    errors.append(str(item.get("message", "unknown item error")))
+                elif item_type in {"mcp_tool_call", "web_search"}:
                     tool_calls += 1
             if event.get("type") == "turn.completed":
+                turn_completed = True
                 usage = event.get("usage") or {}
+            if event.get("type") == "turn.failed":
+                errors.append(str((event.get("error") or {}).get("message", "turn failed")))
 
     injected: set[str] = set()
     if stderr_path.is_file():
@@ -221,6 +230,8 @@ def parse_events(events_path: Path, stderr_path: Path) -> dict[str, Any]:
     output_tokens = int(usage.get("output_tokens") or 0)
     return {
         "thread_id": thread_id,
+        "turn_completed": turn_completed,
+        "errors": errors,
         "final": final,
         "input_tokens": input_tokens,
         "cached_input_tokens": cached_tokens,
@@ -620,9 +631,54 @@ def main() -> None:
         cell.mkdir(parents=True, exist_ok=False)
         return run_cell(task_id, arm, args.model, args.reasoning, run_number, cell, args.timeout)
 
+    def record_result(index: int, task_id: str, arm: str, record: dict[str, Any]) -> None:
+        records.append(record)
+        print(
+            f"  [{index}/{len(cells)}] {task_id} / {arm} "
+            f"quality={record.get('quality')} tokens={record.get('total_tokens', 0)} "
+            f"time={record.get('duration_seconds', 0)}s +src={record.get('source_added_lines', 0)}",
+            flush=True,
+        )
+        (run_dir / "results.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    first_task, first_arm, first_run = cells[0]
+    try:
+        first_record = execute(cells[0])
+    except Exception as error:
+        first_record = {
+            "task": first_task,
+            "level": TASKS[first_task]["level"],
+            "track": TASKS[first_task]["track"],
+            "arm": first_arm,
+            "model": args.model,
+            "reasoning": args.reasoning,
+            "run": first_run,
+            "quality": 0,
+            "correct": 0,
+            "safe": 0,
+            "scope": 0,
+            "reuse": 0,
+            "process": 0,
+            "turn_completed": False,
+            "errors": [str(error)],
+        }
+    record_result(1, first_task, first_arm, first_record)
+    if first_record.get("returncode") not in (None, 0) or not first_record.get("turn_completed"):
+        metadata["preflight_failed"] = {
+            "task": first_task,
+            "arm": first_arm,
+            "errors": first_record.get("errors", []),
+        }
+        (run_dir / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+        rows = aggregate(records)
+        (run_dir / "summary.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
+        write_report(run_dir, rows, metadata)
+        raise SystemExit("first cell failed before a completed model turn; matrix stopped to protect quota")
+
+    remaining = cells[1:]
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
-        futures = {pool.submit(execute, cell): cell for cell in cells}
-        for index, future in enumerate(concurrent.futures.as_completed(futures), 1):
+        futures = {pool.submit(execute, cell): cell for cell in remaining}
+        for index, future in enumerate(concurrent.futures.as_completed(futures), 2):
             task_id, arm, run_number = futures[future]
             try:
                 record = future.result()
@@ -641,16 +697,11 @@ def main() -> None:
                     "scope": 0,
                     "reuse": 0,
                     "process": 0,
+                    "turn_completed": False,
+                    "errors": [str(error)],
                     "error": str(error),
                 }
-            records.append(record)
-            print(
-                f"  [{index}/{len(cells)}] {task_id} / {arm} "
-                f"quality={record.get('quality')} tokens={record.get('total_tokens', 0)} "
-                f"time={record.get('duration_seconds', 0)}s +src={record.get('source_added_lines', 0)}",
-                flush=True,
-            )
-            (run_dir / "results.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+            record_result(index, task_id, arm, record)
 
     rows = aggregate(records)
     (run_dir / "summary.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")

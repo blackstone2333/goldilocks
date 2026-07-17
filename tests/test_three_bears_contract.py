@@ -88,4 +88,27 @@ with tempfile.TemporaryDirectory() as tmp:
     )
     assert tasks.score_task("papa-offline-design", root, conflict_frontier)["process"] == 1
 
+    terse_default = (
+        "The highest-impact decision is conflict ownership and the source of truth. "
+        "Default: keep the server authoritative and hold overlapping offline edits for explicit review. "
+        "Should conflicts require reviewer resolution, or should one side automatically win?"
+    )
+    assert tasks.score_task("papa-offline-design", root, terse_default)["process"] == 1
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    events = root / "events.jsonl"
+    stderr = root / "stderr.txt"
+    events.write_text(
+        '{"type":"thread.started","thread_id":"t1"}\n'
+        '{"type":"item.completed","item":{"type":"error","message":"unsupported model"}}\n'
+        '{"type":"turn.failed","error":{"message":"HTTP 400"}}\n',
+        encoding="utf-8",
+    )
+    stderr.write_text("", encoding="utf-8")
+    failed = runner.parse_events(events, stderr)
+    assert failed["turn_completed"] is False
+    assert failed["tool_calls"] == 0
+    assert any("unsupported model" in error for error in failed["errors"])
+
 print("Three Bears contract passed: 9 tasks, 5 arms, all reference instruments valid.")

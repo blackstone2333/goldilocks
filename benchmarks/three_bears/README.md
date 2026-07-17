@@ -4,6 +4,8 @@ An agentic benchmark for the question Goldilocks is supposed to answer: can a wo
 
 Every cell starts a real headless Codex session in a newly generated git repository. No task reuses a previous project's history, conversation, dependencies, working tree, or plugin cache. Workspaces and raw event streams are retained under `runs/` for audit and offline rescoring.
 
+The randomized first cell doubles as a live model/account preflight. If it cannot complete a model turn, the matrix stops before launching the remaining cells, protecting quota from unsupported-model or authentication failures.
+
 ## Bears
 
 | Level | What it tests | Tasks |
@@ -101,6 +103,10 @@ python3 benchmarks/three_bears/run.py --rescore benchmarks/three_bears/runs/<tim
 ```
 
 Each run retains `metadata.json`, cell repositories, raw `events.jsonl`, stderr, per-cell results, `results.json`, `summary.json`, and `REPORT.md`.
+
+Published exploratory results:
+
+- [2026-07-18 — GPT-5.6 Terra round 1](results/2026-07-18-gpt-5.6-terra-round-1.md)
 
 ## Interpretation limits
 
