@@ -108,6 +108,7 @@ Published exploratory results:
 
 - [2026-07-18 — GPT-5.6 Terra round 1](results/2026-07-18-gpt-5.6-terra-round-1.md)
 - [2026-07-18 — Custom-provider Terra reasoning sweep](results/2026-07-18-custom-terra-reasoning-sweep.md)
+- [2026-07-18 — Custom-provider GPT-5.6 high model sweep](results/2026-07-18-custom-high-model-sweep.md)
 
 ## Interpretation limits
 

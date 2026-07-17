@@ -14,7 +14,7 @@ This is an exploratory custom-provider run, not a universal performance claim. Q
 - Goldilocks instruction-tree SHA-256: `08e32971632f6f58bc90d9a1cff0b028950f296f3c58dc038696ccd6651ce317`
 - External sources: Superpowers `d884ae04`, Ponytail `16f29800`, Matt Pocock Skills `9603c1cc`
 
-The provider-only temporary config copied no MCP servers, plugins, marketplaces, or unrelated user settings. Across the connectivity check and all published matrices, 61 model turns completed using 4,075,498 telemetry tokens, including 918,466 uncached input and 67,624 output tokens.
+The provider-only temporary config copied no MCP servers, plugins, marketplaces, or unrelated user settings. Across the connectivity check and matrices covered by this report, 61 model turns completed using 4,075,498 telemetry tokens, including 918,466 uncached input and 67,624 output tokens.
 
 ## Direct-path regression
 
