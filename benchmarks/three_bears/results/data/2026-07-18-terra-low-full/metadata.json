@@ -1,0 +1,162 @@
+{
+  "date": "20260718-033829",
+  "model": "gpt-5.6-terra",
+  "reasoning": "low",
+  "runs": 3,
+  "workers": 3,
+  "timeout": 1200,
+  "seed": 1729,
+  "tasks": [
+    "baby-docs",
+    "baby-uuid",
+    "baby-reuse",
+    "mama-empty-query",
+    "mama-csv-headers",
+    "mama-cache",
+    "papa-safe-path",
+    "papa-revocation",
+    "papa-offline-design"
+  ],
+  "arms": [
+    "baseline",
+    "goldilocks",
+    "superpowers",
+    "ponytail",
+    "grill"
+  ],
+  "model_provider": "custom",
+  "sources": {
+    "goldilocks_repo": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4",
+    "arms": {
+      "baseline": [],
+      "goldilocks": [
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/brainstorming",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/dispatching-parallel-agents",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/executing-plans",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/finishing-a-development-branch",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/goldilocks",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/receiving-code-review",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/requesting-code-review",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/subagent-driven-development",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/systematic-debugging",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/test-driven-development",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/using-git-worktrees",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/verification-before-completion",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/writing-plans",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/goldilocks/plugins/goldilocks/skills/writing-skills",
+          "sha": "386cb4b218e83e7bc9b774bbd3003daf1d0962a4"
+        }
+      ],
+      "superpowers": [
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/brainstorming",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/dispatching-parallel-agents",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/executing-plans",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/finishing-a-development-branch",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/receiving-code-review",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/requesting-code-review",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/subagent-driven-development",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/systematic-debugging",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/test-driven-development",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/using-git-worktrees",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/using-superpowers",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/verification-before-completion",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/writing-plans",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        },
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/superpowers-clean-baseline/skills/writing-skills",
+          "sha": "d884ae04edebef577e82ff7c4e143debd0bbec99"
+        }
+      ],
+      "ponytail": [
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/ponytail/skills/ponytail",
+          "sha": "16f29800fd2681bdf24f3eb4ccffe38be3baec6b"
+        }
+      ],
+      "grill": [
+        {
+          "path": "<home>/Documents/Codex/2026-07-17/superpowers-plugin-superpowers-openai-curated-remote/work/mattpocock-skills/skills/productivity/grilling",
+          "sha": "9603c1cc8118d08bc1b3bf34cf714f62178dea3b"
+        }
+      ]
+    }
+  }
+}
