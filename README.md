@@ -8,7 +8,7 @@ The project is intended to replace ceremony-heavy workflow stacks rather than si
 
 ## Current status
 
-- `v0.2`: complete Superpowers-compatible entry surface backed by six shared lean engines.
+- `v0.2.1`: complete Superpowers-compatible entry surface, conditional idea capture across every execution engine, and the Three Bears agentic benchmark.
 - Public repository: https://github.com/blackstone2333/goldilocks
 
 The plugin lives in `plugins/goldilocks/`. The trigger evaluation suite lives in `evals/` and defines expected mode, capability engines, user rounds, agent calls, evidence, and process-word budgets for 52 scenarios.
@@ -57,6 +57,8 @@ The explicit `goldilocks` router replaces `using-superpowers`. It is not implici
 
 Each entry contains no more than 80 body words and loads only the engine needed for that task. See `docs/v0.2-capability-trigger-engine.md`.
 
+Every execution engine also contains a lightweight idea-capture condition: adjacent ideas do not expand current scope, are preserved for the final handoff, and load Evolve only when classification or durable recording is actually needed.
+
 ## Local validation
 
 ```bash
@@ -64,6 +66,17 @@ python3 tests/test_v02_contract.py
 ```
 
 The contract validates the exact 14-Skill surface, trigger scenarios, progressive-disclosure engines, and token budgets.
+
+## Three Bears Benchmark
+
+`benchmarks/three_bears/` generates fresh isolated repositories and compares baseline, Goldilocks, Superpowers, Ponytail, and Grill across Baby, Mama, and Papa difficulty levels. It gates correctness, safety, scope, reuse, and decision quality before comparing tokens, time, tool calls, and diff size.
+
+```bash
+python3 benchmarks/three_bears/run.py --selftest
+python3 benchmarks/three_bears/run.py --task baby-docs --arms baseline,goldilocks --runs 1
+```
+
+See `benchmarks/three_bears/README.md` for the full reproducible matrix.
 
 ## License and influences
 

@@ -36,3 +36,5 @@ If a check cannot run or is forbidden, state what ran, what did not, why, and th
 After fresh verification, inspect branch/worktree state and present only applicable integration choices: keep for handoff, push the current branch, open a PR, merge locally, or clean up. Execute only the user's authorized choice. A request to push is not authority to open a PR, merge, release, or deploy.
 
 Before destructive cleanup, name the branch/worktree and confirm changes are integrated or intentionally discarded. Never automatically delete a branch or worktree. Verify the remote or local result after the chosen action.
+
+If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

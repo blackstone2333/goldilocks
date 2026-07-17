@@ -24,3 +24,5 @@ Capture a focused regression that fails for the observed reason when practical, 
 After three failed fixes or disproven hypotheses, stop patching. Reassess the reproduction, assumptions, architecture, and worker capability; escalate to Lead judgment instead of trying a fourth speculative change or multiplying agents.
 
 If the user asked only for diagnosis, stop with the causal chain, evidence, impact, and bounded fix options. Do not mutate source, configuration, production, or external systems.
+
+If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

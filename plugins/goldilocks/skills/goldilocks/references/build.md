@@ -34,3 +34,5 @@ For bugs and non-trivial behavior, define the smallest acceptance or regression 
 Fail-first is optional for prose-only edits, mechanical configuration, generated artifacts, exploratory prototypes, or cases where no meaningful pre-implementation signal exists. State why when skipping it. If implementation already exists, do not delete correct work merely to reenact TDD; add the missing regression and verify the behavior honestly.
 
 Trace the touched flow end to end, preserve security and accessibility invariants, follow project conventions, and prefer the fewest files that keep responsibilities clear. Run focused checks after each coherent unit and use [prove.md](prove.md) before completion.
+
+If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

@@ -34,3 +34,5 @@ A lower-capability worker receives a smaller scope, clearer brief, stronger dete
 Use subagent-driven development only when a plan contains multiple coherent units whose independent implementation and review save time or context. Do not create one agent per microstep. Review actual diffs and evidence, return bounded defects for correction, then re-review. After three repeated failures or requirement mismatches, stop the loop and reassess with Lead capability.
 
 Agent success messages are not completion evidence. Run integration checks on the combined result.
+
+If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

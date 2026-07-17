@@ -129,6 +129,11 @@ for required in [
 for engine in sorted(ENGINES):
     require_file(SKILLS / "goldilocks" / "references" / f"{engine}.md")
 
+for engine in sorted(ENGINES - {"evolve"}):
+    engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"
+    if engine_path.is_file() and "evolve.md" not in engine_path.read_text(encoding="utf-8"):
+        fail(f"{engine} engine lacks conditional idea-capture routing")
+
 for entry in sorted(ENTRIES):
     path = SKILLS / entry / "SKILL.md"
     require_file(path)

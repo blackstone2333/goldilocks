@@ -13,6 +13,7 @@ Goldilocks is an independent implementation influenced by workflow concepts in t
 - Copyright (c) 2026 DietrichGebert
 - Source: https://github.com/DietrichGebert/ponytail
 - Studied commit: `16f29800fd2681bdf24f3eb4ccffe38be3baec6b`
+- The Three Bears harness also draws on Ponytail's agentic-benchmark principles: fresh seeded repositories, deterministic safety gates, retained workspaces, and offline rescoring.
 
 ## Matt Pocock Skills
 
