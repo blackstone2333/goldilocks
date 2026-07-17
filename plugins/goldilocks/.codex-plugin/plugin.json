@@ -1,0 +1,36 @@
+{
+  "name": "goldilocks",
+  "version": "0.1.0",
+  "description": "A dynamic minimum-process workflow that preserves constant quality, safety, and verification standards.",
+  "author": {
+    "name": "Goldilocks contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "planning",
+    "testing",
+    "verification",
+    "delegation",
+    "minimalism"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Goldilocks",
+    "shortDescription": "Minimum process with constant quality",
+    "longDescription": "Dynamically routes each project stage through Direct, Guarded, Orchestrated, or Critical workflow depth while preserving acceptance, safety, authorization, testing, integration, and fresh verification gates.",
+    "developerName": "Goldilocks Contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use the smallest workflow that preserves full quality.",
+      "Plan and execute this without unnecessary process overhead.",
+      "Decide whether this task needs grilling, delegation, or direct action."
+    ],
+    "brandColor": "#D4A72C"
+  }
+}

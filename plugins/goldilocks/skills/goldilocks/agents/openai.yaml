@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goldilocks"
+  short_description: "Minimum process with constant quality"
+  default_prompt: "Use $goldilocks to choose and execute the smallest workflow that preserves full quality."
