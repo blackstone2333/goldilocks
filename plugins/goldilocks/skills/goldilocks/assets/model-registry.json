@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-07-18",
+  "purpose": "Dated public-evidence seed for task-specific model routing. Refresh before consequential use.",
+  "scoring": {
+    "quality": "weighted geometric mean of task-relevant normalized evidence",
+    "cost": "direct plus retry, review, and integration cost divided by probability of success",
+    "selection": "quality gate, then Pareto frontier, then logarithmic value tie-breaker",
+    "value_example_scope": "Terminal-Bench 2.1 plus Artificial Analysis models with comparable entries; best eligible value normalized to 100"
+  },
+  "task_profiles": {
+    "mechanical_edit": {
+      "default_role": "Fast",
+      "starting_quality_floor": 65,
+      "capability_weights": {"local_acceptance": 0.35, "aider_edit_correctness": 0.30, "format_reliability": 0.15, "coding_speed": 0.20},
+      "required_controls": ["narrow scope", "deterministic check", "Lead diff review"]
+    },
+    "test_authoring": {
+      "default_role": "Fast or Standard",
+      "starting_quality_floor": 70,
+      "capability_weights": {"local_mutation_or_regression_detection": 0.40, "swe_bench": 0.25, "terminal_bench": 0.20, "edit_correctness": 0.15},
+      "required_controls": ["tests fail for intended reason when practical", "Lead reviews assertions", "Lead reruns combined gate"]
+    },
+    "repo_implementation": {
+      "default_role": "Standard",
+      "starting_quality_floor": 75,
+      "capability_weights": {"swe_bench": 0.35, "terminal_bench": 0.30, "local_repo_success": 0.20, "edit_correctness": 0.10, "broad_intelligence": 0.05},
+      "required_controls": ["stable interface", "bounded ownership", "integration review"]
+    },
+    "exploration": {
+      "default_role": "Fast",
+      "starting_quality_floor": 60,
+      "capability_weights": {"local_summary_usefulness": 0.30, "tool_reliability": 0.25, "coding_speed": 0.20, "context_fit": 0.15, "broad_intelligence": 0.10},
+      "required_controls": ["read-only by default", "concise evidence summary", "source locations"]
+    },
+    "review_security": {
+      "default_role": "Lead",
+      "starting_quality_floor": 85,
+      "capability_weights": {"local_defects_caught": 0.45, "repo_agentic_evidence": 0.20, "reasoning_evidence": 0.20, "domain_security_evidence": 0.15},
+      "required_controls": ["independent review for Critical work", "file evidence", "no value-only assignment"]
+    },
+    "frontend_multimodal": {
+      "default_role": "Standard or Lead",
+      "starting_quality_floor": 75,
+      "capability_weights": {"local_visual_acceptance": 0.50, "domain_benchmark": 0.30, "modality_and_tool_reliability": 0.20},
+      "required_controls": ["actual browser or device verification", "accessibility check", "confidence penalty when domain evidence is missing"]
+    }
+  },
+  "missing_evidence_policy": "Renormalize only relevant available weights, then reduce confidence for every missing high-weight source. Never substitute broad intelligence for absent domain evidence without disclosure.",
+  "sources": [
+    {"id": "codex-subagents", "url": "https://learn.chatgpt.com/docs/agent-configuration/subagents", "kind": "official capability"},
+    {"id": "codex-speed", "url": "https://learn.chatgpt.com/docs/agent-configuration/speed", "kind": "official capability"},
+    {"id": "codex-pricing", "url": "https://learn.chatgpt.com/docs/pricing", "kind": "official availability"},
+    {"id": "swe-bench", "url": "https://www.swebench.com/", "kind": "independent repository benchmark"},
+    {"id": "terminal-bench-2.1", "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.1", "kind": "independent terminal-agent benchmark"},
+    {"id": "aider-polyglot", "url": "https://aider.chat/docs/leaderboards/", "kind": "independent edit benchmark"},
+    {"id": "livecodebench", "url": "https://livecodebench.github.io/leaderboard.html", "kind": "independent algorithmic benchmark"},
+    {"id": "artificial-analysis", "url": "https://artificialanalysis.ai/leaderboards/models", "kind": "independent intelligence, price, and speed aggregator"},
+    {"id": "openai-pricing", "url": "https://developers.openai.com/api/docs/pricing", "kind": "official pricing"},
+    {"id": "anthropic-pricing", "url": "https://claude.com/pricing", "kind": "official pricing"},
+    {"id": "google-pricing", "url": "https://ai.google.dev/gemini-api/docs/pricing", "kind": "official pricing"},
+    {"id": "xai-models", "url": "https://docs.x.ai/developers/models", "kind": "official pricing and availability"},
+    {"id": "deepseek-pricing", "url": "https://api-docs.deepseek.com/quick_start/pricing/", "kind": "official pricing"},
+    {"id": "alibaba-pricing", "url": "https://www.alibabacloud.com/help/en/model-studio/model-pricing", "kind": "official pricing"},
+    {"id": "kimi-pricing", "url": "https://platform.kimi.ai/docs/pricing", "kind": "official pricing"},
+    {"id": "minimax-pricing", "url": "https://platform.minimax.io/docs/pricing/overview", "kind": "official pricing"},
+    {"id": "zai-pricing", "url": "https://docs.z.ai/guides/overview/pricing", "kind": "official pricing"},
+    {"id": "mistral-models", "url": "https://docs.mistral.ai/models/overview", "kind": "official pricing and availability"}
+  ],
+  "models": [
+    {
+      "id": "gpt-5.3-codex-spark",
+      "provider": "OpenAI",
+      "recommended_roles": ["fast-text-only", "mechanical-code", "test-authoring", "fixtures", "focused-checks"],
+      "excluded_roles": ["architecture", "critical", "vision", "final-integration"],
+      "billing_channel": "ChatGPT Pro research preview with separate usage limits",
+      "public_metrics": {},
+      "confidence": "official-behavior-only"
+    },
+    {"id": "claude-fable-5", "provider": "Anthropic", "recommended_roles": ["lead", "complex-agentic"], "public_metrics": {"aa_intelligence": 60, "aa_blended_usd_per_1m": 7.70, "aa_tokens_per_second": 65, "aa_e2e_seconds": 132.16, "terminal_bench_2_1_accuracy": 83.8, "terminal_bench_total_cost": 552.67, "example_value": 79.8}, "confidence": "medium"},
+    {"id": "gpt-5.5", "provider": "OpenAI", "recommended_roles": ["lead", "complex-agentic"], "public_metrics": {"aa_intelligence": 55, "aa_blended_usd_per_1m": 4.35, "aa_tokens_per_second": 67, "aa_e2e_seconds": 72.62, "terminal_bench_2_1_accuracy": 83.1, "terminal_bench_total_cost": 2059.19, "example_value": 61.8}, "confidence": "medium"},
+    {"id": "grok-4.5", "provider": "xAI", "recommended_roles": ["standard", "agentic-value"], "public_metrics": {"aa_intelligence": 54, "aa_blended_usd_per_1m": 1.35, "aa_tokens_per_second": 90, "aa_e2e_seconds": 17.74, "terminal_bench_2_1_accuracy": 79.3, "terminal_bench_total_cost": 134.09, "terminal_bench_hack_rate": -9.0, "example_value": 100.0}, "confidence": "medium-with-hack-penalty"},
+    {"id": "claude-opus-4.8", "provider": "Anthropic", "recommended_roles": ["lead", "review", "complex-agentic"], "public_metrics": {"aa_intelligence": 56, "aa_blended_usd_per_1m": 3.85, "aa_tokens_per_second": 58, "aa_e2e_seconds": 45.91, "terminal_bench_2_1_accuracy": 78.9, "terminal_bench_total_cost": 286.94, "example_value": 91.3}, "confidence": "medium"},
+    {"id": "gpt-5.6-terra", "provider": "OpenAI", "recommended_roles": ["standard", "exploration", "repo-implementation"], "public_metrics": {"aa_intelligence": 55, "aa_blended_usd_per_1m": 2.17, "aa_tokens_per_second": 136, "aa_e2e_seconds": 141.16, "terminal_bench_2_1_accuracy": 78.4, "terminal_bench_total_cost": 421.15, "example_value": 73.9}, "confidence": "high-for-codex"},
+    {"id": "muse-spark-1.1", "provider": "Meta", "recommended_roles": ["fast", "standard", "agentic-value"], "public_metrics": {"aa_intelligence": 51, "aa_blended_usd_per_1m": 0.78, "aa_tokens_per_second": 110, "aa_e2e_seconds": 24.10, "terminal_bench_2_1_accuracy": 76.2, "terminal_bench_total_cost": 198.05, "example_value": 94.0}, "confidence": "medium"},
+    {"id": "gpt-5.6-luna", "provider": "OpenAI", "recommended_roles": ["fast", "standard", "high-volume"], "public_metrics": {"aa_intelligence": 51, "aa_blended_usd_per_1m": 0.87, "aa_tokens_per_second": 187, "aa_e2e_seconds": 83.47, "terminal_bench_2_1_accuracy": 75.7, "terminal_bench_total_cost": 241.45, "example_value": 79.9}, "confidence": "high-for-codex"},
+    {"id": "claude-sonnet-5", "provider": "Anthropic", "recommended_roles": ["standard", "review"], "public_metrics": {"aa_intelligence": 53, "aa_blended_usd_per_1m": 1.54, "aa_tokens_per_second": 86, "aa_e2e_seconds": 199.71, "terminal_bench_2_1_accuracy": 74.6, "terminal_bench_total_cost": 288.18, "example_value": 70.6}, "confidence": "medium"},
+    {"id": "gemini-3-pro", "provider": "Google", "recommended_roles": ["standard", "multilingual"], "public_metrics": {"terminal_bench_2_1_accuracy": 73.9, "terminal_bench_total_cost": 224.44}, "confidence": "medium-low-missing-current-price-row"},
+    {"id": "glm-5.1", "provider": "Z.ai", "recommended_roles": ["fast", "standard-value"], "public_metrics": {"aa_intelligence": 40, "aa_blended_usd_per_1m": 0.90, "aa_tokens_per_second": 62, "aa_e2e_seconds": 70.79, "terminal_bench_2_1_accuracy": 58.7, "terminal_bench_total_cost": 277.14, "example_value": 52.2}, "confidence": "medium"},
+    {"id": "kimi-k3", "provider": "Kimi", "recommended_roles": ["lead-candidate", "long-context"], "public_metrics": {"aa_intelligence": 57, "aa_blended_usd_per_1m": 2.31, "aa_tokens_per_second": 62, "aa_e2e_seconds": 42.30}, "confidence": "medium-low-no-comparable-terminal-row"},
+    {"id": "qwen3.7-max", "provider": "Alibaba", "recommended_roles": ["standard-value", "high-throughput"], "public_metrics": {"aa_intelligence": 46, "aa_blended_usd_per_1m": 1.43, "aa_tokens_per_second": 202, "aa_e2e_seconds": 16.81}, "confidence": "medium-low-no-comparable-terminal-row"},
+    {"id": "minimax-m3", "provider": "MiniMax", "recommended_roles": ["fast-value", "bounded-edits"], "public_metrics": {"aa_intelligence": 44, "aa_blended_usd_per_1m": 0.22, "aa_tokens_per_second": 85, "aa_e2e_seconds": 31.36}, "confidence": "medium-low-no-comparable-terminal-row"},
+    {"id": "deepseek-v4-pro", "provider": "DeepSeek", "recommended_roles": ["fast-value", "bounded-edits"], "public_metrics": {"aa_intelligence": 44, "aa_blended_usd_per_1m": 0.18, "aa_tokens_per_second": 62, "aa_e2e_seconds": 80.52}, "confidence": "medium-low-no-comparable-terminal-row"}
+  ]
+}

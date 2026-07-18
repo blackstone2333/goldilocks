@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.2.3+codex.20260718124914",
+  "version": "0.2.4+codex.20260718144946",
   "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
   "author": {
     "name": "Charles Roc"
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Goldilocks",
     "shortDescription": "Minimum process with constant quality",
-    "longDescription": "Provides thirteen familiar workflow entry skills plus a Goldilocks router backed by six shared progressive-disclosure engines and an on-demand continuity protocol. It preserves brainstorming, planning, specs, debugging memory, TDD, worktrees, delegation, review, verification, handoff, branch finishing, and skill-writing coverage while keeping Direct work free of ceremony.",
+    "longDescription": "Provides thirteen familiar workflow entry skills plus a Goldilocks router backed by six shared progressive-disclosure engines, adaptive continuity, parallel-first execution routing, and task-specific model value selection. It preserves full quality while delegating eligible implementation and tests to efficient workers and keeping Lead review and integration.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [

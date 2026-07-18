@@ -6,11 +6,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.2.3"
+RELEASE_VERSION = "0.2.4"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
 CONTINUITY = SKILLS / "goldilocks" / "references" / "continuity.md"
+MODEL_ROUTING = SKILLS / "goldilocks" / "references" / "model-routing.md"
+MODEL_REGISTRY = SKILLS / "goldilocks" / "assets" / "model-registry.json"
+MODEL_SURVEY = ROOT / "docs" / "model-routing-survey-2026-07-18.md"
 TEMPLATE_ASSETS = {
     "project-map.md",
     "work-packet.md",
@@ -143,6 +146,9 @@ for required in [
     CLAUDE_PLUGIN,
     MAIN,
     CONTINUITY,
+    MODEL_ROUTING,
+    MODEL_REGISTRY,
+    MODEL_SURVEY,
     CASES,
     RESULTS,
     ROOT / "docs" / "installation.md",
@@ -252,6 +258,66 @@ if CONTINUITY.is_file():
         if required_text not in continuity_text:
             fail(f"continuity protocol lacks required contract: {required_text}")
 
+if MODEL_ROUTING.is_file():
+    routing_text = MODEL_ROUTING.read_text(encoding="utf-8")
+    for required_text in [
+        "quality gate",
+        "Pareto",
+        "expected cost per successful delivery",
+        "confidence",
+        "recency",
+        "local evidence",
+        "billing channel",
+        "gpt-5.3-codex-spark",
+        "separate usage limits",
+        "test authoring",
+        "combined verification",
+    ]:
+        if required_text not in routing_text:
+            fail(f"model routing lacks required contract: {required_text}")
+
+registry = load_json(MODEL_REGISTRY)
+if registry:
+    if registry.get("as_of") != "2026-07-18":
+        fail("model registry must carry its evidence date")
+    if len(registry.get("sources", [])) < 8:
+        fail("model registry needs broad public benchmark and pricing sources")
+    model_ids = {model.get("id") for model in registry.get("models", [])}
+    for model_id in [
+        "gpt-5.3-codex-spark",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
+        "claude-fable-5",
+        "grok-4.5",
+        "muse-spark-1.1",
+    ]:
+        if model_id not in model_ids:
+            fail(f"model registry lacks representative model: {model_id}")
+    task_profiles = registry.get("task_profiles", {})
+    for profile in [
+        "mechanical_edit",
+        "test_authoring",
+        "repo_implementation",
+        "exploration",
+        "review_security",
+        "frontend_multimodal",
+    ]:
+        if profile not in task_profiles:
+            fail(f"model registry lacks task-specific scoring profile: {profile}")
+
+orchestrate_path = SKILLS / "goldilocks" / "references" / "orchestrate.md"
+if orchestrate_path.is_file():
+    orchestrate_text = orchestrate_path.read_text(encoding="utf-8")
+    for required_text in [
+        "routing pass after planning",
+        "default to parallel",
+        "state the serial reason",
+        "test authoring and focused test execution",
+        "model-routing.md",
+    ]:
+        if required_text not in orchestrate_text:
+            fail(f"orchestrate engine lacks parallel-first contract: {required_text}")
+
 for engine in sorted(ENGINES - {"evolve"}):
     engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"
     if engine_path.is_file() and "evolve.md" not in engine_path.read_text(encoding="utf-8"):
@@ -284,6 +350,20 @@ if verification_entry.is_file():
         fail("verification entry must exclude clear Direct edits from implicit triggering")
     if "For clear Direct work, do not load another engine" not in verification_text:
         fail("verification entry must degrade safely when Direct work invokes it explicitly")
+
+executing_entry = SKILLS / "executing-plans" / "SKILL.md"
+if executing_entry.is_file():
+    executing_text = executing_entry.read_text(encoding="utf-8")
+    if "orchestrate.md" not in executing_text:
+        fail("executing-plans must route multi-unit plans through orchestration")
+    if "eligible independent units default to workers" not in executing_text:
+        fail("executing-plans must not silently assign every unit to Lead")
+    if "delegate by default" in executing_text:
+        fail("executing-plans retains the v0.2.3 anti-delegation bias")
+
+writing_entry = SKILLS / "writing-plans" / "SKILL.md"
+if writing_entry.is_file() and "parallel waves" not in writing_entry.read_text(encoding="utf-8"):
+    fail("writing-plans must expose routing-ready parallel waves")
 
 if MAIN.is_file() and word_count(MAIN) > 650:
     fail(f"main router exceeds 650 words: {word_count(MAIN)}")

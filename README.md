@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.3-D4A72C" alt="Version 0.2.3">
+  <img src="https://img.shields.io/badge/version-0.2.4-D4A72C" alt="Version 0.2.4">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -31,6 +31,8 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Decision-frontier questions:** ask only when an answer can materially change the end state, safety, scope, or authorization.
 - **Ideas without scope creep:** useful adjacent ideas are preserved for later rather than silently expanding the current task.
 - **Evidence before completion:** confidence, old test output, and agent reports never replace fresh evidence for material claims.
+- **Parallel when earned:** after planning, independent meaningful units default to capable workers while the Lead keeps architecture, review, and integration.
+- **Model value routing:** task-specific quality gates come before price; Codex Pro prefers GPT-5.3-Codex-Spark for eligible Fast work on its separate usage channel.
 
 ## Evidence: Goldilocks vs Superpowers
 
@@ -112,6 +114,8 @@ The compatibility entries progressively disclose six shared engines:
 
 For work that must survive a session or be handed to another engineer, the engines share a small **Continuity Protocol**. It reuses the repository's existing docs layout when possible; otherwise it can keep a project structure map, compact work packet or split spec/plan/handoff, selective debug memory, deferred ideas, and a user-facing changelog. Direct tasks do not create workflow records by default, but can still create or update documentation when it is the deliverable or necessary for correctness. The protocol adds neither another visible Skill nor another engine.
 
+For multi-unit plans, a shared **Model Routing Protocol** assigns mechanical code, focused tests, fixtures, and exploration to suitable Fast/Standard workers while the Lead retains complex core logic and combined verification. Selection uses a quality gate, public and local evidence, expected cost per successful delivery, latency, confidence, recency, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md).
+
 See [the v0.2 capability and trigger design](docs/v0.2-capability-trigger-engine.md).
 
 ## Validate locally
@@ -140,7 +144,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.2.3`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while the new continuity behavior gathers long-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.2.4`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while continuity and parallel model routing gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 
@@ -148,6 +152,7 @@ Next iterations will focus on:
 - expanding the benchmark into larger repositories and additional languages;
 - adding more repetitions before making broad public performance claims;
 - validating the continuity protocol on long-running projects and cross-agent handoffs;
+- measuring parallel routing by wall-clock saving, successful delivery cost, and integration defects;
 - preserving Superpowers entry compatibility while keeping the Direct path truly direct.
 
 ## License and influences

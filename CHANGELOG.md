@@ -2,6 +2,27 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.2.4 — 2026-07-18
+
+### Added
+
+- Added a parallel-first routing pass after multi-unit plans: eligible independent work defaults to workers instead of silently accumulating on the Lead.
+- Added task-specific model scoring based on a quality gate, public and local evidence, confidence, recency, expected cost per successful delivery, latency, and a Pareto shortlist.
+- Added a Codex adapter that prefers `gpt-5.3-codex-spark` for eligible Fast text-only work when its separate usage limits are available.
+- Added a dated public model registry and research survey covering independent coding benchmarks and official pricing sources across major providers.
+
+### Changed
+
+- Fast workers now preferentially receive mechanical implementation, test authoring, focused test execution, fixtures, and read-heavy exploration.
+- Lead retains architecture, complex shared logic, Critical work, diff review, conflict resolution, combined verification, and final integration.
+- Serial execution of an otherwise eligible multi-unit plan must state why coordination cost exceeds the saving.
+- Public model rankings are advisory; local repository evidence and current host availability override the dated seed.
+
+### Compatibility and evidence
+
+- The visible surface remains fourteen Skills and six engines. Model routing is a shared protocol and zero-default-context registry asset.
+- Existing published runtime certification remains the v0.2.2 result; v0.2.4 requires new real-project evidence before performance claims are expanded.
+
 ## 0.2.3 — 2026-07-18
 
 ### Added

@@ -5,4 +5,4 @@ description: Use when requirements are sufficiently settled and a multi-step imp
 
 # Writing Plans
 
-Read the planning section of [build.md](../goldilocks/references/build.md). Inspect the touched flow, then write coherent implementation units, affected areas, acceptance checks, dependencies, and integration order. Match detail to risk and handoff needs. Avoid microtask explosions, repeated context, speculative code, and mandatory plan files. If material design is unresolved, route to alignment first.
+Read the planning section of [build.md](../goldilocks/references/build.md). Inspect the touched flow, then write coherent units, affected areas, acceptance checks, dependencies, ownership class, and integration order. For multi-unit work, expose independence and parallel waves so execution can route workers before Lead starts coding everything. Avoid microtask explosions and speculative detail; unresolved material design returns to alignment.

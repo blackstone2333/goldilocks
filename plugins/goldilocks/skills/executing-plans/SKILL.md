@@ -5,4 +5,4 @@ description: Use when a written implementation plan already exists and the user 
 
 # Executing Plans
 
-Read [build.md](../goldilocks/references/build.md) and [prove.md](../goldilocks/references/prove.md). Check the plan against current code, surface genuine blockers, then execute coherent units continuously with focused checks. Do not follow an unsafe or stale step blindly, require a separate session, delegate by default, or ask to continue after every microstep. Finish with fresh integrated verification.
+Read [build.md](../goldilocks/references/build.md), [orchestrate.md](../goldilocks/references/orchestrate.md), and [prove.md](../goldilocks/references/prove.md). Check the plan against current code, then route it: eligible independent units default to workers; Lead keeps complex shared judgment. Avoid microstep agents and overlapping writes. Execute continuously, review actual diffs and evidence, and finish with fresh combined verification.

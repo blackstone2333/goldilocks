@@ -1,6 +1,6 @@
 # Orchestrate
 
-Work inline unless coordination has positive net value:
+Run a routing pass after planning whenever work contains multiple coherent units. Keep Direct or one-unit work inline. When two or more meaningful units are independent or have stable interfaces and exceed their setup/review cost, default to parallel; if keeping eligible work serial, state the serial reason.
 
 `benefit = wall-clock saving + quality gain - setup - context transfer - review - integration risk`
 
@@ -18,11 +18,15 @@ Skip a worktree when the current workspace is already isolated or setup and merg
 
 Parallelize only workstreams that are independent or have stable declared interfaces, can be reviewed as meaningful units, and will not edit the same fragile surface. Define shared decisions, ownership, integration order, and combined acceptance first. Keep overlapping work serial.
 
+Prefer delegating read-heavy exploration, mechanical implementation, test authoring and focused test execution, fixtures, and bounded known-pattern work. The Lead keeps the complex core when judgment or shared interfaces make delegation risky; it should not implement every unit merely because it can.
+
 Every delegated brief states objective, non-goals, allowed scope, relevant project patterns, interfaces, acceptance checks, expected evidence, and forbidden external or destructive actions. Give agents only task-local context; the Lead owns architecture, shared interfaces, conflicts, integration, and final judgment.
 
 When workstreams or sessions require durable coordination, read [continuity.md](continuity.md). Give each owner the relevant packet or split plan, keep shared interfaces in one authoritative place, and update handoff state only at coherent milestones.
 
 ## Route by capability
+
+Read [model-routing.md](model-routing.md) when multiple models, billing channels, or capability levels are available. Apply its quality gate before price, then use the Pareto shortlist and local evidence.
 
 Use host-declared capability when available:
 

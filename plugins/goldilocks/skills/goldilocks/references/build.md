@@ -27,6 +27,8 @@ Keep each unit coherent and independently checkable. Fold setup, documentation, 
 
 When executing an existing plan, inspect it against current code first. Resolve genuine blockers, then execute coherent units continuously. Pause only for missing authority, material ambiguity, an unsafe plan, or an external dependency; do not ask “continue?” after every unit.
 
+Before the Lead starts implementing a multi-unit plan, route each unit by independence, capability, model value, acceptance, and integration order through [orchestrate.md](orchestrate.md). The plan should expose parallel waves rather than silently assigning every unit to the main model.
+
 ## Test-first proportionally
 
 For bugs and non-trivial behavior, define the smallest acceptance or regression check and observe it fail for the expected reason when practical and cheap. Implement only enough to pass, then refactor while keeping it green.

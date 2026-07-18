@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.3-D4A72C" alt="版本 0.2.3">
+  <img src="https://img.shields.io/badge/version-0.2.4-D4A72C" alt="版本 0.2.4">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -31,6 +31,8 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 - **只问关键问题：** 只有答案会实质改变终局、安全、范围或授权时才询问用户。
 - **记录新想法但不扩张范围：** 有价值的旁支想法会留到后续迭代，不会偷偷塞进当前任务。
 - **证据先于完成声明：** 信心、旧测试结果和子代理汇报都不能替代针对当前结果的新证据。
+- **该并行时并行：** 计划完成后，独立且有意义的单元默认交给合适的工作模型，Lead 保留架构、审核与集成。
+- **模型性价比路由：** 先过任务质量门，再比较成本；Codex Pro 对符合条件的 Fast 工作优先使用独立额度通道的 GPT-5.3-Codex-Spark。
 
 ## 证据：Goldilocks vs Superpowers
 
@@ -112,6 +114,8 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 
 对于需要跨会话推进或交给其他工程师接手的工作，六个引擎共享一套轻量的 **Continuity Protocol（连续性协议）**。它优先复用仓库现有文档结构；没有约定时，才按需保存项目结构图、单一工作包或拆分的 spec/plan/handoff、精选 debug 经验、延期想法和面向用户的 changelog。Direct 任务默认不创建工作流记录，但当文档本身是交付物或正确性所需时，模型仍可自主创建或更新文档。它也不会增加新的可见 Skill 或执行引擎。
 
+针对多单元计划，共享的 **Model Routing Protocol（模型路由协议）** 会把机械代码、聚焦测试、fixture 和探索交给合适的 Fast/Standard 工作模型，Lead 保留复杂核心与组合验证。模型选择综合质量门、公开与本地证据、每次成功交付成本、延迟、置信度、时效性和 Pareto 候选集。详见[模型路由公开筛查报告](docs/model-routing-survey-2026-07-18.md)。
+
 设计细节见 [v0.2 能力与触发引擎](docs/v0.2-capability-trigger-engine.md)。
 
 ## 本地验证
@@ -140,7 +144,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.2.3`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，新连续性能力还需要积累长期项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.2.4`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，连续性和并行模型路由还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 
@@ -148,6 +152,7 @@ Goldilocks 现已更新至 `v0.2.3`。现有证据表明，它能够更好地替
 - 扩展到更大的真实仓库和更多编程语言；
 - 增加重复次数，再考虑更广泛的性能声明；
 - 在长期项目和跨 Agent 交接中验证连续性协议；
+- 用实际耗时、每次成功交付成本和集成缺陷衡量并行路由；
 - 保持 Superpowers 入口兼容，同时确保 Direct 路径始终足够直接。
 
 ## 许可证与理念来源
