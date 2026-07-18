@@ -122,7 +122,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 仍然是 `v0.2.2`。现有证据支持它在已测试范围内是更好的 Superpowers 替代方案，但不主张普遍优于所有可能的工作流，也不需要急着发布 `1.0`。
+Goldilocks 仍处于 `v0.2.2`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。我们仍需要更多真实项目的测试和反馈，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

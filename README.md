@@ -122,7 +122,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks remains `v0.2.2`. The evidence supports a better Superpowers replacement on the tested surface, not universal superiority over every possible workflow and not a reason to rush `1.0`.
+Goldilocks remains at `v0.2.2`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. We still need testing and feedback from more real projects; [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 
