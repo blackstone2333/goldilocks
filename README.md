@@ -116,6 +116,67 @@ For work that must survive a session or be handed to another engineer, the engin
 
 For multi-unit plans, a shared **Model Routing Protocol** assigns mechanical code, focused tests, fixtures, and exploration to suitable Fast/Standard workers while the Lead retains complex core logic and combined verification. Selection uses a quality gate, public and local evidence, expected cost per successful delivery, latency, confidence, recency, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md).
 
+## Public model-routing seed
+
+The following seed is dated **2026-07-18**. It is an advisory starting point for routing, not a permanent leaderboard or an instruction to call a named model blindly. Availability, tool access, context, modality, language, data policy, and task risk are hard gates; recent local evidence on the same repository and task shape overrides this public seed. Unlisted models remain eligible when they clear the same gates.
+
+### Selection standard
+
+1. Apply the hard gates above.
+2. Reject candidates below the task-specific quality floor, even when they are free.
+3. Estimate quality with a weighted geometric mean so a critical weakness cannot hide inside a high average: `Q = 100 × product(score_i ^ weight_i)`.
+4. Estimate full successful-delivery cost rather than raw token price: `CostSuccess = (direct + retries + review + integration) / P(success)`.
+5. Keep the quality/cost/latency Pareto frontier, then use a logarithmic value score only as a tie-breaker: `Value = Q^1.5 × reliability × confidence / ((1 + ln(1 + CostSuccess/Cref))^0.65 × (1 + ln(1 + latency/Lref))^0.35)`.
+
+Subscription quota is treated as opportunity cost, not zero cost. A separate usage channel lowers cost but never lowers the quality or safety floor. Evidence confidence falls for stale data, mismatched versions or agent harnesses, small samples, missing domain evidence, and results that have not been reproduced locally.
+
+### Task profiles and starting quality floors
+
+| Profile | Default role | Floor | Evidence emphasized |
+|---|---|---:|---|
+| Mechanical edits | Fast | 65 | local acceptance, Aider edit correctness, format reliability, speed |
+| Test authoring | Fast or Standard | 70 | local regression/mutation detection, SWE-bench, Terminal-Bench, edit correctness |
+| Repository implementation | Standard | 75 | SWE-bench, Terminal-Bench, local repository success, edit correctness |
+| Exploration | Fast | 60 | local summary usefulness, tool reliability, speed, context fit |
+| Review and security | Lead | 85 | local defects caught, repository-agent evidence, reasoning and domain-security evidence |
+| Frontend and multimodal | Standard or Lead | 75 | local visual acceptance, domain evidence, modality and tool reliability |
+
+These are starting floors, not universal pass marks. Critical work is never assigned by value score alone. Tests may be written and run by a worker, but the Lead reviews their assertions and reruns the combined gate in the integrated workspace.
+
+### Initial role map
+
+| Role | Current seed | Lower-confidence candidates | Boundaries |
+|---|---|---|---|
+| Fast | GPT-5.3-Codex-Spark; GPT-5.6 Luna; Muse Spark 1.1; GLM-5.1 | MiniMax-M3; DeepSeek V4 Pro | Mechanical code, fixtures, focused tests, search, narrow documentation and deterministic checks |
+| Standard | GPT-5.6 Terra; Grok 4.5; GPT-5.6 Luna; Muse Spark 1.1; Claude Sonnet 5; Gemini 3 Pro; GLM-5.1 | Qwen3.7 Max | Stable-interface, bounded, independently verifiable cross-file implementation |
+| Lead | Claude Opus 4.8; Claude Fable 5; GPT-5.5 | Kimi K3 | Ambiguity, architecture, complex shared logic, Critical judgment, review, conflict resolution and final integration |
+
+In Codex Pro, GPT-5.3-Codex-Spark is the first candidate for eligible Fast text-only work because its separate usage limit reduces opportunity cost. It does **not** own architecture, ambiguous repository-wide changes, security or Critical decisions, vision/browser work, final review, or integration. Efficient Codex workers such as Terra or Luna are the fallback when Spark is unavailable or misses the quality gate. A host-selected Lead model that is absent from the dated registry can still serve as Lead after passing the same gates.
+
+### Comparable public data slice
+
+This small slice contains models that had both a comparable Terminal-Bench 2.1 entry and an Artificial Analysis row at collection time. “Example value” is normalized to the best eligible row in this slice; it is **not** a universal model ranking.
+
+| Model | Terminal-Bench 2.1 | TB reported cost | AA blended $/1M | AA end-to-end | Example value |
+|---|---:|---:|---:|---:|---:|
+| Grok 4.5 | 79.3% | $134.09 | $1.35 | 17.74s | 100.0 |
+| Muse Spark 1.1 | 76.2% | $198.05 | $0.78 | 24.10s | 94.0 |
+| Claude Opus 4.8 | 78.9% | $286.94 | $3.85 | 45.91s | 91.3 |
+| GPT-5.6 Luna | 75.7% | $241.45 | $0.87 | 83.47s | 79.9 |
+| Claude Fable 5 | 83.8% | $552.67 | $7.70 | 132.16s | 79.8 |
+| GPT-5.6 Terra | 78.4% | $421.15 | $2.17 | 141.16s | 73.9 |
+| Claude Sonnet 5 | 74.6% | $288.18 | $1.54 | 199.71s | 70.6 |
+| GPT-5.5 | 83.1% | $2,059.19 | $4.35 | 72.62s | 61.8 |
+| GLM-5.1 | 58.7% | $277.14 | $0.90 | 70.79s | 52.2 |
+
+Grok 4.5's Terminal-Bench submission reported a `-9.0%` hack adjustment, so the registry applies a reliability penalty. Gemini 3 Pro had a comparable Terminal-Bench result but no matching current price row. Kimi K3, Qwen3.7 Max, MiniMax-M3, and DeepSeek V4 Pro had useful broad metrics but no comparable current Terminal-Bench row, so they remain bake-off candidates instead of scored winners.
+
+The evidence set includes SWE-bench, Terminal-Bench, Aider Polyglot, LiveCodeBench, Artificial Analysis, official capability documentation, and provider pricing. Inspect the [machine-readable model registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json) and the [full survey with source links and limitations](docs/model-routing-survey-2026-07-18.md).
+
+### Improve the seed
+
+[Open an issue](https://github.com/blackstone2333/goldilocks/issues) when public or local evidence contradicts this map. Useful reports include the exact model/version/provider, task profile, agent harness and tools, reasoning level, sample count, pass rate, token or monetary cost, wall-clock latency, retries, review effort, and integration defects. Reproducible repository-local results are more valuable than another broad aggregate score.
+
 See [the v0.2 capability and trigger design](docs/v0.2-capability-trigger-engine.md).
 
 ## Validate locally

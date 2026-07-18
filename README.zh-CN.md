@@ -116,6 +116,67 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 
 针对多单元计划，共享的 **Model Routing Protocol（模型路由协议）** 会把机械代码、聚焦测试、fixture 和探索交给合适的 Fast/Standard 工作模型，Lead 保留复杂核心与组合验证。模型选择综合质量门、公开与本地证据、每次成功交付成本、延迟、置信度、时效性和 Pareto 候选集。详见[模型路由公开筛查报告](docs/model-routing-survey-2026-07-18.md)。
 
+## 公开模型路由种子
+
+下面的种子数据截至 **2026-07-18**。它是模型路由的初始参考，不是永久排行榜，也不意味着模型必须机械地调用某个名字。可用性、工具权限、上下文、模态、语言、数据政策和任务风险属于硬门槛；同仓库、同任务形态的近期本地证据优先于公开种子。未列出的模型只要通过同样的门槛，仍然可以参与选择。
+
+### 选择标准
+
+1. 先检查上述硬门槛。
+2. 低于任务质量线的候选直接淘汰，即使免费也不选。
+3. 使用加权几何平均估算质量，避免关键短板被平均数掩盖：`Q = 100 × product(score_i ^ weight_i)`。
+4. 计算完整的成功交付成本，而不是只看 token 单价：`CostSuccess = (直接成本 + 重试 + 审核 + 集成) / P(success)`。
+5. 先保留质量、成本和延迟的 Pareto 候选集，再用对数性价比公式处理同档候选：`Value = Q^1.5 × reliability × confidence / ((1 + ln(1 + CostSuccess/Cref))^0.65 × (1 + ln(1 + latency/Lref))^0.35)`。
+
+订阅额度按机会成本计算，不视为零成本；独立额度通道可以降低成本，但不能降低质量或安全门槛。数据过时、模型版本或 Agent harness 不匹配、样本量太小、缺少领域证据、没有本地复现，都会降低结论置信度。
+
+### 任务画像与初始质量线
+
+| 任务画像 | 默认角色 | 质量线 | 重点证据 |
+|---|---|---:|---|
+| 机械编辑 | Fast | 65 | 本地验收、Aider 编辑正确率、格式可靠性、速度 |
+| 测试编写 | Fast 或 Standard | 70 | 本地回归/变异检测、SWE-bench、Terminal-Bench、编辑正确率 |
+| 仓库级实现 | Standard | 75 | SWE-bench、Terminal-Bench、本地仓库成功率、编辑正确率 |
+| 探索与调查 | Fast | 60 | 本地摘要价值、工具可靠性、速度、上下文适配 |
+| 审查与安全 | Lead | 85 | 本地缺陷发现、仓库 Agent 证据、推理与安全领域证据 |
+| 前端与多模态 | Standard 或 Lead | 75 | 本地视觉验收、领域证据、模态与工具可靠性 |
+
+这些只是初始质量线，不是所有环境通用的考试分数。Critical 工作不能只凭性价比分配。测试可以交给工作模型编写和局部执行，但 Lead 必须审核断言，并在集成工作区重跑组合验证。
+
+### 初始角色划分
+
+| 角色 | 当前种子 | 较低置信度候选 | 工作边界 |
+|---|---|---|---|
+| Fast | GPT-5.3-Codex-Spark；GPT-5.6 Luna；Muse Spark 1.1；GLM-5.1 | MiniMax-M3；DeepSeek V4 Pro | 机械代码、fixture、聚焦测试、搜索、窄范围文档和确定性检查 |
+| Standard | GPT-5.6 Terra；Grok 4.5；GPT-5.6 Luna；Muse Spark 1.1；Claude Sonnet 5；Gemini 3 Pro；GLM-5.1 | Qwen3.7 Max | 接口稳定、边界明确、可以独立验收的跨文件实现 |
+| Lead | Claude Opus 4.8；Claude Fable 5；GPT-5.5 | Kimi K3 | 模糊需求、架构、复杂共享逻辑、Critical 判断、审查、冲突处理和最终集成 |
+
+在 Codex Pro 中，GPT-5.3-Codex-Spark 因独立使用额度降低了机会成本，是符合条件的 Fast 纯文本任务的第一候选。它**不负责**架构、模糊的仓库级修改、安全或 Critical 决策、视觉/浏览器工作、最终审查和集成。Spark 不可用或达不到质量线时，优先考虑 Terra、Luna 等高效 Codex 工作模型。宿主选择但未出现在当前注册表里的高级主模型，只要通过同样的门槛，仍然可以承担 Lead。
+
+### 可比公开数据切片
+
+这份小型切片只包含采集时同时拥有可比 Terminal-Bench 2.1 条目和 Artificial Analysis 数据的模型。“示例性价比”只在这个可比集合里归一化，**不是通用模型排行榜**。
+
+| 模型 | Terminal-Bench 2.1 | TB 报告成本 | AA 混合 $/1M | AA 端到端延迟 | 示例性价比 |
+|---|---:|---:|---:|---:|---:|
+| Grok 4.5 | 79.3% | $134.09 | $1.35 | 17.74s | 100.0 |
+| Muse Spark 1.1 | 76.2% | $198.05 | $0.78 | 24.10s | 94.0 |
+| Claude Opus 4.8 | 78.9% | $286.94 | $3.85 | 45.91s | 91.3 |
+| GPT-5.6 Luna | 75.7% | $241.45 | $0.87 | 83.47s | 79.9 |
+| Claude Fable 5 | 83.8% | $552.67 | $7.70 | 132.16s | 79.8 |
+| GPT-5.6 Terra | 78.4% | $421.15 | $2.17 | 141.16s | 73.9 |
+| Claude Sonnet 5 | 74.6% | $288.18 | $1.54 | 199.71s | 70.6 |
+| GPT-5.5 | 83.1% | $2,059.19 | $4.35 | 72.62s | 61.8 |
+| GLM-5.1 | 58.7% | $277.14 | $0.90 | 70.79s | 52.2 |
+
+Grok 4.5 的 Terminal-Bench 提交报告了 `-9.0%` hack 调整，因此注册表对其可靠性施加惩罚。Gemini 3 Pro 有可比的 Terminal-Bench 结果，但缺少匹配的当前价格行。Kimi K3、Qwen3.7 Max、MiniMax-M3 和 DeepSeek V4 Pro 有值得关注的综合数据，但缺少完全可比的当前 Terminal-Bench 条目，因此只作为本地 bake-off 候选，不作为已评分赢家。
+
+证据来源包括 SWE-bench、Terminal-Bench、Aider Polyglot、LiveCodeBench、Artificial Analysis、官方能力文档和各提供商价格。可以直接检查[机器可读模型注册表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)以及[包含来源链接和局限性的完整筛查报告](docs/model-routing-survey-2026-07-18.md)。
+
+### 一起改进这份种子
+
+如果公开或本地证据与当前划分冲突，欢迎[提交 Issue](https://github.com/blackstone2333/goldilocks/issues)。有价值的报告最好包含：准确模型/版本/提供商、任务画像、Agent harness 与工具、推理等级、样本量、通过率、token 或金额成本、真实耗时、重试次数、审核投入和集成缺陷。同仓库可复现的实际结果，比再提供一个综合智力总分更有价值。
+
 设计细节见 [v0.2 能力与触发引擎](docs/v0.2-capability-trigger-engine.md)。
 
 ## 本地验证
