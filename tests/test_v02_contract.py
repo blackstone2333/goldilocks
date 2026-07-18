@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_VERSION = "0.2.3"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -146,6 +147,8 @@ for required in [
     RESULTS,
     ROOT / "docs" / "installation.md",
     ROOT / "docs" / "installation.zh-CN.md",
+    ROOT / "CHANGELOG.md",
+    ROOT / "CHANGELOG.zh-CN.md",
 ]:
     require_file(required)
 
@@ -163,8 +166,19 @@ claude_plugin = load_json(CLAUDE_PLUGIN)
 if claude_plugin:
     if claude_plugin.get("name") != "goldilocks":
         fail("Claude plugin name must be goldilocks")
-    if claude_plugin.get("version") != "0.2.2":
-        fail("Claude plugin version must remain 0.2.2")
+    if claude_plugin.get("version") != RELEASE_VERSION:
+        fail(f"Claude plugin version must be {RELEASE_VERSION}")
+
+codex_plugin = load_json(PLUGIN / ".codex-plugin" / "plugin.json")
+if codex_plugin:
+    codex_version = codex_plugin.get("version", "").split("+", 1)[0]
+    if codex_version != RELEASE_VERSION:
+        fail(f"Codex plugin base version must be {RELEASE_VERSION}")
+
+if claude_marketplace:
+    marketplace_plugins = claude_marketplace.get("plugins", [])
+    if marketplace_plugins and marketplace_plugins[0].get("version") != RELEASE_VERSION:
+        fail(f"Claude marketplace version must be {RELEASE_VERSION}")
 
 for readme_name in ["README.md", "README.zh-CN.md"]:
     readme_path = ROOT / readme_name
@@ -178,6 +192,18 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
         ]:
             if command not in readme:
                 fail(f"{readme_name} lacks installation command: {command}")
+        if f"version-{RELEASE_VERSION}" not in readme:
+            fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
+
+for changelog_name, marker in [
+    ("CHANGELOG.md", "Continuity Protocol"),
+    ("CHANGELOG.zh-CN.md", "连续性协议"),
+]:
+    changelog_path = ROOT / changelog_name
+    if changelog_path.is_file():
+        changelog = changelog_path.read_text(encoding="utf-8")
+        if RELEASE_VERSION not in changelog or marker not in changelog:
+            fail(f"{changelog_name} lacks the {RELEASE_VERSION} continuity release notes")
 
 for engine in sorted(ENGINES):
     require_file(SKILLS / "goldilocks" / "references" / f"{engine}.md")

@@ -8,7 +8,7 @@ Two evaluations support that claim. They answer different questions and must not
 
 ## Test 1 — instruction-level stress test
 
-This was the original five-arm design evaluation, filtered here to the requested Goldilocks/Superpowers head-to-head. Goldilocks was still named `just-necessary`; the result supports the architecture that became Goldilocks, not runtime performance of `v0.2.2`.
+This was the original five-arm design evaluation, filtered here to the requested Goldilocks/Superpowers head-to-head. Goldilocks was still named `just-necessary`; the result supports the architecture that became Goldilocks, not release runtime performance.
 
 ![Instruction-level head-to-head: Goldilocks predecessor versus Superpowers](assets/instruction-stress-head-to-head.svg)
 
@@ -37,7 +37,7 @@ The original report published scenario rows as whole points while preserving ful
 
 ## Test 2 — real agentic workflow certification
 
-This is the current `v0.2.2` runtime evidence: GPT-5.6 Terra at low reasoning, nine Baby/Mama/Papa tasks, three fresh isolated repositories per task, and 27 attempts for each workflow. The published head-to-head slice contains 54 valid model turns with zero infrastructure failures.
+This is the published `v0.2.2` runtime evidence: GPT-5.6 Terra at low reasoning, nine Baby/Mama/Papa tasks, three fresh isolated repositories per task, and 27 attempts for each workflow. The published head-to-head slice contains 54 valid model turns with zero infrastructure failures.
 
 ![Real agentic head-to-head: Goldilocks versus Superpowers](assets/agentic-certification-head-to-head.svg)
 

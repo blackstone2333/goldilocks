@@ -8,7 +8,7 @@ Goldilocks 对外只主张一个产品结论：在已测试的工作流范围内
 
 ## 测试一：指令层压力测试
 
-这是最初五方设计测试中 Goldilocks/Superpowers 的正面对照。当时 Goldilocks 还叫 `just-necessary`，因此这轮证明的是后来成为 Goldilocks 的架构设计，不是 `v0.2.2` 的真实运行性能。
+这是最初五方设计测试中 Goldilocks/Superpowers 的正面对照。当时 Goldilocks 还叫 `just-necessary`，因此这轮证明的是后来成为 Goldilocks 的架构设计，不是正式版本的真实运行性能。
 
 ![指令层正面对照：Goldilocks 前身与 Superpowers](assets/instruction-stress-head-to-head.svg)
 
@@ -37,7 +37,7 @@ Goldilocks 对外只主张一个产品结论：在已测试的工作流范围内
 
 ## 测试二：真实 Agent 工作流认证
 
-这是当前 `v0.2.2` 的真实运行证据：GPT-5.6 Terra / low，9 个 Baby/Mama/Papa 任务，每个任务使用 3 个全新隔离仓库，每套工作流共 27 次尝试。公开的正面对照切片共有 54 个有效模型 turn，基础设施失败为 0。
+这是公开的 `v0.2.2` 真实运行证据：GPT-5.6 Terra / low，9 个 Baby/Mama/Papa 任务，每个任务使用 3 个全新隔离仓库，每套工作流共 27 次尝试。公开的正面对照切片共有 54 个有效模型 turn，基础设施失败为 0。
 
 ![真实 Agent 正面对照：Goldilocks 与 Superpowers](assets/agentic-certification-head-to-head.svg)
 
