@@ -20,6 +20,8 @@ Parallelize only workstreams that are independent or have stable declared interf
 
 Every delegated brief states objective, non-goals, allowed scope, relevant project patterns, interfaces, acceptance checks, expected evidence, and forbidden external or destructive actions. Give agents only task-local context; the Lead owns architecture, shared interfaces, conflicts, integration, and final judgment.
 
+When workstreams or sessions require durable coordination, read [continuity.md](continuity.md). Give each owner the relevant packet or split plan, keep shared interfaces in one authoritative place, and update handoff state only at coherent milestones.
+
 ## Route by capability
 
 Use host-declared capability when available:

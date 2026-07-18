@@ -110,6 +110,8 @@ The compatibility entries progressively disclose six shared engines:
 5. **Prove** — review, verification, authorization, branch completion.
 6. **Evolve** — idea capture, retrospection, and Skill improvement.
 
+For work that must survive a session or be handed to another engineer, the engines share a small **Continuity Protocol**. It reuses the repository's existing docs layout when possible; otherwise it can keep a project structure map, compact work packet or split spec/plan/handoff, selective debug memory, deferred ideas, and a user-facing changelog. Direct tasks do not create workflow records by default, but can still create or update documentation when it is the deliverable or necessary for correctness. The protocol adds neither another visible Skill nor another engine.
+
 See [the v0.2 capability and trigger design](docs/v0.2-capability-trigger-engine.md).
 
 ## Validate locally
@@ -145,6 +147,7 @@ Next iterations will focus on:
 - lowering Mama/Papa test and verification overhead without weakening quality gates;
 - expanding the benchmark into larger repositories and additional languages;
 - adding more repetitions before making broad public performance claims;
+- validating the continuity protocol on long-running projects and cross-agent handoffs;
 - preserving Superpowers entry compatibility while keeping the Direct path truly direct.
 
 ## License and influences

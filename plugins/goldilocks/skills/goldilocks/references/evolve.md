@@ -12,6 +12,8 @@ Classify each mid-flight idea:
 
 Prefer a short final-handoff ledger. Update an existing local backlog or design note only when the task authorizes that write. Do not create external issues, messages, or tickets without explicit authority.
 
+When an idea must survive the current session or the work already uses durable records, read [continuity.md](continuity.md) and append the minimum useful entry to the project's existing backlog or `docs/ideas.md`. Direct work keeps ideas in the final response.
+
 Record the idea, value, revisit trigger, and dependency in a few lines. Do not design speculative implementation or scaffold deferred work.
 
 ## Write and improve skills empirically

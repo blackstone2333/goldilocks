@@ -9,6 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
+CONTINUITY = SKILLS / "goldilocks" / "references" / "continuity.md"
+TEMPLATE_ASSETS = {
+    "project-map.md",
+    "work-packet.md",
+    "debug-note.md",
+}
 CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CLAUDE_PLUGIN = PLUGIN / ".claude-plugin" / "plugin.json"
 CASES = ROOT / "evals" / "trigger-cases.jsonl"
@@ -135,6 +141,7 @@ for required in [
     PLUGIN / ".codex-plugin" / "plugin.json",
     CLAUDE_PLUGIN,
     MAIN,
+    CONTINUITY,
     CASES,
     RESULTS,
     ROOT / "docs" / "installation.md",
@@ -174,6 +181,50 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
 
 for engine in sorted(ENGINES):
     require_file(SKILLS / "goldilocks" / "references" / f"{engine}.md")
+
+for template in sorted(TEMPLATE_ASSETS):
+    require_file(SKILLS / "goldilocks" / "assets" / template)
+
+markdown_assets = {
+    path.name
+    for path in (SKILLS / "goldilocks" / "assets").glob("*.md")
+}
+if markdown_assets != TEMPLATE_ASSETS:
+    fail(
+        "continuity template set mismatch: "
+        f"expected {sorted(TEMPLATE_ASSETS)}, found {sorted(markdown_assets)}"
+    )
+
+if MAIN.is_file():
+    main_text = MAIN.read_text(encoding="utf-8")
+    if "Direct: do not create workflow continuity documents by default" not in main_text:
+        fail("main router must keep Direct work free of default continuity overhead")
+    if "documentation is the deliverable" not in main_text:
+        fail("main router must preserve Direct documentation autonomy")
+    if "continuity.md" not in main_text:
+        fail("main router lacks conditional continuity routing")
+
+for engine in sorted(ENGINES):
+    engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"
+    if engine_path.is_file() and "continuity.md" not in engine_path.read_text(encoding="utf-8"):
+        fail(f"{engine} engine lacks conditional continuity routing")
+
+if CONTINUITY.is_file():
+    continuity_text = CONTINUITY.read_text(encoding="utf-8")
+    for required_text in [
+        "docs/PROJECT.md",
+        "docs/work/",
+        "docs/debug/",
+        "docs/ideas.md",
+        "CHANGELOG.md",
+        "Direct",
+        "Guarded",
+        "Critical",
+        "regression test",
+        "Do not create a debug note",
+    ]:
+        if required_text not in continuity_text:
+            fail(f"continuity protocol lacks required contract: {required_text}")
 
 for engine in sorted(ENGINES - {"evolve"}):
     engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"

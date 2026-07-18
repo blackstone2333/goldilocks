@@ -29,6 +29,8 @@ Avoid performative agreement, blind implementation, and reflexive dismissal. Rev
 
 Immediately before claiming complete, identify the command, runtime observation, or artifact inspection that proves each claim; run it fresh; read the full result; inspect the final diff and repository status. Another agent's report, an earlier pass, or confidence is not fresh evidence.
 
+If the work used durable records, read [continuity.md](continuity.md) and verify the spec, plan status, project map, idea separation, debug links, and handoff are current. Stale documentation is an incomplete handoff, but documentation never substitutes for runtime evidence.
+
 If a check cannot run or is forbidden, state what ran, what did not, why, and the exact claim that remains unverified. Do not claim completion.
 
 ## Finish a branch safely

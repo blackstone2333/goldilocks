@@ -23,7 +23,7 @@ Before adding a dependency, verify fit, maintenance, compatibility, licensing, b
 - Orchestrated: add ownership, stable interfaces, integration order, and combined acceptance.
 - Critical: durable design/plan with authority, rollback, risk controls, and approval.
 
-Keep each unit coherent and independently checkable. Fold setup, documentation, and configuration into the deliverable that needs them. Avoid implementation transcripts, artificial two-minute microsteps, and mandatory plan files. Create a durable plan only for handoff, long-running work, auditability, or costly decisions.
+Keep each unit coherent and independently checkable. Fold setup, documentation, and configuration into the deliverable that needs them. Avoid implementation transcripts, artificial two-minute microsteps, and mandatory plan files. For handoff, long-running work, auditability, costly decisions, or new-project structure, read [continuity.md](continuity.md) and create only the durable record earned by the work.
 
 When executing an existing plan, inspect it against current code first. Resolve genuine blockers, then execute coherent units continuously. Pause only for missing authority, material ambiguity, an unsafe plan, or an external dependency; do not ask “continue?” after every unit.
 

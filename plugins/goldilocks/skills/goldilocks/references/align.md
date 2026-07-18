@@ -37,4 +37,6 @@ Credentials, tool access, urgency, or “use your judgment” are not authority 
 
 Stop alignment when the frontier is empty or remaining branches are explicit non-goals. Restate the chosen end state, assumptions, evidence, risks, and deferred decisions, then return to execution. Do not implement while a material choice is silently assumed; do not demand ceremonial approval for an already clear Direct task.
 
+For a new project, costly architecture, cross-session decision, or handoff, read [continuity.md](continuity.md) and preserve the end-state contract, structure, and only costly-to-reverse rationale. Otherwise keep alignment inline.
+
 If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

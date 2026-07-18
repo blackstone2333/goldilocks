@@ -21,6 +21,8 @@ Re-evaluate as facts change; do not assign one workflow depth to an entire proje
 
 Add orchestration only when isolation, delegation, or parallelism has positive net value after setup, context transfer, review, and integration cost.
 
+Direct: do not create workflow continuity documents by default. Creating or updating documentation is still appropriate when documentation is the deliverable, project conventions require it, or omission would make the change misleading. For Guarded work that genuinely spans stages, Critical or Orchestrated work, cross-session handoff, or new-project architecture, read [continuity.md](references/continuity.md) and persist only the minimum useful state.
+
 ## Load only the needed engine
 
 - Material product, design, architecture, scope, or authority decisions: read [align.md](references/align.md).
@@ -35,7 +37,7 @@ Load multiple engines only when the stage genuinely crosses their boundaries. Ex
 ## Minimum complete loop
 
 1. Define the requested end state, constraints, non-goals, and acceptance evidence.
-2. Inspect the real project flow and existing solutions before inventing.
+2. Inspect the real project flow, structure, documentation, and existing solutions before inventing.
 3. Choose the smallest safe execution shape.
 4. Implement the smallest coherent change.
 5. Obtain fresh evidence for every completion claim.
