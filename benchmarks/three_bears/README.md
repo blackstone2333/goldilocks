@@ -1,6 +1,6 @@
 # Three Bears Benchmark
 
-An agentic benchmark for the question Goldilocks is supposed to answer: can a workflow use less process, time, and context without lowering the delivered quality?
+An agentic benchmark for the public Goldilocks claim: can it replace Superpowers with more reliable delivery and less quality-adjusted workflow cost?
 
 Every cell starts a real headless Codex session in a newly generated git repository. No task reuses a previous project's history, conversation, dependencies, working tree, or plugin cache. Workspaces and raw event streams are retained under `runs/` for audit and offline rescoring.
 
@@ -27,6 +27,8 @@ Each task ships a good and bad reference. `--selftest` proves the good reference
 | `grill` | Original Matt Pocock `grilling` primitive on the design task; inactive on coding tasks |
 
 The conditional activation avoids pretending Ponytail is a general design interview or Grill is a coding workflow. All five arms remain available in one matrix.
+
+The official product comparison is intentionally limited to `goldilocks` versus `superpowers`. The other arms remain available for independent exploration and are not ranked in the Goldilocks product claim.
 
 By default the external source paths are sibling repositories already used during Goldilocks development:
 
@@ -75,14 +77,28 @@ Low-cost smoke comparison:
 ```bash
 python3 benchmarks/three_bears/run.py \
   --task baby-docs \
-  --arms baseline,goldilocks \
+  --arms goldilocks,superpowers \
   --model gpt-5.6-terra \
   --reasoning low \
   --runs 1 \
   --workers 2
 ```
 
-Full first matrix:
+Full Goldilocks/Superpowers certification:
+
+```bash
+python3 benchmarks/three_bears/run.py \
+  --level all \
+  --arms goldilocks,superpowers \
+  --model gpt-5.6-terra \
+  --reasoning low \
+  --runs 3 \
+  --workers 3
+```
+
+That command runs 54 isolated cells. Cell order is deterministically randomized (`--seed 1729`) to reduce warm-cache and ordering bias. Start with one run per cell before paying for repetitions. Report medians only after at least three runs; use five or more when making broad public performance claims. Always publish cached and uncached input separately: a single warm-cache imbalance can dominate both latency and apparent cost.
+
+Optional exploratory five-arm matrix:
 
 ```bash
 python3 benchmarks/three_bears/run.py \
@@ -94,7 +110,7 @@ python3 benchmarks/three_bears/run.py \
   --workers 3
 ```
 
-That command runs 135 isolated cells. Cell order is deterministically randomized (`--seed 1729`) to reduce warm-cache and ordering bias. Start with one run per cell before paying for repetitions. Report medians only after at least three runs; use five or more when making public performance claims. Always publish cached and uncached input separately: a single warm-cache imbalance can dominate both latency and apparent cost.
+That optional command runs 135 isolated cells. Its additional arms are available for readers to evaluate themselves; they are not part of the official Goldilocks-versus-Superpowers claim.
 
 Recompute graders and summary tables without another model call:
 
@@ -104,12 +120,10 @@ python3 benchmarks/three_bears/run.py --rescore benchmarks/three_bears/runs/<tim
 
 Each run retains `metadata.json`, cell repositories, raw `events.jsonl`, stderr, per-cell results, `results.json`, `summary.json`, and `REPORT.md`.
 
-Published exploratory results:
+Published head-to-head evidence:
 
-- [2026-07-18 — Terra low full workflow certification, 135 cells](results/2026-07-18-terra-low-full-certification.md)
-- [2026-07-18 — GPT-5.6 Terra round 1](results/2026-07-18-gpt-5.6-terra-round-1.md)
-- [2026-07-18 — Custom-provider Terra reasoning sweep](results/2026-07-18-custom-terra-reasoning-sweep.md)
-- [2026-07-18 — Custom-provider GPT-5.6 high model sweep](results/2026-07-18-custom-high-model-sweep.md)
+- [Two-test Goldilocks versus Superpowers report](../GOLDILOCKS-VS-SUPERPOWERS.md)
+- [2026-07-18 — Terra low runtime certification, 54-turn published head-to-head slice](results/2026-07-18-terra-low-full-certification.md)
 
 ## Interpretation limits
 

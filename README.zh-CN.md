@@ -31,29 +31,31 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 - **记录新想法但不扩张范围：** 有价值的旁支想法会留到后续迭代，不会偷偷塞进当前任务。
 - **证据先于完成声明：** 信心、旧测试结果和子代理汇报都不能替代针对当前结果的新证据。
 
-## 当前证据
+## 证据：Goldilocks vs Superpowers
 
-Goldilocks `v0.2.2` 已使用 GPT-5.6 Terra / low 完成完整 Three Bears 矩阵：
+Goldilocks 对外只主张一个经过验证的窄结论：在已测试的工作流范围内，它是一个比 Superpowers 更可靠、更高效的**替代方案**。下面两轮验证回答不同问题，不把设计评分和真实运行成本混成一个总分。
 
-- Baby、Mama、Papa 三档共 9 个任务；
-- Baseline、Goldilocks、Superpowers、Ponytail、Grill 五个对照组；
-- 每个任务/工作流组合运行 3 个全新隔离项目；
-- 135 个有效模型 turn，0 次基础设施失败；
-- 全矩阵共记录 10,645,012 telemetry token。
+### 测试一：指令层压力测试
 
-| 工作流 | 质量 | 安全 | 成功交付 | 总 token | 非缓存输入 | Skill 活动 |
-|---|---:|---:|---:|---:|---:|---:|
-| **Goldilocks** | **27/27** | **100%** | **27** | 3,031,688 | 474,546 | 30 |
-| Baseline | 27/27 | 100% | 27 | 1,629,610 | 326,595 | 0 |
-| Grill | 27/27 | 100% | 27 | 1,653,856 | 262,677 | 3 |
-| Ponytail | 26/27 | 100% | 26 | 2,015,197 | 305,021 | 27 |
-| Superpowers | 8/27 | 88.9% | 8 | 2,314,661 | 476,286 | 87 |
+最初的设计测试包含 8 个隔离场景。当时 Goldilocks 还叫 `just-necessary`，因此这轮证明的是 Goldilocks 的架构来源，不是 `v0.2.2` 的真实运行性能。Goldilocks 设计平均得分 **98.9/100，Superpowers 为 79.2/100**；8 个场景全部领先，规则文本少 **86.2%**。
 
-Superpowers 的原始总成本看起来较低，是因为其中 19 格在修改代码前就停下，通常是在等待用户批准一个需求中已经足够明确的实现细节。在 Goldilocks 和 Superpowers 都成功交付的 8 格里，Goldilocks 少用 30.6% 总 token、少用 7.7% 时间、少用 28.6% 工具调用和 66.7% Skill 活动，但非缓存输入高 9.7%。
+<p align="center">
+  <img src="benchmarks/assets/instruction-stress-head-to-head.svg" width="960" alt="指令层压力测试：Goldilocks 前身在 8 个场景中全部领先 Superpowers，规则文本少 86.2%">
+</p>
 
-Goldilocks 并不是本测试中成本最低的方案。与 Baseline 相比，它累计多使用 86.0% 总 token 和 34.9% 时间。如何在不降低质量的前提下削减这部分开销，是后续 `v0.2.x` 的首要优化方向。
+### 测试二：真实 Agent 工作流认证
 
-可以继续阅读[完整认证报告](benchmarks/three_bears/results/2026-07-18-terra-low-full-certification.md)、[测试方法](benchmarks/three_bears/README.md)和[公开的逐格数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/)。
+当前 `v0.2.2` 使用 GPT-5.6 Terra / low 测试了 Baby、Mama、Papa 三档共 9 个任务；每个任务运行 3 个全新隔离项目，每套工作流 27 次尝试。完整探索实验共有 135 个有效 turn；公开的替代结论只使用其中 **54 个 Goldilocks/Superpowers 正面对照 turn**。
+
+<p align="center">
+  <img src="benchmarks/assets/agentic-certification-head-to-head.svg" width="960" alt="真实 Agent 工作流认证：Goldilocks 成功交付 27/27，Superpowers 为 8/27；按每次成功交付计算，Goldilocks 所有成本维度均更低">
+</p>
+
+Goldilocks **27/27** 成功交付，测得安全率 100%；Superpowers 成功 **8/27**，安全率 88.9%。Superpowers 有 19 次在修改源码前停止，因此只看原始总成本会错误奖励“没有交付”。
+
+在双方都成功的 8 个完全相同样本里，Goldilocks 少用 30.6% 总 token、7.7% 时间、28.6% 工具调用和 66.7% Skill 活动；非缓存输入高 9.7%，这是同成功样本中唯一没有领先的效率指标。把全部尝试（包括失败）计入并除以成功交付数后，Goldilocks 少用 61.2% 总 token、70.5% 非缓存输入、60.4% 时间、55.4% 工具调用和 89.8% Skill 活动。
+
+详细数据见[两轮正面对照报告](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)、[完整运行认证](benchmarks/three_bears/results/2026-07-18-terra-low-full-certification.md)、[测试方法](benchmarks/three_bears/README.md)、[正面对照数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)和[完整逐格审计数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/results.json)。
 
 ## 安装
 
@@ -109,7 +111,7 @@ python3 benchmarks/three_bears/run.py --selftest
 ```bash
 python3 benchmarks/three_bears/run.py \
   --task baby-docs \
-  --arms baseline,goldilocks \
+  --arms goldilocks,superpowers \
   --model gpt-5.6-terra \
   --reasoning low \
   --runs 1 \
@@ -120,7 +122,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 仍然是 `v0.2.2`。这轮通过代表有了更强证据，不代表已经普遍优于所有方案，更不需要急着发布 `1.0`。
+Goldilocks 仍然是 `v0.2.2`。现有证据支持它在已测试范围内是更好的 Superpowers 替代方案，但不主张普遍优于所有可能的工作流，也不需要急着发布 `1.0`。
 
 接下来的迭代重点：
 

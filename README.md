@@ -31,29 +31,31 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Ideas without scope creep:** useful adjacent ideas are preserved for later rather than silently expanding the current task.
 - **Evidence before completion:** confidence, old test output, and agent reports never replace fresh evidence for material claims.
 
-## Current evidence
+## Evidence: Goldilocks vs Superpowers
 
-Goldilocks `v0.2.2` completed the full Three Bears matrix on GPT-5.6 Terra at low reasoning:
+Goldilocks makes one deliberately narrow public claim: it is a more reliable and more efficient **Superpowers replacement** on the tested workflow surface. Two evaluations support that claim without mixing design scores with runtime measurements.
 
-- 9 tasks across Baby, Mama, and Papa difficulty;
-- Baseline, Goldilocks, Superpowers, Ponytail, and Grill arms;
-- 3 fresh isolated runs per task/arm cell;
-- 135 valid model turns, 0 infrastructure failures;
-- 10,645,012 telemetry tokens across the complete matrix.
+### Test 1 — instruction-level stress test
 
-| Arm | Quality | Safety | Successful turns | Total tokens | Uncached input | Skill activity |
-|---|---:|---:|---:|---:|---:|---:|
-| **Goldilocks** | **27/27** | **100%** | **27** | 3,031,688 | 474,546 | 30 |
-| Baseline | 27/27 | 100% | 27 | 1,629,610 | 326,595 | 0 |
-| Grill | 27/27 | 100% | 27 | 1,653,856 | 262,677 | 3 |
-| Ponytail | 26/27 | 100% | 26 | 2,015,197 | 305,021 | 27 |
-| Superpowers | 8/27 | 88.9% | 8 | 2,314,661 | 476,286 | 87 |
+The original design evaluation ran eight isolated scenarios. Goldilocks was still named `just-necessary`, so this is architectural lineage evidence rather than `v0.2.2` runtime evidence. The Goldilocks design averaged **98.9/100 versus 79.2/100**, led all eight scenarios, and used **86.2% less rule text**.
 
-The raw Superpowers totals look cheaper because 19 cells stopped before changing code, usually to request approval for an already specified implementation detail. On the eight cells both Goldilocks and Superpowers completed successfully, Goldilocks used 30.6% fewer total tokens, 7.7% less time, 28.6% fewer tool calls, and 66.7% less Skill activity, while using 9.7% more uncached input.
+<p align="center">
+  <img src="benchmarks/assets/instruction-stress-head-to-head.svg" width="960" alt="Instruction-level stress test: the Goldilocks predecessor leads Superpowers in all eight scenarios and uses 86.2 percent less rule text">
+</p>
 
-Goldilocks is not the cheapest arm in this suite. Against Baseline it used 86.0% more cumulative total tokens and 34.9% more time. Reducing that quality-preserving overhead is the main `v0.2.x` optimization target.
+### Test 2 — real agentic certification
 
-Read the [full certification report](benchmarks/three_bears/results/2026-07-18-terra-low-full-certification.md), the [benchmark methodology](benchmarks/three_bears/README.md), and the [per-cell published data](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/).
+The current `v0.2.2` plugin was tested on GPT-5.6 Terra at low reasoning across nine Baby/Mama/Papa tasks, three fresh isolated runs per task, and 27 attempts per workflow. The complete exploratory experiment contained 135 valid turns; the published replacement claim uses only the **54 Goldilocks/Superpowers head-to-head turns**.
+
+<p align="center">
+  <img src="benchmarks/assets/agentic-certification-head-to-head.svg" width="960" alt="Real agentic certification: Goldilocks delivered 27 of 27 attempts versus 8 of 27 for Superpowers and used less cost per successful delivery on every measured dimension">
+</p>
+
+Goldilocks delivered **27/27** attempts with 100% measured safety; Superpowers delivered **8/27** with 88.9% safety. Nineteen Superpowers attempts stopped before changing source code, so raw totals alone would reward non-delivery.
+
+On the eight exact cells both workflows completed, Goldilocks used 30.6% fewer total tokens, 7.7% less time, 28.6% fewer tool calls, and 66.7% less Skill activity. It used 9.7% more uncached input on that slice—the one comparable efficiency measure it did not win. Charging every attempt and dividing by successful deliveries, Goldilocks used 61.2% fewer total tokens, 70.5% less uncached input, 60.4% less time, 55.4% fewer tool calls, and 89.8% less Skill activity.
+
+Read the [two-test head-to-head report](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.md), the [full runtime certification](benchmarks/three_bears/results/2026-07-18-terra-low-full-certification.md), the [benchmark methodology](benchmarks/three_bears/README.md), the [head-to-head data](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json), and the [complete per-cell audit data](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/results.json).
 
 ## Install
 
@@ -109,7 +111,7 @@ Low-cost live smoke test:
 ```bash
 python3 benchmarks/three_bears/run.py \
   --task baby-docs \
-  --arms baseline,goldilocks \
+  --arms goldilocks,superpowers \
   --model gpt-5.6-terra \
   --reasoning low \
   --runs 1 \
@@ -120,7 +122,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks remains `v0.2.2`. Passing this suite is evidence, not a claim of universal superiority or a reason to rush `1.0`.
+Goldilocks remains `v0.2.2`. The evidence supports a better Superpowers replacement on the tested surface, not universal superiority over every possible workflow and not a reason to rush `1.0`.
 
 Next iterations will focus on:
 

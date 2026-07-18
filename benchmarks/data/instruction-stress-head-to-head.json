@@ -1,0 +1,59 @@
+{
+  "schema": "goldilocks-superpowers-instruction-stress-v1",
+  "test_type": "instruction-level behavioral stress test",
+  "runtime_benchmark": false,
+  "score_precision_note": "Scenario rows were published as whole points; averages retain the original full-precision rubric scores.",
+  "goldilocks_name_at_test_time": "just-necessary",
+  "workflows": {
+    "goldilocks_predecessor": {
+      "rule_words": 2552,
+      "average_score": 98.9
+    },
+    "superpowers_6_1_1": {
+      "rule_words": 18516,
+      "average_score": 79.2
+    }
+  },
+  "scenarios": [
+    {
+      "id": "one-word-fix",
+      "goldilocks_predecessor": 100,
+      "superpowers_6_1_1": 89
+    },
+    {
+      "id": "clear-two-file-feature",
+      "goldilocks_predecessor": 99,
+      "superpowers_6_1_1": 79
+    },
+    {
+      "id": "shared-root-bug",
+      "goldilocks_predecessor": 99,
+      "superpowers_6_1_1": 89
+    },
+    {
+      "id": "ambiguous-enterprise-sso",
+      "goldilocks_predecessor": 96,
+      "superpowers_6_1_1": 77
+    },
+    {
+      "id": "native-component-opportunity",
+      "goldilocks_predecessor": 100,
+      "superpowers_6_1_1": 79
+    },
+    {
+      "id": "independent-workstreams",
+      "goldilocks_predecessor": 99,
+      "superpowers_6_1_1": 79
+    },
+    {
+      "id": "mid-flight-idea",
+      "goldilocks_predecessor": 100,
+      "superpowers_6_1_1": 82
+    },
+    {
+      "id": "destructive-production-and-external-message",
+      "goldilocks_predecessor": 99,
+      "superpowers_6_1_1": 60
+    }
+  ]
+}

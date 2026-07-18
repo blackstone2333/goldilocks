@@ -1,6 +1,6 @@
-# Three Bears — Goldilocks v0.2.2 full workflow certification
+# Three Bears — Goldilocks v0.2.2 versus Superpowers certification
 
-This run is the first complete three-repetition matrix for Goldilocks. It is evidence for the `v0.2.2` workflow design, not a universal model or workflow ranking and not a `1.0` release gate.
+This report certifies one product claim: Goldilocks is a better Superpowers replacement on the tested workflow surface. It is not a universal model or workflow ranking and not a `1.0` release gate.
 
 ## Setup
 
@@ -9,20 +9,19 @@ This run is the first complete three-repetition matrix for Goldilocks. It is evi
 - Reasoning: `low`
 - Provider: isolated OpenAI-compatible custom Responses provider; endpoint and credentials omitted
 - Tasks: all 9 Three Bears tasks
-- Arms: Baseline, Goldilocks, Superpowers, Ponytail, Grill
-- Runs: 3 per task/arm cell
+- Compared workflows: Goldilocks and Superpowers
+- Runs: 3 per task/workflow cell
 - Workers: 3
 - Timeout: 1,200 seconds per cell
 - Seed: `1729`
-- Valid turns: 135/135
+- Published head-to-head turns: 54/54
+- Source exploratory experiment: 135/135 valid turns
 - Infrastructure failures: 0
-- Telemetry tokens: 10,645,012 total, 1,845,125 uncached input, 181,903 output
+- Published comparison telemetry: 5,346,349 total tokens, 950,832 uncached input
 - Goldilocks: `386cb4b`
 - Superpowers: `d884ae04`
-- Ponytail: `16f29800`
-- Matt Pocock Skills / Grill: `9603c1cc`
 
-Each cell ran in a freshly generated git repository with isolated Skill sources and a reduced provider-only Codex configuration. The deterministic graders were validated against good and bad references before model calls, then rerun offline after the matrix completed.
+Each cell ran in a freshly generated git repository with isolated Skill sources and a reduced provider-only Codex configuration. The deterministic graders were validated against good and bad references before model calls, then rerun offline after the matrix completed. The retained artifacts contain the complete exploratory experiment; all product conclusions and tables below use only the 54 Goldilocks/Superpowers turns.
 
 ## Result
 
@@ -31,12 +30,11 @@ Quality gates are read before efficiency. A cell that stops early, asks an unnec
 | Arm | Quality | Safety | Scope | Successful turns | Total tokens | Uncached input | Cumulative seconds | Tools | Skill activity |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | **Goldilocks** | **27/27** | **100%** | **100%** | **27** | 3,031,688 | 474,546 | 3,866.3 | 161 | 30 |
-| Baseline | 27/27 | 100% | 100% | 27 | 1,629,610 | 326,595 | 2,865.2 | 94 | 0 |
-| Grill | 27/27 | 100% | 100% | 27 | 1,653,856 | 262,677 | 2,724.5 | 94 | 3 |
-| Ponytail | 26/27 | 100% | 100% | 26 | 2,015,197 | 305,021 | 2,865.9 | 103 | 27 |
 | Superpowers | 8/27 | 88.9% | 100% | 8 | 2,314,661 | 476,286 | 2,890.3 | 107 | 87 |
 
 Goldilocks passed every Baby, Mama, and Papa cell. It preserved the Direct path on all three trivial documentation samples, reused existing helpers and standard-library mechanisms, repaired shared causes, stopped at material design decisions, and maintained the path-traversal and immediate-revocation safety boundaries.
+
+![Goldilocks versus Superpowers real agentic certification](../../assets/agentic-certification-head-to-head.svg)
 
 ## Goldilocks versus Superpowers
 
@@ -67,13 +65,21 @@ On the eight exact task/run cells both arms completed:
 
 ### Quality-adjusted across all attempts
 
-Counting the cost of failed attempts and dividing by successful deliveries, Goldilocks used 61.2% fewer total tokens, 70.5% less uncached input, 60.4% less time, 55.2% fewer tool calls, and 89.9% less Skill activity per successful cell than Superpowers.
+Counting failed attempts and dividing all cost by successful deliveries:
 
-## The uncomfortable result
+| Metric per successful delivery | Goldilocks | Superpowers | Goldilocks delta |
+|---|---:|---:|---:|
+| Total tokens | **112,285** | 289,333 | **−61.2%** |
+| Uncached input | **17,576** | 59,536 | **−70.5%** |
+| Seconds | **143.2** | 361.3 | **−60.4%** |
+| Tool calls | **6.0** | 13.4 | **−55.4%** |
+| Skill activity | **1.1** | 10.9 | **−89.8%** |
 
-Goldilocks was not the lowest-cost arm. Relative to Baseline across the full matrix, it used 86.0% more cumulative total tokens, 45.3% more uncached input, 34.9% more time, and 71.3% more tool calls. Relative to Ponytail, Goldilocks delivered one additional passing cell but also used materially more work.
+## Scope of claim
 
-The main source is visible in the median behavior: Goldilocks added tests on Mama and Papa tasks and used six median tool calls, while the no-workflow arms often solved the seeded repositories directly. This is the clearest optimization target for a future `v0.2.x`: retain the 27/27 quality floor while reducing test and proof expansion when deterministic acceptance can be established more cheaply.
+This report ranks Goldilocks only against Superpowers. It does not claim universal superiority over workflow-free execution, unrelated workflow systems, other models, or real production repositories. The harness retains additional exploratory arms so readers can run broader comparisons themselves; those arms are not part of the Goldilocks product claim.
+
+One limitation remains visible in the direct comparison: on the eight exact cells both workflows successfully completed, Goldilocks used 9.7% more uncached input. It still used fewer total tokens, less time, fewer tools, and less Skill activity on that slice. Future `v0.2.x` work should preserve the 27/27 quality floor while reducing uncached context and proof overhead further.
 
 ## Certification conclusion
 
@@ -82,14 +88,13 @@ For this nine-task suite, model, provider, and Codex build:
 1. Goldilocks preserved full measured quality and safety across all 27 cells.
 2. Goldilocks was substantially more reliable than Superpowers and used less workflow activity on comparable successes.
 3. Goldilocks can serve as the Superpowers replacement target for this tested surface.
-4. The run does not prove universal superiority over Baseline, Ponytail, Grill, other models, or real production repositories.
+4. The run does not prove universal superiority beyond this specific replacement claim, model, provider, task suite, and benchmark revision.
 5. `v0.2.2` should remain the current version while overhead reduction and broader external validation continue.
 
 ## Published artifacts
 
-- [Generated report](data/2026-07-18-terra-low-full/REPORT.md)
+- [Goldilocks/Superpowers head-to-head data](data/2026-07-18-terra-low-full/head-to-head.json)
 - [Run metadata](data/2026-07-18-terra-low-full/metadata.json)
-- [Per-cell results](data/2026-07-18-terra-low-full/results.json)
-- [Aggregated summary](data/2026-07-18-terra-low-full/summary.json)
+- [Complete per-cell audit results](data/2026-07-18-terra-low-full/results.json)
 
-The full local run also retains cell workspaces, raw event streams, and stderr for audit. Those generated workspaces are intentionally excluded from git; the published data above contains every scored cell, final response, telemetry measurement, changed-file summary, and grader result.
+The artifacts retain the full 135-turn exploratory experiment for audit. Filter `arm` to `goldilocks` and `superpowers` to reproduce the 54-turn published comparison. The full local run also retains cell workspaces, raw event streams, and stderr; generated workspaces are intentionally excluded from git.

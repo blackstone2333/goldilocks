@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc" font-family="Arial Unicode MS, sans-serif">
+  <title id="title">Goldilocks predecessor versus Superpowers in the instruction-level stress test</title>
+  <desc id="desc">Across eight isolated scenarios, the Goldilocks predecessor scored 96 to 100 while Superpowers scored 60 to 89. Average score was 98.9 versus 79.2. The Goldilocks rule set used 2552 words versus 18516 for Superpowers.</desc>
+  <style>
+    text { fill: #2d2926; }
+    .title { font-size: 30px; font-weight: 750; }
+    .subtitle { font-size: 16px; fill: #6b625c; }
+    .axis { font-size: 13px; fill: #766c65; }
+    .label { font-size: 15px; font-weight: 650; }
+    .value { font-size: 13px; font-weight: 750; fill: #2d2926; }
+    .legend { font-size: 14px; font-weight: 650; }
+    .summary-title { font-size: 15px; fill: #6b625c; }
+    .summary-value { font-size: 27px; font-weight: 800; }
+    .footnote { font-size: 13px; fill: #766c65; }
+  </style>
+  <rect width="1200" height="820" rx="24" fill="#fffaf0"/>
+  <text id="title-text" class="title" x="44" y="52">Test 1 · Instruction-level stress test / 指令层压力测试</text>
+  <text class="subtitle" x="44" y="82">Goldilocks predecessor (then “Just Necessary”) vs Superpowers 6.1.1 · 8 isolated scenarios</text>
+
+  <rect x="820" y="90" width="18" height="18" rx="4" fill="#d4a72c"/>
+  <text class="legend" x="847" y="104">Goldilocks design</text>
+  <rect x="1013" y="90" width="18" height="18" rx="4" fill="#746b65"/>
+  <text class="legend" x="1040" y="104">Superpowers</text>
+
+  <text class="axis" x="280" y="113">Scenario score / 场景得分（越高越好 ↑）</text>
+  <line x1="280" y1="126" x2="1000" y2="126" stroke="#d9d0c8" stroke-width="1"/>
+  <line x1="280" y1="122" x2="280" y2="650" stroke="#e5ddd6"/>
+  <line x1="460" y1="122" x2="460" y2="650" stroke="#eee7e1"/>
+  <line x1="640" y1="122" x2="640" y2="650" stroke="#eee7e1"/>
+  <line x1="820" y1="122" x2="820" y2="650" stroke="#eee7e1"/>
+  <line x1="1000" y1="122" x2="1000" y2="650" stroke="#e5ddd6"/>
+  <text class="axis" x="276" y="120" text-anchor="end">0</text>
+  <text class="axis" x="460" y="120" text-anchor="middle">25</text>
+  <text class="axis" x="640" y="120" text-anchor="middle">50</text>
+  <text class="axis" x="820" y="120" text-anchor="middle">75</text>
+  <text class="axis" x="1000" y="120" text-anchor="middle">100</text>
+
+  <text class="label" x="44" y="162">1. One-word fix / 单词级修改</text>
+  <rect x="280" y="144" width="720" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1012" y="158">100</text>
+  <rect x="280" y="168" width="640.8" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="933" y="182">89</text>
+
+  <text class="label" x="44" y="226">2. Clear feature / 明确功能</text>
+  <rect x="280" y="208" width="712.8" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1005" y="222">99</text>
+  <rect x="280" y="232" width="568.8" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="861" y="246">79</text>
+
+  <text class="label" x="44" y="290">3. Shared-root bug / 共享根因</text>
+  <rect x="280" y="272" width="712.8" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1005" y="286">99</text>
+  <rect x="280" y="296" width="640.8" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="933" y="310">89</text>
+
+  <text class="label" x="44" y="354">4. Ambiguous SSO / 模糊架构</text>
+  <rect x="280" y="336" width="691.2" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="983" y="350">96</text>
+  <rect x="280" y="360" width="554.4" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="847" y="374">77</text>
+
+  <text class="label" x="44" y="418">5. Native reuse / 原生复用</text>
+  <rect x="280" y="400" width="720" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1012" y="414">100</text>
+  <rect x="280" y="424" width="568.8" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="861" y="438">79</text>
+
+  <text class="label" x="44" y="482">6. Parallel work / 并行工作</text>
+  <rect x="280" y="464" width="712.8" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1005" y="478">99</text>
+  <rect x="280" y="488" width="568.8" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="861" y="502">79</text>
+
+  <text class="label" x="44" y="546">7. Idea capture / 想法留存</text>
+  <rect x="280" y="528" width="720" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1012" y="542">100</text>
+  <rect x="280" y="552" width="590.4" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="883" y="566">82</text>
+
+  <text class="label" x="44" y="610">8. Destructive action / 高危操作</text>
+  <rect x="280" y="592" width="712.8" height="17" rx="6" fill="#d4a72c"/>
+  <text class="value" x="1005" y="606">99</text>
+  <rect x="280" y="616" width="432" height="17" rx="6" fill="#746b65"/>
+  <text class="value" x="725" y="630">60</text>
+
+  <rect x="44" y="680" width="530" height="94" rx="16" fill="#fff" stroke="#eadfce"/>
+  <text class="summary-title" x="68" y="711">Average scenario score / 平均场景得分（↑）</text>
+  <text class="summary-value" x="68" y="751" fill="#9a7014">98.9</text>
+  <text class="summary-value" x="173" y="751" fill="#8a817a">vs 79.2</text>
+
+  <rect x="594" y="680" width="562" height="94" rx="16" fill="#fff" stroke="#eadfce"/>
+  <text class="summary-title" x="618" y="711">Rule text / 规则文本（越少越好 ↓）</text>
+  <text class="summary-value" x="618" y="751" fill="#9a7014">2,552</text>
+  <text class="summary-value" x="735" y="751" fill="#8a817a">vs 18,516</text>
+  <text class="legend" x="1130" y="751" text-anchor="end" fill="#2f855a">−86.2%</text>
+
+  <text class="footnote" x="44" y="792">Bundled rubric scores; instruction-level evidence only—not runtime token, latency, or repository correctness data.</text>
+  <text class="footnote" x="44" y="809">Scenario bars are rounded to whole points; averages retain the original full-precision rubric scores.</text>
+</svg>

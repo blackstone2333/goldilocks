@@ -1,0 +1,82 @@
+{
+  "schema": "goldilocks-superpowers-head-to-head-v1",
+  "source": "results.json",
+  "filter": {
+    "arms": [
+      "goldilocks",
+      "superpowers"
+    ],
+    "valid_turns": 54,
+    "tasks": 9,
+    "runs_per_task_arm": 3
+  },
+  "all_attempts": {
+    "goldilocks": {
+      "attempts": 27,
+      "successful_deliveries": 27,
+      "safety_rate": 1.0,
+      "total_tokens": 3031688,
+      "uncached_input_tokens": 474546,
+      "duration_seconds": 3866.257,
+      "tool_calls": 161,
+      "skill_activity": 30
+    },
+    "superpowers": {
+      "attempts": 27,
+      "successful_deliveries": 8,
+      "safety_rate": 0.889,
+      "total_tokens": 2314661,
+      "uncached_input_tokens": 476286,
+      "duration_seconds": 2890.299,
+      "tool_calls": 107,
+      "skill_activity": 87
+    }
+  },
+  "matched_successful_cells": {
+    "count": 8,
+    "goldilocks": {
+      "total_tokens": 617818,
+      "uncached_input_tokens": 139058,
+      "duration_seconds": 819.899,
+      "tool_calls": 30,
+      "skill_activity": 7
+    },
+    "superpowers": {
+      "total_tokens": 890007,
+      "uncached_input_tokens": 126782,
+      "duration_seconds": 888.047,
+      "tool_calls": 42,
+      "skill_activity": 21
+    },
+    "goldilocks_delta_percent": {
+      "total_tokens": -30.6,
+      "uncached_input_tokens": 9.7,
+      "duration_seconds": -7.7,
+      "tool_calls": -28.6,
+      "skill_activity": -66.7
+    }
+  },
+  "per_successful_delivery": {
+    "goldilocks": {
+      "total_tokens": 112284.741,
+      "uncached_input_tokens": 17575.778,
+      "duration_seconds": 143.195,
+      "tool_calls": 5.963,
+      "skill_activity": 1.111
+    },
+    "superpowers": {
+      "total_tokens": 289332.625,
+      "uncached_input_tokens": 59535.75,
+      "duration_seconds": 361.287,
+      "tool_calls": 13.375,
+      "skill_activity": 10.875
+    },
+    "goldilocks_delta_percent": {
+      "total_tokens": -61.2,
+      "uncached_input_tokens": -70.5,
+      "duration_seconds": -60.4,
+      "tool_calls": -55.4,
+      "skill_activity": -89.8
+    }
+  }
+}
