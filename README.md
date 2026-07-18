@@ -13,7 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.2.2-D4A72C" alt="Version 0.2.2">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
-  <a href="https://skills.sh/blackstone2333/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
+  <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
