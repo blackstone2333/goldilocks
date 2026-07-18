@@ -1,0 +1,19 @@
+{
+  "name": "goldilocks",
+  "version": "0.2.2",
+  "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
+  "author": {
+    "name": "Charles Roc"
+  },
+  "homepage": "https://github.com/blackstone2333/goldilocks",
+  "repository": "https://github.com/blackstone2333/goldilocks",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "superpowers",
+    "workflow",
+    "planning",
+    "testing",
+    "verification"
+  ]
+}

@@ -13,6 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.2.2-D4A72C" alt="Version 0.2.2">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
+  <a href="https://skills.sh/blackstone2333/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
@@ -59,14 +60,29 @@ Read the [two-test head-to-head report](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.md)
 
 ## Install
 
-Add this repository as a Codex marketplace, then install the plugin:
+Install the complete Superpowers-compatible suite with the cross-platform `skills` CLI:
+
+```bash
+npx skills add blackstone2333/goldilocks --skill '*' --global --agent codex --yes
+```
+
+Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` for another agent. To install only the self-contained Just-Necessary router, use `--skill goldilocks` instead.
+
+Native Codex plugin:
 
 ```bash
 codex plugin marketplace add blackstone2333/goldilocks
 codex plugin add goldilocks@goldilocks-local
 ```
 
-Start a new Codex task after installation so the new Skill context is loaded.
+Native Claude Code plugin:
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+Do not enable Goldilocks and Superpowers together. See the [complete installation guide](docs/installation.md) for project-local installs, updates, platform IDs, and compatibility details.
 
 ## What ships
 

@@ -9,6 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
+CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
+CLAUDE_PLUGIN = PLUGIN / ".claude-plugin" / "plugin.json"
 CASES = ROOT / "evals" / "trigger-cases.jsonl"
 RESULTS = ROOT / "evals" / "results" / "red-baseline.jsonl"
 
@@ -69,6 +71,16 @@ def load_jsonl(path: Path) -> list[dict]:
     return rows
 
 
+def load_json(path: Path) -> dict:
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        fail(f"{path.relative_to(ROOT)}: invalid JSON: {error.msg}")
+        return {}
+
+
 def validate_case(case: dict, index: int) -> None:
     label = case.get("id", f"row-{index}")
     required = {"id", "category", "title", "prompt", "host_capability", "material_ambiguity", "expected"}
@@ -119,12 +131,46 @@ def validate_case(case: dict, index: int) -> None:
 
 for required in [
     ROOT / ".agents" / "plugins" / "marketplace.json",
+    CLAUDE_MARKETPLACE,
     PLUGIN / ".codex-plugin" / "plugin.json",
+    CLAUDE_PLUGIN,
     MAIN,
     CASES,
     RESULTS,
+    ROOT / "docs" / "installation.md",
+    ROOT / "docs" / "installation.zh-CN.md",
 ]:
     require_file(required)
+
+claude_marketplace = load_json(CLAUDE_MARKETPLACE)
+if claude_marketplace:
+    if claude_marketplace.get("name") != "goldilocks":
+        fail("Claude marketplace name must be goldilocks")
+    plugins = claude_marketplace.get("plugins", [])
+    if len(plugins) != 1 or plugins[0].get("name") != "goldilocks":
+        fail("Claude marketplace must expose exactly one goldilocks plugin")
+    elif plugins[0].get("source") != "./plugins/goldilocks":
+        fail("Claude marketplace source must point to ./plugins/goldilocks")
+
+claude_plugin = load_json(CLAUDE_PLUGIN)
+if claude_plugin:
+    if claude_plugin.get("name") != "goldilocks":
+        fail("Claude plugin name must be goldilocks")
+    if claude_plugin.get("version") != "0.2.2":
+        fail("Claude plugin version must remain 0.2.2")
+
+for readme_name in ["README.md", "README.zh-CN.md"]:
+    readme_path = ROOT / readme_name
+    require_file(readme_path)
+    if readme_path.is_file():
+        readme = readme_path.read_text(encoding="utf-8")
+        for command in [
+            "npx skills add blackstone2333/goldilocks",
+            "codex plugin marketplace add blackstone2333/goldilocks",
+            "claude plugin marketplace add blackstone2333/goldilocks",
+        ]:
+            if command not in readme:
+                fail(f"{readme_name} lacks installation command: {command}")
 
 for engine in sorted(ENGINES):
     require_file(SKILLS / "goldilocks" / "references" / f"{engine}.md")

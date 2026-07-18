@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "goldilocks",
+  "description": "Goldilocks: a lean, Superpowers-compatible workflow suite for coding agents.",
+  "owner": {
+    "name": "Charles Roc"
+  },
+  "plugins": [
+    {
+      "name": "goldilocks",
+      "source": "./plugins/goldilocks",
+      "description": "Minimum process with constant quality.",
+      "version": "0.2.2",
+      "author": {
+        "name": "Charles Roc"
+      },
+      "category": "development",
+      "homepage": "https://github.com/blackstone2333/goldilocks",
+      "tags": [
+        "agent-skills",
+        "superpowers",
+        "workflow",
+        "planning",
+        "testing",
+        "verification"
+      ]
+    }
+  ]
+}

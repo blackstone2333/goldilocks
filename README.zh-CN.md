@@ -13,6 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.2.2-D4A72C" alt="版本 0.2.2">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
+  <a href="https://skills.sh/blackstone2333/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
@@ -59,14 +60,29 @@ Goldilocks **27/27** 成功交付，测得安全率 100%；Superpowers 成功 **
 
 ## 安装
 
-先把本仓库添加为 Codex marketplace，再安装插件：
+使用跨平台 `skills` CLI 安装完整的 Superpowers 兼容套件：
+
+```bash
+npx skills add blackstone2333/goldilocks --skill '*' --global --agent codex --yes
+```
+
+其他平台把 `codex` 替换为 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。如果只需要可独立工作的 Just-Necessary 核心路由器，把参数改为 `--skill goldilocks`。
+
+Codex 原生插件：
 
 ```bash
 codex plugin marketplace add blackstone2333/goldilocks
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建一个 Codex 任务，让新的 Skill 上下文生效。
+Claude Code 原生插件：
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+不要同时启用 Goldilocks 和 Superpowers。项目级安装、更新命令、平台 ID 和兼容说明见[完整中文安装文档](docs/installation.zh-CN.md)。
 
 ## 包含哪些能力
 
