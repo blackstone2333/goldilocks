@@ -34,6 +34,57 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Parallel when earned:** after planning, independent meaningful units default to capable workers while the Lead keeps architecture, review, and integration.
 - **Model value routing:** task-specific quality gates come before price; Codex Pro prefers GPT-5.3-Codex-Spark for eligible Fast work on its separate usage channel.
 
+## What Goldilocks actually does
+
+Goldilocks is an adaptive router, not a mandatory waterfall. It inspects the repository and the task, activates only the workflow engines that remove real risk, and keeps the acceptance standard constant even when the process depth changes.
+
+| Situation | Goldilocks behavior | Durable output when useful |
+|---|---|---|
+| Tiny, well-bounded change | Take the Direct path: make the smallest coherent edit and run the obvious targeted check | Usually none |
+| Unclear feature or product decision | Align on the end state, material trade-offs, constraints, and acceptance before implementation | Compact spec or decision record when the choice must survive the session |
+| Bug with an unknown cause | Reproduce, trace, test hypotheses, identify the root cause, then patch | Reusable debug lesson when recurrence is plausible |
+| Multi-step implementation | Create only the necessary plan, prefer existing project patterns and libraries, then execute in coherent units | Plan, work packet, handoff, or project map when continuity requires it |
+| Multiple independent units | Use worktrees and parallel workers; route bounded work by model value while the Lead owns architecture and integration | Worker summaries plus integrated evidence, not parallel-document noise |
+| Critical or externally consequential action | Require explicit authorization, Lead ownership, stronger evidence, and independent review where appropriate | Approval and verification evidence |
+| Useful idea outside current scope | Preserve it without silently expanding the current task | Deferred-ideas entry |
+
+### Execution and decision flow
+
+```mermaid
+flowchart TD
+    A["Task arrives"] --> B["Inspect repository, constraints, authority, risk, existing methods and tools"]
+    B --> C{"Minimum safe route?"}
+
+    C -- "Narrow and clear" --> D["Direct<br/>Minimum coherent change"]
+    C -- "End state unclear" --> E["Align<br/>Material decisions and acceptance"]
+    C -- "Root cause unknown" --> F["Diagnose<br/>Reproduce, trace, test hypotheses"]
+    C -- "Multi-step or risky" --> G["Build<br/>Spec and plan only as needed"]
+    C -- "Critical or external effect" --> H["Explicit authorization<br/>Lead ownership + stronger review"]
+
+    E --> G
+    F --> G
+    H --> G
+    G --> I["Reuse project patterns, native APIs, standard libraries and proven packages first"]
+    I --> J{"Two or more independent meaningful units?"}
+    J -- "Yes" --> K["Orchestrate<br/>Worktrees + Fast/Standard workers<br/>Lead keeps architecture and integration"]
+    J -- "No" --> L["Lead executes one coherent path"]
+
+    D --> M["Produce fresh acceptance evidence<br/>Tests, review, browser/device checks or targeted verification"]
+    K --> M
+    L --> M
+    M --> N{"Acceptance passes?"}
+    N -- "No" --> O["Return to the relevant engine and iterate"]
+    O --> M
+    N -- "Yes" --> P["Lead integrates and finishes"]
+
+    P --> Q{"Will this knowledge matter later?"}
+    Q -- "Yes" --> R["Keep only useful spec/plan/handoff, debug lesson, deferred idea or changelog"]
+    Q -- "No" --> S["Complete without workflow residue"]
+    R --> S
+```
+
+The invariant is the acceptance floor, not the ceremony. Goldilocks may skip brainstorming, planning, TDD, delegation, worktrees, or documentation when they add no protection; it activates them when ambiguity, regression risk, parallel opportunity, authorization, or future continuity makes them necessary. Workers may implement and test bounded units, but their summaries never replace the Lead's diff review, integrated verification, and final judgment.
+
 ## Evidence: Goldilocks vs Superpowers
 
 Goldilocks makes one deliberately narrow public claim: it is a more reliable and more efficient **Superpowers replacement** on the tested workflow surface. Two evaluations support that claim without mixing design scores with runtime measurements.
