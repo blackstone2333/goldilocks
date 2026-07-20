@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.4-D4A72C" alt="版本 0.2.4">
+  <img src="https://img.shields.io/badge/version-0.2.5-D4A72C" alt="版本 0.2.5">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -165,6 +165,8 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 
 对于需要跨会话推进或交给其他工程师接手的工作，六个引擎共享一套轻量的 **Continuity Protocol（连续性协议）**。它优先复用仓库现有文档结构；没有约定时，才按需保存项目结构图、单一工作包或拆分的 spec/plan/handoff、精选 debug 经验、延期想法和面向用户的 changelog。Direct 任务默认不创建工作流记录，但当文档本身是交付物或正确性所需时，模型仍可自主创建或更新文档。它也不会增加新的可见 Skill 或执行引擎。
 
+当压缩或中途引导威胁到正在执行的长任务时，连续性协议可以创建一个临时的 `.goldilocks/ACTIVE.md` 执行边界，保存稳定目标、已消费的引导、Done/In progress/Remaining、唯一的精确下一步、仓库与验证状态、禁止重做边界和终止条件。恢复时先读账本，再用 Git 事实校准；仓库证据优先。Codex 原生插件还附带默认静默的恢复 Hook 和可选的完整压缩提示词。详见[安装与 Codex 恢复配置](docs/installation.zh-CN.md#codex-连续性恢复)。
+
 针对多单元计划，共享的 **Model Routing Protocol（模型路由协议）** 会把机械代码、聚焦测试、fixture 和探索交给合适的 Fast/Standard 工作模型，Lead 保留复杂核心与组合验证。模型选择综合质量门、公开与本地证据、每次成功交付成本、延迟、置信度、时效性和 Pareto 候选集。详见[模型路由公开筛查报告](docs/model-routing-survey-2026-07-18.md)。
 
 ## 公开模型路由种子
@@ -256,7 +258,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.2.4`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，连续性和并行模型路由还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.2.5`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，执行边界连续性和并行模型路由还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

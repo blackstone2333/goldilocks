@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.4-D4A72C" alt="Version 0.2.4">
+  <img src="https://img.shields.io/badge/version-0.2.5-D4A72C" alt="Version 0.2.5">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -165,6 +165,8 @@ The compatibility entries progressively disclose six shared engines:
 
 For work that must survive a session or be handed to another engineer, the engines share a small **Continuity Protocol**. It reuses the repository's existing docs layout when possible; otherwise it can keep a project structure map, compact work packet or split spec/plan/handoff, selective debug memory, deferred ideas, and a user-facing changelog. Direct tasks do not create workflow records by default, but can still create or update documentation when it is the deliverable or necessary for correctness. The protocol adds neither another visible Skill nor another engine.
 
+When compaction or mid-flight steering threatens an active long task, Continuity can add one temporary `.goldilocks/ACTIVE.md` execution frontier. It keeps the stable objective, consumed steering, Done/In progress/Remaining, one exact next action, repository and verification state, a do-not-repeat boundary, and the terminal condition. Recovery reads this ledger and reconciles it with Git before continuing; repository evidence wins. The native Codex plugin also includes silent-by-default recovery hooks and an optional complete compaction-prompt asset. See [installation and Codex recovery setup](docs/installation.md#codex-continuity-recovery).
+
 For multi-unit plans, a shared **Model Routing Protocol** assigns mechanical code, focused tests, fixtures, and exploration to suitable Fast/Standard workers while the Lead retains complex core logic and combined verification. Selection uses a quality gate, public and local evidence, expected cost per successful delivery, latency, confidence, recency, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md).
 
 ## Public model-routing seed
@@ -256,7 +258,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.2.4`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while continuity and parallel model routing gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.2.5`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while execution-frontier continuity and parallel model routing gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 

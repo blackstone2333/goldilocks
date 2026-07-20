@@ -61,6 +61,16 @@ For handoff, remove stale speculation and name:
 
 Never treat a stale plan as truth. The receiver checks it against the current code and repository state before execution.
 
+## Survive steering and compaction
+
+When work is likely to cross a context boundary, receives mid-flight steering, or must resume after waiting or delegation, keep one live execution frontier. Reuse a predictable existing state file when it carries the same contract; otherwise copy [active-task.md](../assets/active-task.md) to `.goldilocks/ACTIVE.md`. This is a short-lived pointer and ledger, not a second documentation hierarchy. Link to the real spec or plan instead of duplicating it, keep it under 100 lines, and remove it after durable outcomes are transferred at completion.
+
+Keep the original objective stable. Classify each later user message as `ADD / REPLACE / CANCEL / QUESTION`; record its effect and mark it `pending, applied, or superseded`. A recent message does not replace the objective unless the user explicitly changes or cancels it. After handling a steer, mark it applied before doing more work.
+
+The frontier names completed work with evidence, current work, remaining work, one **Exact next action**, repository and verification state, blockers or authority, a **Do not repeat** boundary, and the terminal condition. Update it after a steer is consumed, at coherent milestones, before long waits or delegation, and before handoff or known compaction—not after every command.
+
+On startup, resume, or compaction recovery, read the frontier first; inspect `git status`, relevant diffs, commits, and files; then reconcile it. The repository state wins when they disagree. Continue from the Exact next action and do not reopen completed work unless its evidence is stale or contradicted. Codex users may optionally use [codex-compact-prompt.md](../assets/codex-compact-prompt.md); bundled hooks are reminders only, never the source of truth.
+
 ## Preserve ideas without expanding scope
 
 Keep required work in the current packet. Put valuable but unnecessary ideas in the project's existing backlog or `docs/ideas.md`, with the value, revisit trigger, and dependency in a few lines. Do not pre-design or scaffold deferred work.

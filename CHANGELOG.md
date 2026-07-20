@@ -2,6 +2,25 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.2.5 — 2026-07-20
+
+### Added
+
+- Extended the **Continuity Protocol** with a temporary, under-100-line `.goldilocks/ACTIVE.md` Execution Frontier for long tasks exposed to compaction, steering, waiting, delegation, or handoff.
+- Added explicit `ADD`, `REPLACE`, `CANCEL`, and `QUESTION` steering semantics with `pending`, `applied`, and `superseded` lifecycle states.
+- Added an exact-next-action and do-not-repeat recovery boundary, repository reconciliation, verification state, authority blockers, and terminal conditions.
+- Added silent-by-default Codex recovery hooks plus an optional complete compaction-prompt asset.
+
+### Changed
+
+- Recovery now reads durable state first, checks Git and current files, and resumes from the first unfinished action instead of reconstructing work from chat salience.
+- Direct work still creates no workflow state by default; the live ledger is activated only by observable continuity risk and is removed after useful outcomes are transferred.
+
+### Compatibility and evidence
+
+- Hooks are optional reminders and require Codex trust review; the ledger remains authoritative when hooks are delayed or unavailable.
+- v0.2.5 is an experimental continuity release. One [fresh-context smoke test](evals/results/2026-07-20-v025-continuity-smoke.md) passed; the published runtime certification remains v0.2.2 while real projects test actual compaction recovery and non-repetition behavior.
+
 ## 0.2.4 — 2026-07-18
 
 ### Added

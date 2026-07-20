@@ -10,7 +10,7 @@
       "name": "goldilocks",
       "source": "./plugins/goldilocks",
       "description": "Minimum process with constant quality.",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "author": {
         "name": "Charles Roc"
       },

@@ -71,6 +71,18 @@ codex plugin add goldilocks@goldilocks-local
 
 安装后新建一个 Codex 任务，让新的 Skill 上下文生效。Goldilocks 发布新版本后，可通过 Codex 的插件管理器更新 marketplace 和插件。
 
+### Codex 连续性恢复
+
+原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。Codex 会要求用户审核非托管插件 Hook；安装后可用 `/hooks` 查看并信任 Goldilocks 定义。即使 Hook 被禁用、延迟或不可用，账本仍是唯一事实源。
+
+如需额外加强压缩摘要，可从仓库复制 `plugins/goldilocks/skills/goldilocks/assets/codex-compact-prompt.md` 到稳定的本地路径，并在用户级 `~/.codex/config.toml` 中指向该副本：
+
+```toml
+experimental_compact_prompt_file = "/绝对路径/goldilocks-compact-prompt.md"
+```
+
+这个设置可选且全局生效。Codex 会把它视为内置压缩提示词的完整覆盖，而不是追加片段；Execution Frontier 不依赖它也能工作。
+
 ## Claude Code 原生插件
 
 ```bash

@@ -1,0 +1,45 @@
+{
+  "description": "Optional Goldilocks continuity reminders; the repository ledger remains the source of truth.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Goldilocks continuity"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Goldilocks recovery state"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

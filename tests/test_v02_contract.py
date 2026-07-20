@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.2.4"
+RELEASE_VERSION = "0.2.5"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -14,7 +14,13 @@ CONTINUITY = SKILLS / "goldilocks" / "references" / "continuity.md"
 MODEL_ROUTING = SKILLS / "goldilocks" / "references" / "model-routing.md"
 MODEL_REGISTRY = SKILLS / "goldilocks" / "assets" / "model-registry.json"
 MODEL_SURVEY = ROOT / "docs" / "model-routing-survey-2026-07-18.md"
+ACTIVE_TASK = SKILLS / "goldilocks" / "assets" / "active-task.md"
+COMPACT_PROMPT = SKILLS / "goldilocks" / "assets" / "codex-compact-prompt.md"
+HOOK_CONFIG = PLUGIN / "hooks" / "hooks.json"
+HOOK_SCRIPT = PLUGIN / "scripts" / "recovery_reminder.py"
 TEMPLATE_ASSETS = {
+    "active-task.md",
+    "codex-compact-prompt.md",
     "project-map.md",
     "work-packet.md",
     "debug-note.md",
@@ -149,6 +155,10 @@ for required in [
     MODEL_ROUTING,
     MODEL_REGISTRY,
     MODEL_SURVEY,
+    ACTIVE_TASK,
+    COMPACT_PROMPT,
+    HOOK_CONFIG,
+    HOOK_SCRIPT,
     CASES,
     RESULTS,
     ROOT / "docs" / "installation.md",
@@ -235,6 +245,8 @@ if MAIN.is_file():
         fail("main router must preserve Direct documentation autonomy")
     if "continuity.md" not in main_text:
         fail("main router lacks conditional continuity routing")
+    if ".goldilocks/ACTIVE.md" not in main_text:
+        fail("main router lacks deterministic recovery routing")
 
 for engine in sorted(ENGINES):
     engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"
@@ -254,9 +266,53 @@ if CONTINUITY.is_file():
         "Critical",
         "regression test",
         "Do not create a debug note",
+        ".goldilocks/ACTIVE.md",
+        "ADD / REPLACE / CANCEL / QUESTION",
+        "pending, applied, or superseded",
+        "Exact next action",
+        "Do not repeat",
+        "repository state wins",
     ]:
         if required_text not in continuity_text:
             fail(f"continuity protocol lacks required contract: {required_text}")
+
+if ACTIVE_TASK.is_file():
+    active_text = ACTIVE_TASK.read_text(encoding="utf-8")
+    for required_text in [
+        "## Objective",
+        "## Steering ledger",
+        "### Done",
+        "### In progress",
+        "### Remaining",
+        "### Exact next action",
+        "## Repository state",
+        "## Verification",
+        "## Do not repeat",
+        "## Terminal condition",
+    ]:
+        if required_text not in active_text:
+            fail(f"active-task template lacks required section: {required_text}")
+    if len(active_text.splitlines()) > 100:
+        fail("active-task template exceeds 100 lines")
+
+if COMPACT_PROMPT.is_file():
+    compact_text = COMPACT_PROMPT.read_text(encoding="utf-8")
+    for required_text in [
+        "Steering ledger",
+        "Exact next action",
+        "Do not repeat",
+        ".goldilocks/ACTIVE.md",
+        "complete override",
+    ]:
+        if required_text not in compact_text:
+            fail(f"Codex compact prompt lacks required contract: {required_text}")
+
+hook_config = load_json(HOOK_CONFIG)
+if hook_config:
+    hook_events = set(hook_config.get("hooks", {}))
+    for event in ["SessionStart", "PostCompact", "UserPromptSubmit"]:
+        if event not in hook_events:
+            fail(f"recovery hook config lacks event: {event}")
 
 if MODEL_ROUTING.is_file():
     routing_text = MODEL_ROUTING.read_text(encoding="utf-8")

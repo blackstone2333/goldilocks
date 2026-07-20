@@ -71,6 +71,18 @@ codex plugin add goldilocks@goldilocks-local
 
 Start a new Codex task after installation so the new Skill context is loaded. Update the marketplace and plugin through Codex's plugin manager when a newer Goldilocks version is published.
 
+### Codex continuity recovery
+
+The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. Codex requires review before non-managed plugin hooks run; use `/hooks` to inspect and trust the Goldilocks definition after installation. The ledger remains the source of truth if a hook is disabled, delayed, or unavailable.
+
+For an additional compaction layer, copy `plugins/goldilocks/skills/goldilocks/assets/codex-compact-prompt.md` from this repository to a stable local path and point user-level `~/.codex/config.toml` at that copy:
+
+```toml
+experimental_compact_prompt_file = "/absolute/path/to/goldilocks-compact-prompt.md"
+```
+
+This setting is optional and global. Codex treats it as a complete override of the built-in compaction prompt, not an additive fragment. The Execution Frontier works without it.
+
 ## Claude Code native plugin
 
 ```bash

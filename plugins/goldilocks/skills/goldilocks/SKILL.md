@@ -25,6 +25,8 @@ After a Guarded or Critical plan exposes multiple meaningful units, run the orch
 
 Direct: do not create workflow continuity documents by default. Creating or updating documentation is still appropriate when documentation is the deliverable, project conventions require it, or omission would make the change misleading. For Guarded work that genuinely spans stages, Critical or Orchestrated work, cross-session handoff, or new-project architecture, read [continuity.md](references/continuity.md) and persist only the minimum useful state.
 
+If `.goldilocks/ACTIVE.md` exists, continuity recovery takes precedence over reconstructing the task from chat: read it, reconcile it with repository evidence, classify the current user message, and continue from its exact frontier. Create it only when continuity risk appears, such as likely compaction, a long-running multi-stage task, mid-flight steering, waiting, delegation, or handoff.
+
 ## Load only the needed engine
 
 - Material product, design, architecture, scope, or authority decisions: read [align.md](references/align.md).
