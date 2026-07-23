@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.3.0+codex.20260723092721",
+  "version": "0.3.1+codex.20260723105432",
   "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
   "author": {
     "name": "Charles Roc"
@@ -23,7 +23,7 @@
   "interface": {
     "displayName": "Goldilocks",
     "shortDescription": "Right-sized teams with constant quality",
-    "longDescription": "Provides thirteen familiar workflow entries plus a Goldilocks router backed by six shared engines. v0.3 dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; minimizes quota-weighted expensive work within a raw-token envelope; reuses verified execution patterns; preserves compaction continuity; and keeps final review and integration with Lead.",
+    "longDescription": "Provides thirteen familiar workflow entries plus a Goldilocks router backed by six shared engines. It dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; minimizes quota-weighted expensive work within a raw-token envelope; reuses verified execution patterns; preserves compaction continuity; quietly checks for newer releases; and keeps final review and integration with Lead.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [

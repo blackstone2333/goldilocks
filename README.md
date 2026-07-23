@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.0-D4A72C" alt="Version 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.3.1-D4A72C" alt="Version 0.3.1">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -35,6 +35,7 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Quota-weighted economics:** optimize scarce, high-multiplier model usage and critical-path time while keeping total raw tokens inside a reasonable envelope.
 - **Execution memory:** reuse a verified route for recurring task shapes after checking its invalidators instead of paying for the same orchestration decision twice.
 - **Enforced Codex routing:** eligible Fast work is sent to GPT-5.3-Codex-Spark, Fast remains a leaf, Lead-only full-context handoff stays possible, and concurrent audit never invents a false match.
+- **Quiet update awareness:** the native Codex plugin checks at most once per day, stays silent when current or offline, and reports a newer release once without changing an active task.
 
 ## What Goldilocks actually does
 
@@ -262,6 +263,9 @@ No model calls:
 ```bash
 python3 tests/test_v03_contract.py
 python3 tests/test_three_bears_contract.py
+python3 tests/test_agent_routing_hook.py
+python3 tests/test_recovery_hook.py
+python3 tests/test_update_checker.py
 python3 benchmarks/three_bears/run.py --selftest
 ```
 
@@ -281,7 +285,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.3.0`. It can replace Superpowers more efficiently on the tested surface, but the new hierarchical orchestration is an architectural release, not a new performance certification. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.3.1`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. The native Codex plugin now provides low-frequency update awareness without automatic installation or portable-Skill startup overhead. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 

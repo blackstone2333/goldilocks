@@ -62,6 +62,8 @@ Update installed Skills:
 npx skills update --global --yes
 ```
 
+Portable Skills do not run a background update check. This keeps activation offline, cross-platform, and free of recurring model or network overhead. Run the update command explicitly or watch GitHub releases when proactive notification is important.
+
 ## Codex native plugin
 
 ```bash
@@ -69,7 +71,20 @@ codex plugin marketplace add blackstone2333/goldilocks
 codex plugin add goldilocks@goldilocks-local
 ```
 
-Start a new Codex task after installation so the new Skill context is loaded. Update the marketplace and plugin through Codex's plugin manager when a newer Goldilocks version is published.
+Start a new Codex task after installation so the new Skill context is loaded.
+
+### Quiet update awareness
+
+The native plugin checks the public Goldilocks manifest on GitHub at most once every 24 hours during `SessionStart`. It uses a short timeout, GitHub ETags, and a small state row in plugin-data SQLite. Current versions, repeated sessions, malformed responses, timeouts, and offline use produce no output. A newer semantic version produces one notice per release with the installed version, latest version, and update commands.
+
+The checker never downloads or executes remote code and never installs an update. The active task remains on its installed version; review the changelog and approve the update before running:
+
+```bash
+codex plugin marketplace upgrade goldilocks-local
+codex plugin add goldilocks@goldilocks-local
+```
+
+Start a new task after updating. Set `GOLDILOCKS_UPDATE_CHECK=0` in the Codex environment to disable the network check completely.
 
 ### Codex continuity recovery
 

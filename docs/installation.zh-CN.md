@@ -62,6 +62,8 @@ npx skills add blackstone2333/goldilocks --list
 npx skills update --global --yes
 ```
 
+纯 Skill 安装不会在后台检查更新，因此启用过程保持离线、跨平台，也不会持续增加模型或网络开销。需要主动获知更新时，请定期执行更新命令或订阅 GitHub Releases。
+
 ## Codex 原生插件
 
 ```bash
@@ -69,7 +71,20 @@ codex plugin marketplace add blackstone2333/goldilocks
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建一个 Codex 任务，让新的 Skill 上下文生效。Goldilocks 发布新版本后，可通过 Codex 的插件管理器更新 marketplace 和插件。
+安装后新建一个 Codex 任务，让新的 Skill 上下文生效。
+
+### 安静的更新感知
+
+原生插件会在 `SessionStart` 时检查 GitHub 上的 Goldilocks 公共清单，但 24 小时内最多请求一次。检查使用短超时、GitHub ETag 和插件数据目录中的 SQLite 状态。已经是最新版、重复启动、响应格式错误、超时或离线时完全无输出；发现更高的语义版本时，每个版本只提醒一次，并显示当前版本、最新版本和更新命令。
+
+检查器不会下载或执行远端代码，也不会自行安装更新。当前任务始终继续使用已经加载的版本；阅读 changelog 并确认更新后，再运行：
+
+```bash
+codex plugin marketplace upgrade goldilocks-local
+codex plugin add goldilocks@goldilocks-local
+```
+
+更新后新建任务生效。如需完全关闭联网检查，可在 Codex 环境中设置 `GOLDILOCKS_UPDATE_CHECK=0`。
 
 ### Codex 连续性恢复
 

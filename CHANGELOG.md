@@ -2,6 +2,20 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.3.1 — 2026-07-23
+
+### Added — Quiet Update Awareness
+
+- Added a native Codex `SessionStart` check for the public Goldilocks manifest. It runs at most once every 24 hours, uses a short timeout and ETag, and stores only check time, latest version, ETag, and notified version in plugin-data SQLite.
+- A newer semantic version produces one notice per release with the installed version and exact Codex update commands. The active task remains on its loaded version, and installation still requires explicit user approval.
+- Current versions, repeated sessions, opt-out, malformed responses, timeouts, and offline use remain completely silent. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
+
+### Compatibility and evidence
+
+- Portable Skill installs do not gain a startup hook or recurring network/model cost; they continue to update explicitly through `npx skills update`.
+- The checker compares version metadata only. It never downloads or executes remote code and never self-modifies the active plugin.
+- Added [deterministic local-server coverage](evals/results/2026-07-23-v031-update-awareness.md) for update detection, 24-hour throttling, ETag reuse, one-notice-per-version behavior, downgrade comparison, opt-out, offline failure, and Hook registration.
+
 ## 0.3.0 — 2026-07-23
 
 ### Added — Hierarchical Orchestration

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.0-D4A72C" alt="版本 0.3.0">
+  <img src="https://img.shields.io/badge/version-0.3.1-D4A72C" alt="版本 0.3.1">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -35,6 +35,7 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 - **额度加权经济性：** 在控制总 token 的前提下，优先减少高系数、稀缺模型额度，并通过并行缩短关键路径。
 - **执行经验复用：** 相似任务先检查已验证路径和失效条件，不重复支付同一轮组织判断成本。
 - **Codex 强制路由：** 合格 Fast 工作自动交给 GPT-5.3-Codex-Spark；Fast 是叶子执行者；复杂 Lead 交接仍可继承完整上下文；并发审计不会凭错误关联误杀子任务。
+- **安静的更新感知：** Codex 原生插件每天最多检查一次；已是最新版、离线或检查失败时完全静默，发现新版本只提醒一次且不改变当前任务。
 
 ## Goldilocks 到底能做什么
 
@@ -262,6 +263,9 @@ Grok 4.5 的 Terminal-Bench 提交报告了 `-9.0%` hack 调整，因此注册�
 ```bash
 python3 tests/test_v03_contract.py
 python3 tests/test_three_bears_contract.py
+python3 tests/test_agent_routing_hook.py
+python3 tests/test_recovery_hook.py
+python3 tests/test_update_checker.py
 python3 benchmarks/three_bears/run.py --selftest
 ```
 
@@ -281,7 +285,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.3.0`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但这次分层动态编排属于架构更新，不冒充新的性能认证。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.3.1`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。Codex 原生插件现在能够低频感知更新，但不会自动安装，也不会给纯 Skill 增加启动开销。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

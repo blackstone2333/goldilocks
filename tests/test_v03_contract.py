@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.3.0"
+RELEASE_VERSION = "0.3.1"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -20,6 +20,7 @@ COMPACT_PROMPT = SKILLS / "goldilocks" / "assets" / "codex-compact-prompt.md"
 HOOK_CONFIG = PLUGIN / "hooks" / "hooks.json"
 HOOK_SCRIPT = PLUGIN / "scripts" / "recovery_reminder.py"
 ROUTING_HOOK_SCRIPT = PLUGIN / "scripts" / "agent_routing_guard.py"
+UPDATE_HOOK_SCRIPT = PLUGIN / "scripts" / "update_checker.py"
 TEMPLATE_ASSETS = {
     "active-task.md",
     "codex-compact-prompt.md",
@@ -166,6 +167,7 @@ for required in [
     HOOK_CONFIG,
     HOOK_SCRIPT,
     ROUTING_HOOK_SCRIPT,
+    UPDATE_HOOK_SCRIPT,
     CASES,
     RESULTS,
     ROOT / "docs" / "installation.md",
@@ -219,8 +221,8 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Hierarchical Orchestration"),
-    ("CHANGELOG.zh-CN.md", "分层动态编排"),
+    ("CHANGELOG.md", "Quiet Update Awareness"),
+    ("CHANGELOG.zh-CN.md", "安静的更新感知"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
@@ -330,6 +332,8 @@ if hook_config:
     routing_hook_config = json.dumps(hook_config.get("hooks", {}), ensure_ascii=False)
     if "agent_routing_guard.py" not in routing_hook_config:
         fail("hook config does not register the agent routing guard")
+    if "update_checker.py" not in routing_hook_config:
+        fail("hook config does not register the quiet update checker")
     pre_tool_groups = hook_config.get("hooks", {}).get("PreToolUse", [])
     if not any("Agent" in str(group.get("matcher", "")) for group in pre_tool_groups):
         fail("routing guard does not match the Agent alias")

@@ -1,5 +1,5 @@
 {
-  "description": "Goldilocks continuity recovery plus hierarchical, quota-aware subagent routing enforcement and concurrency-safe audit.",
+  "description": "Goldilocks continuity recovery, quiet update awareness, and hierarchical quota-aware routing enforcement.",
   "hooks": {
     "PreToolUse": [
       {
@@ -49,6 +49,12 @@
             "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
             "timeout": 10,
             "statusMessage": "Checking Goldilocks continuity"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/update_checker.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\update_checker.py\"",
+            "timeout": 4
           }
         ]
       }
