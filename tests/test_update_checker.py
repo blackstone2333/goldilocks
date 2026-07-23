@@ -170,6 +170,11 @@ def main() -> None:
         assert len(update_hooks) == 1, "SessionStart must register one update checker"
         assert update_hooks[0]["timeout"] <= 4
         assert "statusMessage" not in update_hooks[0], "normal checks must have no visible startup status"
+
+        checker_source = CHECKER.read_text(encoding="utf-8")
+        assert "api.github.com/repos/blackstone2333/goldilocks/contents" in checker_source, (
+            "the default check must bypass stale raw.githubusercontent.com CDN responses"
+        )
     finally:
         server.shutdown()
         server.server_close()

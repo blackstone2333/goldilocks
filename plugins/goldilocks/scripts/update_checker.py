@@ -19,8 +19,8 @@ from typing import Any
 CHECK_INTERVAL_SECONDS = 24 * 60 * 60
 DEFAULT_TIMEOUT_SECONDS = 2.0
 DEFAULT_MANIFEST_URL = (
-    "https://raw.githubusercontent.com/blackstone2333/goldilocks/"
-    "main/plugins/goldilocks/.codex-plugin/plugin.json"
+    "https://api.github.com/repos/blackstone2333/goldilocks/contents/"
+    "plugins/goldilocks/.codex-plugin/plugin.json?ref=main"
 )
 DISABLED_VALUES = {"0", "false", "no", "off", "disabled"}
 VERSION_PATTERN = re.compile(
@@ -120,7 +120,8 @@ def request_timeout() -> float:
 
 def fetch_manifest(etag: str | None) -> tuple[dict[str, Any] | None, str | None]:
     headers = {
-        "Accept": "application/json",
+        "Accept": "application/vnd.github.raw+json",
+        "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "goldilocks-update-checker",
     }
     if etag:

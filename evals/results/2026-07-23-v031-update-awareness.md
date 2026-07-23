@@ -6,7 +6,7 @@
 
 ## RED baseline
 
-`tests/test_update_checker.py` initially failed because `plugins/goldilocks/scripts/update_checker.py` did not exist. A second RED case showed that an HTTP 304 response lost the cached latest version after a local downgrade.
+`tests/test_update_checker.py` initially failed because `plugins/goldilocks/scripts/update_checker.py` did not exist. A second RED case showed that an HTTP 304 response lost the cached latest version after a local downgrade. A live post-push check then found that `raw.githubusercontent.com` still served the previous manifest, so the default endpoint moved to the ETag-capable GitHub Contents API.
 
 ## Implemented contract
 
@@ -29,6 +29,10 @@ Python compilation and Git whitespace checks passed.
 ```
 
 The update-checker suite uses a local HTTP server and covers a newer release, daily throttling, unchanged ETag, a second newer release, current installation, cached comparison after downgrade, explicit opt-out, offline failure, and silent Hook registration.
+
+## Live endpoint smoke
+
+After the v0.3.1 manifest was pushed, the old raw-content endpoint still returned `0.3.0` while the GitHub Contents API returned `0.3.1`. With the API endpoint configured, a real checker run stored `0.3.1` and emitted no notice for the already-current local `0.3.1` installation. A separate cold Python TLS attempt exceeded the short timeout and stayed silent as designed; later requests succeeded, so this is fail-silent availability behavior rather than a correctness guarantee for GitHub access.
 
 ## Boundary
 

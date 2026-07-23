@@ -6,7 +6,7 @@
 
 ### Added — Quiet Update Awareness
 
-- Added a native Codex `SessionStart` check for the public Goldilocks manifest. It runs at most once every 24 hours, uses a short timeout and ETag, and stores only check time, latest version, ETag, and notified version in plugin-data SQLite.
+- Added a native Codex `SessionStart` check through the GitHub Contents API for the public Goldilocks manifest. It runs at most once every 24 hours, uses a short timeout and ETag, and stores only check time, latest version, ETag, and notified version in plugin-data SQLite.
 - A newer semantic version produces one notice per release with the installed version and exact Codex update commands. The active task remains on its loaded version, and installation still requires explicit user approval.
 - Current versions, repeated sessions, opt-out, malformed responses, timeouts, and offline use remain completely silent. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
 
