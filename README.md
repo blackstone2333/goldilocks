@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.6-D4A72C" alt="Version 0.2.6">
+  <img src="https://img.shields.io/badge/version-0.3.0-D4A72C" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -25,14 +25,16 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 
 ## Why Goldilocks
 
-- **Dynamic depth:** Direct, Fast, Lead, and Critical work receive different amounts of process while keeping the same acceptance standard.
+- **Dynamic depth:** clear work gets a constant-time Direct-versus-delegate check; complex work receives only the useful management layers.
 - **Progressive disclosure:** thirteen compatibility entries route into six shared engines instead of duplicating fourteen long procedures.
 - **Native and reuse first:** inspect the project, standard library, established helpers, and proven libraries before inventing new machinery.
 - **Decision-frontier questions:** ask only when an answer can materially change the end state, safety, scope, or authorization.
 - **Ideas without scope creep:** useful adjacent ideas are preserved for later rather than silently expanding the current task.
 - **Evidence before completion:** confidence, old test output, and agent reports never replace fresh evidence for material claims.
-- **Parallel when earned:** after planning, independent meaningful units default to capable workers while the Lead keeps architecture, review, and integration.
-- **Enforced model value routing:** task-specific quality gates come before price; the native Codex plugin sends eligible Fast work to GPT-5.3-Codex-Spark without requiring global model defaults, blocks full-context Lead clones, and audits the model that actually starts.
+- **Hierarchical delegation:** Lead can dispatch execution contracts directly to Fast or give a bounded domain to Standard, which may organize its own Fast workers.
+- **Quota-weighted economics:** optimize scarce, high-multiplier model usage and critical-path time while keeping total raw tokens inside a reasonable envelope.
+- **Execution memory:** reuse a verified route for recurring task shapes after checking its invalidators instead of paying for the same orchestration decision twice.
+- **Enforced Codex routing:** eligible Fast work is sent to GPT-5.3-Codex-Spark, Fast remains a leaf, Lead-only full-context handoff stays possible, and concurrent audit never invents a false match.
 
 ## What Goldilocks actually does
 
@@ -40,11 +42,11 @@ Goldilocks is an adaptive router, not a mandatory waterfall. It inspects the rep
 
 | Situation | Goldilocks behavior | Durable output when useful |
 |---|---|---|
-| Tiny, well-bounded change | Take the Direct path: make the smallest coherent edit and run the obvious targeted check | Usually none |
+| Tiny, well-bounded change | Quickly compare Lead Direct with one Fast contract; use whichever finishes and verifies sooner | Usually none |
 | Unclear feature or product decision | Align on the end state, material trade-offs, constraints, and acceptance before implementation | Compact spec or decision record when the choice must survive the session |
 | Bug with an unknown cause | Reproduce, trace, test hypotheses, identify the root cause, then patch | Reusable debug lesson when recurrence is plausible |
 | Multi-step implementation | Create only the necessary plan, prefer existing project patterns and libraries, then execute in coherent units | Plan, work packet, handoff, or project map when continuity requires it |
-| Multiple independent units | Use worktrees and parallel workers; route bounded work by model value while the Lead owns architecture and integration | Worker summaries plus integrated evidence, not parallel-document noise |
+| Multiple independent units | Build the ready graph; use Lead→Fast or Lead→Standard→Fast while each layer reviews its own scope | Worker and domain evidence plus Lead integration, not parallel-document noise |
 | Critical or externally consequential action | Require explicit authorization, Lead ownership, stronger evidence, and independent review where appropriate | Approval and verification evidence |
 | Useful idea outside current scope | Preserve it without silently expanding the current task | Deferred-ideas entry |
 
@@ -52,10 +54,12 @@ Goldilocks is an adaptive router, not a mandatory waterfall. It inspects the rep
 
 ```mermaid
 flowchart TD
-    A["Task arrives"] --> B["Inspect repository, constraints, authority, risk, existing methods and tools"]
-    B --> C{"Minimum safe route?"}
+    A["Task arrives"] --> B["Inspect repository, authority, risk, existing methods and verified execution patterns"]
+    B --> C{"Fast make-or-delegate check"}
 
-    C -- "Narrow and clear" --> D["Direct<br/>Minimum coherent change"]
+    C -- "Lead finishes sooner" --> D["Lead Direct<br/>Minimum coherent change"]
+    C -- "Contract is ready" --> K["Fast worker or parallel Fast workers"]
+    C -- "Domain judgment remains" --> T["Standard domain owner"]
     C -- "End state unclear" --> E["Align<br/>Material decisions and acceptance"]
     C -- "Root cause unknown" --> F["Diagnose<br/>Reproduce, trace, test hypotheses"]
     C -- "Multi-step or risky" --> G["Build<br/>Spec and plan only as needed"]
@@ -64,26 +68,43 @@ flowchart TD
     E --> G
     F --> G
     H --> G
-    G --> I["Reuse project patterns, native APIs, standard libraries and proven packages first"]
-    I --> J{"Two or more independent meaningful units?"}
-    J -- "Yes" --> K["Orchestrate<br/>Worktrees + Fast/Standard workers<br/>Lead keeps architecture and integration"]
-    J -- "No" --> L["Lead executes one coherent path"]
+    G --> I["Freeze shared decisions, interfaces and acceptance"]
+    I --> J{"Cheapest useful organization?"}
+    J -- "Execution contract" --> K
+    J -- "Bounded domain" --> T
+    J -- "Critical or inseparable" --> L["Lead owns the core"]
+    T --> U{"Can Standard externalize the remaining decisions?"}
+    U -- "Yes" --> K
+    U -- "No" --> V["Standard implements or escalates"]
 
     D --> M["Produce fresh acceptance evidence<br/>Tests, review, browser/device checks or targeted verification"]
     K --> M
+    V --> M
     L --> M
     M --> N{"Acceptance passes?"}
     N -- "No" --> O["Return to the relevant engine and iterate"]
     O --> M
-    N -- "Yes" --> P["Lead integrates and finishes"]
+    N -- "Yes" --> P["Evidence integrates upward<br/>Lead runs the combined gate"]
 
     P --> Q{"Will this knowledge matter later?"}
-    Q -- "Yes" --> R["Keep only useful spec/plan/handoff, debug lesson, deferred idea or changelog"]
+    Q -- "Yes" --> R["Keep only useful spec/plan/handoff, debug lesson, verified execution pattern, deferred idea or changelog"]
     Q -- "No" --> S["Complete without workflow residue"]
     R --> S
 ```
 
-The invariant is the acceptance floor, not the ceremony. Goldilocks may skip brainstorming, planning, TDD, delegation, worktrees, or documentation when they add no protection; it activates them when ambiguity, regression risk, parallel opportunity, authorization, or future continuity makes them necessary. Workers may implement and test bounded units, but their summaries never replace the Lead's diff review, integrated verification, and final judgment.
+The invariant is the acceptance floor, not who typed the code. Fast describes low residual discretion after decomposition, not a small original task. Standard describes bounded domain judgment, not medium file count. Lead owns user intent, shared decisions, conflicts, and final quality; it implements only when Direct delivery or an inseparable core makes that cheaper than delegation.
+
+### Hierarchical orchestration in v0.3
+
+Goldilocks treats an agent team like a small company. The user sets direction and accepts the result. Lead acts as product, technical, and project leadership. Standard owns a domain and can turn its decisions into Fast execution contracts. Fast implements and runs focused checks but cannot delegate further.
+
+The hierarchy is dynamic rather than mandatory. A tiny task may stay with Lead or go to one Fast worker. A medium task may go directly to Fast, to Standard, or remain local. A large project can use several Standard domain owners, each coordinating independent Fast work, before evidence integrates upward. There is no fixed worker count: useful concurrency is bounded by the ready dependency graph, host capacity, isolation, integration risk, and reviewer throughput.
+
+The routing objective is not minimum raw tokens at any cost. Quality and authority are hard gates; total raw tokens remain bounded; among valid routes Goldilocks minimizes quota-weighted expensive usage and the wall-clock critical path. A route may use slightly more low-coefficient or separately metered worker tokens when it materially reduces scarce Lead usage without increasing defects or review debt.
+
+Recurring routes can be stored as selective project execution patterns after combined verification. Future tasks reuse them only when subsystem, interfaces, risk, tools, billing channel, and acceptance still match. Plugin audit observations are local and concurrency-safe, but a worker stopping is never treated as verified success and internal routing history never enters the user-facing changelog.
+
+Read the [v0.3 hierarchical orchestration design](docs/v0.3-hierarchical-orchestration.md) for the role boundaries, routing order, context policy, audit behavior, and release acceptance.
 
 ## Evidence: Goldilocks vs Superpowers
 
@@ -163,13 +184,13 @@ The compatibility entries progressively disclose six shared engines:
 5. **Prove** — review, verification, authorization, branch completion.
 6. **Evolve** — idea capture, retrospection, and Skill improvement.
 
-For work that must survive a session or be handed to another engineer, the engines share a small **Continuity Protocol**. It reuses the repository's existing docs layout when possible; otherwise it can keep a project structure map, compact work packet or split spec/plan/handoff, selective debug memory, deferred ideas, and a user-facing changelog. Direct tasks do not create workflow records by default, but can still create or update documentation when it is the deliverable or necessary for correctness. The protocol adds neither another visible Skill nor another engine.
+For work that must survive a session or be handed to another engineer, the engines share a small **Continuity Protocol**. It reuses the repository's existing docs layout when possible; otherwise it can keep a project structure map, compact work packet or split spec/plan/handoff, selective debug memory, verified execution patterns, deferred ideas, and a user-facing changelog. Direct tasks do not create workflow records by default, but can still create or update documentation when it is the deliverable or necessary for correctness. Internal execution memory stays separate from the release changelog. The protocol adds neither another visible Skill nor another engine.
 
 When compaction or mid-flight steering threatens an active long task, Continuity can add one temporary `.goldilocks/ACTIVE.md` execution frontier. It keeps the stable objective, consumed steering, Done/In progress/Remaining, one exact next action, repository and verification state, a do-not-repeat boundary, and the terminal condition. Recovery reads this ledger and reconciles it with Git before continuing; repository evidence wins. The native Codex plugin also includes silent-by-default recovery hooks and an optional complete compaction-prompt asset. See [installation and Codex recovery setup](docs/installation.md#codex-continuity-recovery).
 
-For multi-unit plans, a shared **Model Routing Protocol** assigns mechanical code, focused tests, fixtures, and exploration to suitable Fast/Standard workers while the Lead retains complex core logic and combined verification. Selection uses a quality gate, public and local evidence, expected cost per successful delivery, latency, confidence, recency, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md).
+For multi-unit plans, a shared **Hierarchical Orchestration Protocol** first compares Direct execution with delegation. It can route a complete contract to Fast, assign a bounded domain to Standard, or let Standard organize Fast workers after local decisions are fixed. Selection uses a quality gate, quota-weighted subscription burn, a raw-token envelope, critical-path latency, confidence, recency, execution memory, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md) for the public seed; local evidence wins.
 
-The native Codex plugin turns that protocol into an execution guard. Every spawn declares `fast__`, `standard__`, or `lead__` in its task name and uses no more than four task-relevant parent turns. `fast__` is rewritten to Spark; Standard and Lead workers require an explicit model. Unclassified calls, implicit/full-history forks, and silent Lead inheritance are blocked before execution. `SubagentStart` audits the actual model; a mismatch tells the child not to execute and returns the work to Lead. This uses plugin hooks and writable plugin data, not user-level `config.toml`. Portable Skill-only installs retain the routing guidance but cannot enforce native Codex tool calls.
+The native Codex plugin turns that protocol into an execution guard. Every spawn declares `fast__`, `standard__`, or `lead__`. `fast__` is rewritten to Spark and Fast cannot spawn; Standard requires an explicit model and may organize Fast within its contract. Task-local routes use no context or at most four relevant turns. A justified `lead__` handoff may inherit full history and the parent Lead model. SQLite-backed plugin data makes route observation safe under concurrent writers; when the host cannot uniquely correlate a concurrent or nested start, the audit records ambiguity instead of stopping the wrong child. Portable Skill-only installs retain the protocol but cannot enforce native Codex calls.
 
 ## Public model-routing seed
 
@@ -180,8 +201,8 @@ The following seed is dated **2026-07-18**. It is an advisory starting point for
 1. Apply the hard gates above.
 2. Reject candidates below the task-specific quality floor, even when they are free.
 3. Estimate quality with a weighted geometric mean so a critical weakness cannot hide inside a high average: `Q = 100 × product(score_i ^ weight_i)`.
-4. Estimate full successful-delivery cost rather than raw token price: `CostSuccess = (direct + retries + review + integration) / P(success)`.
-5. Keep the quality/cost/latency Pareto frontier, then use a logarithmic value score only as a tie-breaker: `Value = Q^1.5 × reliability × confidence / ((1 + ln(1 + CostSuccess/Cref))^0.65 × (1 + ln(1 + latency/Lref))^0.35)`.
+4. For subscriptions, estimate `QuotaBurn = Σ(usage × account coefficient × channel scarcity) + retries + review + integration`; keep raw tokens inside an evidence-based envelope.
+5. Keep the quality/quota-burn/latency Pareto frontier. Use expected successful-delivery cost and the published logarithmic value score only as portable fallbacks when account-specific quota evidence is unavailable.
 
 Subscription quota is treated as opportunity cost, not zero cost. A separate usage channel lowers cost but never lowers the quality or safety floor. Evidence confidence falls for stale data, mismatched versions or agent harnesses, small samples, missing domain evidence, and results that have not been reproduced locally.
 
@@ -202,11 +223,11 @@ These are starting floors, not universal pass marks. Critical work is never assi
 
 | Role | Current seed | Lower-confidence candidates | Boundaries |
 |---|---|---|---|
-| Fast | GPT-5.3-Codex-Spark; GPT-5.6 Luna; Muse Spark 1.1; GLM-5.1 | MiniMax-M3; DeepSeek V4 Pro | Mechanical code, fixtures, focused tests, search, narrow documentation and deterministic checks |
-| Standard | GPT-5.6 Terra; Grok 4.5; GPT-5.6 Luna; Muse Spark 1.1; Claude Sonnet 5; Gemini 3 Pro; GLM-5.1 | Qwen3.7 Max | Stable-interface, bounded, independently verifiable cross-file implementation |
-| Lead | Claude Opus 4.8; Claude Fable 5; GPT-5.5 | Kimi K3 | Ambiguity, architecture, complex shared logic, Critical judgment, review, conflict resolution and final integration |
+| Fast | GPT-5.3-Codex-Spark; GPT-5.6 Luna; Muse Spark 1.1; GLM-5.1 | MiniMax-M3; DeepSeek V4 Pro | Any complete execution contract with low residual discretion and deterministic acceptance; Fast is a leaf |
+| Standard | GPT-5.6 Terra; Grok 4.5; GPT-5.6 Luna; Muse Spark 1.1; Claude Sonnet 5; Gemini 3 Pro; GLM-5.1 | Qwen3.7 Max | Bounded domain ownership, local design, worker coordination, and independently verifiable implementation |
+| Lead | Claude Opus 4.8; Claude Fable 5; GPT-5.5 | Kimi K3 | User intent, architecture, Critical judgment, shared interfaces, conflict resolution, combined verification and final integration |
 
-In Codex Pro, GPT-5.3-Codex-Spark is the first candidate for eligible Fast text-only work because its separate usage limit reduces opportunity cost. It does **not** own architecture, ambiguous repository-wide changes, security or Critical decisions, vision/browser work, final review, or integration. Efficient Codex workers such as Terra or Luna are the fallback when Spark is unavailable or misses the quality gate. A host-selected Lead model that is absent from the dated registry can still serve as Lead after passing the same gates.
+In Codex Pro, GPT-5.3-Codex-Spark is the first candidate for eligible Fast text-only work because its separate usage limit reduces opportunity cost. Eligibility is decided after Lead or Standard externalizes the material decisions, so large implementation volume can still become Fast-ready. Spark does **not** own architecture, ambiguous repository-wide changes, security or Critical decisions, vision/browser work, final review, or integration. Terra is the initial general Standard choice; Luna is the initial lower-risk, high-volume Standard/Fast choice. Current availability and verified local results override this seed.
 
 ### Comparable public data slice
 
@@ -232,14 +253,14 @@ The evidence set includes SWE-bench, Terminal-Bench, Aider Polyglot, LiveCodeBen
 
 [Open an issue](https://github.com/blackstone2333/goldilocks/issues) when public or local evidence contradicts this map. Useful reports include the exact model/version/provider, task profile, agent harness and tools, reasoning level, sample count, pass rate, token or monetary cost, wall-clock latency, retries, review effort, and integration defects. Reproducible repository-local results are more valuable than another broad aggregate score.
 
-See [the v0.2 capability and trigger design](docs/v0.2-capability-trigger-engine.md).
+See the [v0.3 hierarchical orchestration design](docs/v0.3-hierarchical-orchestration.md) and its [v0.2 capability-engine lineage](docs/v0.2-capability-trigger-engine.md).
 
 ## Validate locally
 
 No model calls:
 
 ```bash
-python3 tests/test_v02_contract.py
+python3 tests/test_v03_contract.py
 python3 tests/test_three_bears_contract.py
 python3 benchmarks/three_bears/run.py --selftest
 ```
@@ -260,15 +281,15 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.2.6`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while execution-frontier continuity and the new enforced routing guard gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.3.0`. It can replace Superpowers more efficiently on the tested surface, but the new hierarchical orchestration is an architectural release, not a new performance certification. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 
 - lowering Mama/Papa test and verification overhead without weakening quality gates;
 - expanding the benchmark into larger repositories and additional languages;
 - adding more repetitions before making broad public performance claims;
-- validating the continuity protocol on long-running projects and cross-agent handoffs;
-- measuring parallel routing by wall-clock saving, successful delivery cost, and integration defects;
+- validating nested Standard→Fast delegation, continuity, and execution-memory reuse on long-running projects;
+- measuring raw-token change, quota-weighted Lead share, wall-clock critical path, retries, and integration defects;
 - preserving Superpowers entry compatibility while keeping the Direct path truly direct.
 
 ## License and influences

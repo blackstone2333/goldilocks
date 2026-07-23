@@ -19,7 +19,8 @@ When no local convention exists, use:
 docs/
 ├── PROJECT.md
 ├── work/
-│   └── YYYY-MM-DD-<topic>.md
+│   ├── YYYY-MM-DD-<topic>.md
+│   └── execution-patterns.md
 ├── decisions/
 │   └── ADR-0001-<decision>.md
 ├── debug/
@@ -39,7 +40,7 @@ docs/work/YYYY-MM-DD-<topic>/
 └── handoff.md
 ```
 
-Use [project-map.md](../assets/project-map.md), [work-packet.md](../assets/work-packet.md), and [debug-note.md](../assets/debug-note.md) as section menus, not forms that must be filled completely. Delete irrelevant headings.
+Use [project-map.md](../assets/project-map.md), [work-packet.md](../assets/work-packet.md), [debug-note.md](../assets/debug-note.md), and [execution-pattern.md](../assets/execution-pattern.md) as section menus, not forms that must be filled completely. Delete irrelevant headings.
 
 ## Keep the project legible
 
@@ -84,6 +85,10 @@ After a fix, add a focused regression test when practical. Create or update a de
 Do not create a debug note for obvious typos, routine dependency drift, transient noise, or a failure already explained by a clear regression test and commit. A useful note records symptom, reproduction, root cause, fix, verification commands, failed attempts, related regression test or commit, prevention, and current status. Link rather than paste large logs. Never store credentials, tokens, private user data, or production secrets.
 
 Keep `CHANGELOG.md` separate: it records user-visible release changes, not internal debugging history. Follow the repository's existing changelog format and update it only when the task includes a release-worthy external change.
+
+## Reuse execution routes selectively
+
+Before repeating orchestration analysis for a familiar task shape, search the project's execution patterns. Reuse a route only after checking its preconditions and invalidators against current code, risk, authority, tools, models, billing channels, and acceptance. After combined verification, record only routes likely to recur; read [execution-memory.md](execution-memory.md). A worker stop is not proof that a route succeeded, and internal routing history never belongs in `CHANGELOG.md`.
 
 ## Completion check
 

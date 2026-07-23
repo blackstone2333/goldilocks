@@ -2,6 +2,8 @@
 
 This survey supports Goldilocks v0.2.4 model routing. It is a dated evidence snapshot, not a permanent ranking. Model versions, prices, quotas, harnesses, and provider access change quickly.
 
+Goldilocks v0.3 retains this public evidence seed but changes its use: roles are assigned after decomposition, subscription routes optimize quota-weighted expensive usage inside a raw-token envelope, and verified local execution patterns override the public ordering. The data below was not recollected for v0.3 and does not constitute a new benchmark.
+
 ## Decision
 
 Goldilocks should not rank workers by raw coding score divided by token price. That ratio explodes for nearly free models, ignores retries and review cost, and treats unrelated benchmarks as interchangeable.

@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.2.6",
-  "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
+  "version": "0.3.0",
+  "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
   "author": {
     "name": "Charles Roc"
   },
@@ -14,6 +14,8 @@
     "workflow",
     "planning",
     "testing",
-    "verification"
+    "verification",
+    "multi-agent",
+    "quota-aware"
   ]
 }

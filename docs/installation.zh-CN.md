@@ -73,7 +73,7 @@ codex plugin add goldilocks@goldilocks-local
 
 ### Codex 连续性恢复
 
-原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。它还为 `PreToolUse`、`SubagentStart` 和 `SubagentStop` 附带路由守卫。守卫只在子智能体活动时运行：阻止未分级或完整历史派发，把 `fast__` 工作改写为 Spark，要求 Standard/Lead 显式指定模型，并在插件数据目录记录计划与实际模型。它不会修改 `config.toml`，也不会给 Direct 任务增加流程。
+原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。它还为 `PreToolUse`、`SubagentStart` 和 `SubagentStop` 附带路由守卫。守卫只在子智能体活动时运行：阻止未分级派发，把 `fast__` 改写为 Spark，禁止 Fast 继续创建子智能体，要求 Standard 显式指定模型，并且只允许明确的 Lead 交接继承完整历史。并发路由观察写入本地 SQLite；宿主关联不唯一时只记录歧义，不会误停子任务。它不会修改用户级 `config.toml`，也不会给 Direct 任务增加流程。
 
 Codex 会要求用户审核非托管插件 Hook；安装后可用 `/hooks` 查看并信任 Goldilocks 定义，插件更新导致 Hook 哈希变化时需要重新审核。恢复 Hook 被禁用时，连续性账本仍是唯一事实源；路由 Hook 未获信任或平台只安装了跨平台 Skill 时，模型路由只保留指导作用，无法强制执行。
 

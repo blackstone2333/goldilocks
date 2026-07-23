@@ -9,8 +9,8 @@
     {
       "name": "goldilocks",
       "source": "./plugins/goldilocks",
-      "description": "Minimum process with constant quality.",
-      "version": "0.2.6",
+      "description": "Right-sized agent teams with constant quality.",
+      "version": "0.3.0",
       "author": {
         "name": "Charles Roc"
       },

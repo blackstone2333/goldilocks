@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.2.6+codex.20260723064249",
-  "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
+  "version": "0.3.0+codex.20260723092721",
+  "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
   "author": {
     "name": "Charles Roc"
   },
@@ -14,14 +14,16 @@
     "testing",
     "verification",
     "delegation",
+    "multi-agent",
+    "quota-aware",
     "minimalism",
     "superpowers-compatible"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Goldilocks",
-    "shortDescription": "Minimum process with constant quality",
-    "longDescription": "Provides thirteen familiar workflow entry skills plus a Goldilocks router backed by six shared progressive-disclosure engines, compaction-safe continuity, and enforced model-value routing. It prevents full-context Lead clones, sends eligible Fast work to Spark, audits the actual worker model, and keeps Lead review and integration.",
+    "shortDescription": "Right-sized teams with constant quality",
+    "longDescription": "Provides thirteen familiar workflow entries plus a Goldilocks router backed by six shared engines. v0.3 dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; minimizes quota-weighted expensive work within a raw-token envelope; reuses verified execution patterns; preserves compaction continuity; and keeps final review and integration with Lead.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [
@@ -31,7 +33,8 @@
     ],
     "defaultPrompt": [
       "Use the smallest workflow that preserves full quality.",
-      "Plan and execute this without unnecessary process overhead.",
+      "Plan and execute this with the shallowest useful agent hierarchy.",
+      "Keep Lead focused on direction and integration; delegate complete execution contracts to lower-cost workers.",
       "Replace a Superpowers workflow with the equivalent Goldilocks entry."
     ],
     "brandColor": "#D4A72C",

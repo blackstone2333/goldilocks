@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.6-D4A72C" alt="版本 0.2.6">
+  <img src="https://img.shields.io/badge/version-0.3.0-D4A72C" alt="版本 0.3.0">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -25,14 +25,16 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 
 ## 为什么做 Goldilocks
 
-- **动态流程深度：** Direct、Fast、Lead、Critical 四类任务使用不同流程量，但验收标准不降级。
+- **动态流程深度：** 明确任务先快速比较 Lead 直做与委派；复杂任务只增加真正有收益的管理层级。
 - **渐进式加载：** 十三个兼容入口共享六个能力引擎，不复制十四套冗长流程。
 - **原生与复用优先：** 先检查现有项目方法、标准库、成熟库和平台原生能力，再考虑自造方案。
 - **只问关键问题：** 只有答案会实质改变终局、安全、范围或授权时才询问用户。
 - **记录新想法但不扩张范围：** 有价值的旁支想法会留到后续迭代，不会偷偷塞进当前任务。
 - **证据先于完成声明：** 信心、旧测试结果和子代理汇报都不能替代针对当前结果的新证据。
-- **该并行时并行：** 计划完成后，独立且有意义的单元默认交给合适的工作模型，Lead 保留架构、审核与集成。
-- **强制模型性价比路由：** 先过任务质量门，再比较成本；Codex 原生插件无需修改全局默认模型，就会把符合条件的 Fast 工作交给 GPT-5.3-Codex-Spark，同时阻止完整上下文的 Lead 克隆并核验真正启动的模型。
+- **分层动态委派：** Lead 可以直接把执行合同交给 Fast，也可以把一个板块交给 Standard，再由 Standard 组织自己的 Fast 成员。
+- **额度加权经济性：** 在控制总 token 的前提下，优先减少高系数、稀缺模型额度，并通过并行缩短关键路径。
+- **执行经验复用：** 相似任务先检查已验证路径和失效条件，不重复支付同一轮组织判断成本。
+- **Codex 强制路由：** 合格 Fast 工作自动交给 GPT-5.3-Codex-Spark；Fast 是叶子执行者；复杂 Lead 交接仍可继承完整上下文；并发审计不会凭错误关联误杀子任务。
 
 ## Goldilocks 到底能做什么
 
@@ -40,11 +42,11 @@ Goldilocks 是一个动态路由器，不是一套必须走完的瀑布流程。
 
 | 遇到的情况 | Goldilocks 的行为 | 有长期价值时留下什么 |
 |---|---|---|
-| 很小、边界明确的修改 | 走 Direct 路径：完成最小且完整的修改，执行最直接的针对性检查 | 通常什么都不留 |
+| 很小、边界明确的修改 | 快速比较 Lead Direct 与一个 Fast 合同，选择更快完成并验证的路径 | 通常什么都不留 |
 | 功能终局或产品决策不清晰 | 实现前对齐终局、关键取舍、约束和验收条件 | 需要跨会话保留时，记录精简 spec 或决策 |
 | 不知道根因的 Bug | 先复现、追踪、验证假设并定位根因，再修复 | 问题可能复发时，保留可复用的 debug 经验 |
 | 多步骤实现 | 只制定必要深度的计划，优先复用项目现有模式和成熟库，再按连贯单元执行 | 连续性需要时保存 plan、工作包、handoff 或项目结构图 |
-| 多个互相独立的工作单元 | 使用 worktree 和并行工作模型；按性价比分配边界明确的任务，Lead 负责架构与集成 | 工作模型摘要和集成证据，不制造并行文档噪音 |
+| 多个互相独立的工作单元 | 构建就绪任务图，动态使用 Lead→Fast 或 Lead→Standard→Fast | 工作成员与板块证据逐级汇总，最终由 Lead 集成 |
 | Critical 或会影响外部系统的动作 | 要求明确授权、Lead 负责、更强验证，并在适当时独立审查 | 授权与验证证据 |
 | 当前范围之外但有价值的新想法 | 记录下来，不偷偷扩大当前任务范围 | 后续想法条目 |
 
@@ -52,10 +54,12 @@ Goldilocks 是一个动态路由器，不是一套必须走完的瀑布流程。
 
 ```mermaid
 flowchart TD
-    A["收到任务"] --> B["检查仓库、约束、授权边界、风险、现有方法和工具"]
-    B --> C{"满足安全底线的最短路径是什么？"}
+    A["收到任务"] --> B["检查仓库、授权、风险、现有方法和已验证执行经验"]
+    B --> C{"快速判断直做还是委派"}
 
-    C -- "边界明确" --> D["Direct<br/>最小且完整的修改"]
+    C -- "Lead 更快" --> D["Lead Direct<br/>最小且完整的修改"]
+    C -- "执行合同已完整" --> K["一个或多个 Fast 并行执行"]
+    C -- "板块仍需判断" --> T["Standard 板块负责人"]
     C -- "终局不清晰" --> E["Align 对齐<br/>关键决策与验收条件"]
     C -- "根因未知" --> F["Diagnose 诊断<br/>复现、追踪、验证假设"]
     C -- "多步骤或高风险" --> G["Build 构建<br/>只写必要深度的 spec 和 plan"]
@@ -64,26 +68,43 @@ flowchart TD
     E --> G
     F --> G
     H --> G
-    G --> I["优先复用项目模式、原生 API、标准库和成熟依赖"]
-    I --> J{"是否有两个以上独立且有意义的工作单元？"}
-    J -- "是" --> K["Orchestrate 编排<br/>worktree + Fast/Standard 工作模型<br/>Lead 保留架构与集成"]
-    J -- "否" --> L["Lead 连贯执行"]
+    G --> I["冻结共享决策、接口和验收条件"]
+    I --> J{"成本最低的有效组织是什么？"}
+    J -- "执行合同" --> K
+    J -- "板块需要设计" --> T
+    J -- "Critical 或不可拆" --> L["Lead 负责核心"]
+    T --> U{"Standard 能否把剩余决策外置？"}
+    U -- "能" --> K
+    U -- "不能" --> V["Standard 实现或上报 Lead"]
 
     D --> M["产生新的验收证据<br/>测试、审查、浏览器/设备检查或针对性验证"]
     K --> M
+    V --> M
     L --> M
     M --> N{"是否满足验收？"}
     N -- "否" --> O["回到相关引擎继续迭代"]
     O --> M
-    N -- "是" --> P["Lead 集成并收尾"]
+    N -- "是" --> P["证据逐级汇总<br/>Lead 执行组合验收"]
 
     P --> Q{"这些知识以后还有价值吗？"}
-    Q -- "有" --> R["只保留有用的 spec/plan/handoff、debug 经验、延期想法或 changelog"]
+    Q -- "有" --> R["只保留有用的 spec/plan/handoff、debug 经验、已验证执行路径、延期想法或 changelog"]
     Q -- "没有" --> S["不留下流程残渣，直接完成"]
     R --> S
 ```
 
-Goldilocks 固定的是验收底线，而不是仪式。头脑风暴、计划、TDD、委派、worktree 和文档如果不能提供实际保护，就可以跳过；当需求歧义、回归风险、并行机会、授权边界或后续连续性使它们成为必要条件时，再按需启用。工作模型可以实现并测试边界明确的单元，但它们的汇报不能替代 Lead 对 diff 的审核、集成后的组合验证和最终判断。
+Goldilocks 固定的是验收底线，而不是谁亲手写代码。Fast 表示拆解后的剩余自主判断很少，不表示原任务很小；Standard 表示一个边界明确但仍需局部判断的板块，不表示文件数量中等；Lead 负责用户意图、共享决策、冲突和最终质量，只在 Direct 更快或核心不可拆时亲自实现。
+
+### v0.3 的分层动态编排
+
+Goldilocks 把 Agent 团队看作一个小型公司。用户负责方向和结果；Lead 承担产品、技术与项目管理；Standard 负责一个具体板块，并把已经做完的局部决策转成 Fast 执行合同；Fast 负责实现和聚焦验证，但不能继续分发任务。
+
+层级不是必走流程。小任务可以由 Lead 直做，也可以交给一个 Fast；中等任务可以直接交给 Fast、交给 Standard，或留在 Lead；大型项目可以由多个 Standard 各自管理 Fast，最后将板块证据逐级汇总。Goldilocks 不写死并行数量，实际并发由就绪任务图、平台容量、隔离工作区、集成风险和审核吞吐共同决定。
+
+优化目标也不再是机械追求总 token 最少。质量与授权属于硬门槛，总 token 必须保持在合理范围；在有效方案中，优先降低额度加权后的昂贵 token 占比和真实关键路径。只要没有增加缺陷或审核债，略多的低系数、独立额度工作模型 token 可以换取更少的 Lead 额度和更短时间。
+
+组合验收通过后，重复概率高的路径可以保存为精选执行经验。后续只有在模块、接口、风险、工具、计费通道和验收仍匹配时才复用。插件审计数据保存在本地并支持并发写入，但子智能体正常停止不等于成功验收，内部路由历史也不会污染面向用户的 changelog。
+
+完整的角色边界、路由顺序、上下文策略、审计行为和发布验收见 [v0.3 分层动态编排设计](docs/v0.3-hierarchical-orchestration.zh-CN.md)。
 
 ## 证据：Goldilocks vs Superpowers
 
@@ -163,13 +184,13 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 5. **Prove：** 审查、验证、授权、分支完成。
 6. **Evolve：** 新想法记录、复盘和 Skill 迭代。
 
-对于需要跨会话推进或交给其他工程师接手的工作，六个引擎共享一套轻量的 **Continuity Protocol（连续性协议）**。它优先复用仓库现有文档结构；没有约定时，才按需保存项目结构图、单一工作包或拆分的 spec/plan/handoff、精选 debug 经验、延期想法和面向用户的 changelog。Direct 任务默认不创建工作流记录，但当文档本身是交付物或正确性所需时，模型仍可自主创建或更新文档。它也不会增加新的可见 Skill 或执行引擎。
+对于需要跨会话推进或交给其他工程师接手的工作，六个引擎共享一套轻量的 **Continuity Protocol（连续性协议）**。它优先复用仓库现有文档结构；没有约定时，才按需保存项目结构图、单一工作包或拆分的 spec/plan/handoff、精选 debug 经验、已验证执行路径、延期想法和面向用户的 changelog。Direct 任务默认不创建工作流记录，但当文档本身是交付物或正确性所需时，模型仍可自主创建或更新文档。内部执行经验与发布 changelog 始终分开，也不会增加新的可见 Skill 或执行引擎。
 
 当压缩或中途引导威胁到正在执行的长任务时，连续性协议可以创建一个临时的 `.goldilocks/ACTIVE.md` 执行边界，保存稳定目标、已消费的引导、Done/In progress/Remaining、唯一的精确下一步、仓库与验证状态、禁止重做边界和终止条件。恢复时先读账本，再用 Git 事实校准；仓库证据优先。Codex 原生插件还附带默认静默的恢复 Hook 和可选的完整压缩提示词。详见[安装与 Codex 恢复配置](docs/installation.zh-CN.md#codex-连续性恢复)。
 
-针对多单元计划，共享的 **Model Routing Protocol（模型路由协议）** 会把机械代码、聚焦测试、fixture 和探索交给合适的 Fast/Standard 工作模型，Lead 保留复杂核心与组合验证。模型选择综合质量门、公开与本地证据、每次成功交付成本、延迟、置信度、时效性和 Pareto 候选集。详见[模型路由公开筛查报告](docs/model-routing-survey-2026-07-18.md)。
+针对多单元计划，共享的 **Hierarchical Orchestration Protocol（分层编排协议）** 会先比较 Direct 与委派，再把完整执行合同交给 Fast、把具体板块交给 Standard，或者由 Standard 在完成局部设计后继续组织 Fast。模型选择综合质量门、额度加权消耗、总 token 包络、关键路径、置信度、时效性、执行经验和 Pareto 候选集。公开模型数据只是种子，[本地证据优先](docs/model-routing-survey-2026-07-18.md)。
 
-Codex 原生插件会把这套协议变成执行守卫。每次派发都必须在任务名中声明 `fast__`、`standard__` 或 `lead__`，并且最多只继承四轮必要上下文。`fast__` 会被自动改写为 Spark；Standard 与 Lead 子智能体必须显式指定模型。未分级派发、隐式或完整历史继承、静默继承 Lead 模型都会在执行前被拦截。`SubagentStart` 会核验真正启动的模型；发现不一致时，子智能体不会执行任务，而是把工作交回 Lead。整个过程使用插件 Hook 与插件数据目录，不修改用户级 `config.toml`。只安装跨平台 Skill 时仍有路由指导，但无法强制约束 Codex 原生工具。
+Codex 原生插件会把这套协议变成执行守卫。每次派发都必须声明 `fast__`、`standard__` 或 `lead__`。`fast__` 自动改写为 Spark，且 Fast 不能继续创建子智能体；Standard 必须显式选择模型，并可在合同范围内组织 Fast。任务本地路由使用零到四轮相关上下文；真正需要完整对话的 `lead__` 交接可以继承父 Lead 模型和完整历史。路由观察写入支持并发的 SQLite 本地状态；宿主无法唯一关联并发或嵌套启动时，只记录“不可验证”，不会误停正确子任务。跨平台 Skill 安装保留协议，但无法强制拦截 Codex 原生调用。
 
 ## 公开模型路由种子
 
@@ -180,8 +201,8 @@ Codex 原生插件会把这套协议变成执行守卫。每次派发都必须�
 1. 先检查上述硬门槛。
 2. 低于任务质量线的候选直接淘汰，即使免费也不选。
 3. 使用加权几何平均估算质量，避免关键短板被平均数掩盖：`Q = 100 × product(score_i ^ weight_i)`。
-4. 计算完整的成功交付成本，而不是只看 token 单价：`CostSuccess = (直接成本 + 重试 + 审核 + 集成) / P(success)`。
-5. 先保留质量、成本和延迟的 Pareto 候选集，再用对数性价比公式处理同档候选：`Value = Q^1.5 × reliability × confidence / ((1 + ln(1 + CostSuccess/Cref))^0.65 × (1 + ln(1 + latency/Lref))^0.35)`。
+4. 订阅场景估算 `QuotaBurn = Σ(用量 × 账户系数 × 通道稀缺度) + 重试 + 审核 + 集成`，同时约束总 token 不明显膨胀。
+5. 保留质量、额度消耗和延迟的 Pareto 候选；账户真实额度证据不可用时，再退回每次成功交付成本和公开性价比分数。
 
 订阅额度按机会成本计算，不视为零成本；独立额度通道可以降低成本，但不能降低质量或安全门槛。数据过时、模型版本或 Agent harness 不匹配、样本量太小、缺少领域证据、没有本地复现，都会降低结论置信度。
 
@@ -202,11 +223,11 @@ Codex 原生插件会把这套协议变成执行守卫。每次派发都必须�
 
 | 角色 | 当前种子 | 较低置信度候选 | 工作边界 |
 |---|---|---|---|
-| Fast | GPT-5.3-Codex-Spark；GPT-5.6 Luna；Muse Spark 1.1；GLM-5.1 | MiniMax-M3；DeepSeek V4 Pro | 机械代码、fixture、聚焦测试、搜索、窄范围文档和确定性检查 |
-| Standard | GPT-5.6 Terra；Grok 4.5；GPT-5.6 Luna；Muse Spark 1.1；Claude Sonnet 5；Gemini 3 Pro；GLM-5.1 | Qwen3.7 Max | 接口稳定、边界明确、可以独立验收的跨文件实现 |
-| Lead | Claude Opus 4.8；Claude Fable 5；GPT-5.5 | Kimi K3 | 模糊需求、架构、复杂共享逻辑、Critical 判断、审查、冲突处理和最终集成 |
+| Fast | GPT-5.3-Codex-Spark；GPT-5.6 Luna；Muse Spark 1.1；GLM-5.1 | MiniMax-M3；DeepSeek V4 Pro | 剩余自主判断低、验收确定的完整执行合同；Fast 是叶子执行者 |
+| Standard | GPT-5.6 Terra；Grok 4.5；GPT-5.6 Luna；Muse Spark 1.1；Claude Sonnet 5；Gemini 3 Pro；GLM-5.1 | Qwen3.7 Max | 板块管理、局部设计、工作成员协调和可独立验收的实现 |
+| Lead | Claude Opus 4.8；Claude Fable 5；GPT-5.5 | Kimi K3 | 用户意图、架构、Critical 判断、共享接口、冲突处理、组合验证与最终集成 |
 
-在 Codex Pro 中，GPT-5.3-Codex-Spark 因独立使用额度降低了机会成本，是符合条件的 Fast 纯文本任务的第一候选。它**不负责**架构、模糊的仓库级修改、安全或 Critical 决策、视觉/浏览器工作、最终审查和集成。Spark 不可用或达不到质量线时，优先考虑 Terra、Luna 等高效 Codex 工作模型。宿主选择但未出现在当前注册表里的高级主模型，只要通过同样的门槛，仍然可以承担 Lead。
+在 Codex Pro 中，GPT-5.3-Codex-Spark 因独立使用额度降低了机会成本，是符合条件的 Fast 纯文本任务的第一候选。Fast 资格在 Lead 或 Standard 把关键决策外置之后判断，因此大型项目的大量实现也能变成 Fast 工作。Spark **不负责**架构、模糊的仓库级修改、安全或 Critical 决策、视觉/浏览器工作、最终审查和集成。Terra 是通用 Standard 初始选择；Luna 是低风险、高吞吐 Standard/Fast 初始选择；当前可用性与本地实测优先。
 
 ### 可比公开数据切片
 
@@ -232,14 +253,14 @@ Grok 4.5 的 Terminal-Bench 提交报告了 `-9.0%` hack 调整，因此注册�
 
 如果公开或本地证据与当前划分冲突，欢迎[提交 Issue](https://github.com/blackstone2333/goldilocks/issues)。有价值的报告最好包含：准确模型/版本/提供商、任务画像、Agent harness 与工具、推理等级、样本量、通过率、token 或金额成本、真实耗时、重试次数、审核投入和集成缺陷。同仓库可复现的实际结果，比再提供一个综合智力总分更有价值。
 
-设计细节见 [v0.2 能力与触发引擎](docs/v0.2-capability-trigger-engine.md)。
+设计细节见 [v0.3 分层动态编排](docs/v0.3-hierarchical-orchestration.zh-CN.md)，底层能力引擎沿革见 [v0.2 能力与触发引擎](docs/v0.2-capability-trigger-engine.md)。
 
 ## 本地验证
 
 不调用模型的验证：
 
 ```bash
-python3 tests/test_v02_contract.py
+python3 tests/test_v03_contract.py
 python3 tests/test_three_bears_contract.py
 python3 benchmarks/three_bears/run.py --selftest
 ```
@@ -260,15 +281,15 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.2.6`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，执行边界连续性和新增的强制路由守卫还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.3.0`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但这次分层动态编排属于架构更新，不冒充新的性能认证。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 
 - 在不削弱质量门的前提下，降低 Mama/Papa 任务中的测试与验证开销；
 - 扩展到更大的真实仓库和更多编程语言；
 - 增加重复次数，再考虑更广泛的性能声明；
-- 在长期项目和跨 Agent 交接中验证连续性协议；
-- 用实际耗时、每次成功交付成本和集成缺陷衡量并行路由；
+- 在长期项目中验证 Standard→Fast 嵌套委派、连续性和执行经验复用；
+- 测量总 token 变化、额度加权后的 Lead 占比、关键路径、重试和集成缺陷；
 - 保持 Superpowers 入口兼容，同时确保 Direct 路径始终足够直接。
 
 ## 许可证与理念来源

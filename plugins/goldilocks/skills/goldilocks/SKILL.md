@@ -19,9 +19,9 @@ Re-evaluate as facts change; do not assign one workflow depth to an entire proje
 | Guarded | Behavior change, bug, multi-file work, or limited ambiguity | State assumptions; use a short plan and focused evidence |
 | Critical | Security, permissions, money, production, migration, data loss, public contract, or costly architecture | Resolve authority/design; add risk-specific tests and independent review |
 
-Add orchestration only when isolation, delegation, or parallelism has positive net value after setup, context transfer, review, and integration cost.
+Before an expensive model starts implementation, make a constant-time Direct-versus-delegate check. If a verified route for the same task shape still applies, reuse it after checking invalidators. Add orchestration only when delegation, hierarchy, isolation, or parallelism has positive net value after briefing, review, integration, retry risk, quota-channel cost, and raw-token growth.
 
-After a Guarded or Critical plan exposes multiple meaningful units, run the orchestration routing pass before the main model starts implementing every unit itself.
+After a Guarded or Critical plan exposes meaningful units, run the orchestration routing pass before the Lead starts implementing everything. A ready execution contract can go directly to Fast; a bounded domain can go to Standard, which may split it into Fast contracts. Lead owns direction and final quality rather than defaulting to high-cost implementation.
 
 Direct: do not create workflow continuity documents by default. Creating or updating documentation is still appropriate when documentation is the deliverable, project conventions require it, or omission would make the change misleading. For Guarded work that genuinely spans stages, Critical or Orchestrated work, cross-session handoff, or new-project architecture, read [continuity.md](references/continuity.md) and persist only the minimum useful state.
 
@@ -42,7 +42,7 @@ Load multiple engines only when the stage genuinely crosses their boundaries. Ex
 
 1. Define the requested end state, constraints, non-goals, and acceptance evidence.
 2. Inspect the real project flow, structure, documentation, and existing solutions before inventing.
-3. Choose the smallest safe execution shape.
+3. Choose the smallest safe execution and organizational shape.
 4. Implement the smallest coherent change.
 5. Obtain fresh evidence for every completion claim.
 6. Separate useful follow-up ideas from delivered scope.

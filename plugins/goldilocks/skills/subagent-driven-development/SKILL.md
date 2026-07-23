@@ -5,4 +5,4 @@ description: Use when executing a plan with multiple coherent implementation uni
 
 # Subagent-Driven Development
 
-Read [orchestrate.md](../goldilocks/references/orchestrate.md), then [build.md](../goldilocks/references/build.md) and [prove.md](../goldilocks/references/prove.md). After planning, route eligible independent units instead of letting Lead implement all of them. Send mechanical code and focused tests to Fast, bounded patterns to Standard, and judgment to Lead. Review actual output; the coordinator owns interfaces, combined verification, and final integration.
+Read [orchestrate.md](../goldilocks/references/orchestrate.md), then [build.md](../goldilocks/references/build.md) and [prove.md](../goldilocks/references/prove.md). Lead owns outcome, not every implementation. Route complete execution contracts to Fast; route bounded domains to Standard, which may design and review its own Fast contracts. Classify residual judgment after decomposition, not original size. Integrate evidence upward and keep final verification with Lead.

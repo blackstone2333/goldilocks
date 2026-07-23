@@ -2,6 +2,31 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.3.0 — 2026-07-23
+
+### Added — Hierarchical Orchestration
+
+- Added a constant-time make-or-delegate check before expensive implementation. Clear work may stay Direct or become one complete Fast contract; larger work can use Lead→Fast, Lead→Standard, or Lead→Standard→Fast.
+- Added Standard domain ownership. Standard can resolve bounded local design, dispatch Fast execution contracts inside that boundary, review the domain result, and return one coherent evidence packet to Lead.
+- Added selective execution memory. Projects may preserve a verified route, preconditions, invalidators, organization depth, quota mix, elapsed time, retries, and acceptance evidence without using the release changelog as an internal database.
+- Added six v0.3 routing scenarios covering Direct dispatch, nested delegation, post-decomposition Fast eligibility, quota-weighted routing, execution-memory reuse, and full-context Lead handoff.
+
+### Changed
+
+- Fast now means low residual discretion after decomposition, not mechanical code, small file count, or a small original project. A large implementation may be Fast-ready after Lead or Standard freezes its decisions and acceptance.
+- Model selection now minimizes quota-weighted expensive usage and critical-path time after the quality gate, while total raw tokens stay inside a reasonable evidence-based envelope.
+- Useful concurrency is no longer described by a fixed two-or-three-worker default. It is bounded by the ready dependency graph, host capacity, isolation, integration risk, and reviewer throughput.
+- Lead owns user intent, shared interfaces, conflicts, combined verification, and final judgment. Lead implementation now needs a Direct, Critical-core, unblocking, or failed-worker reason rather than being the silent default.
+- Full-history context is allowed only for an explicit Lead handoff that inherits the parent Lead model. Fast and Standard continue to use task-local contracts or at most four relevant turns.
+
+### Routing guard and evidence
+
+- Replaced unlocked JSONL matching with a standard-library SQLite audit store. Concurrent writes are atomic, starts bind by a unique model match when possible, and ambiguous concurrent or nested starts are recorded as unverifiable instead of producing a false mismatch.
+- Fast workers are enforced as leaf executors. Standard and Lead route choices remain explicit; Spark rewriting still uses the separate Codex usage channel when eligible.
+- Plugin data records observed completions separately from verified passes. A normal child stop never becomes successful execution memory without Lead acceptance.
+- Added [deterministic RED/GREEN coverage](evals/results/2026-07-23-v030-hierarchical-orchestration.md) for Fast recursion, Lead full-history inheritance, out-of-order unique-model starts, ambiguous same-model starts, SQLite decisions/executions, Stop correlation, and true mismatch handling.
+- v0.3.0 makes no new runtime performance claim. The acceptance target is quality non-inferiority with lower Lead quota share, bounded total-token change, shorter critical path where parallelism exists, and no increase in integration defects.
+
 ## 0.2.6 — 2026-07-23
 
 ### Added

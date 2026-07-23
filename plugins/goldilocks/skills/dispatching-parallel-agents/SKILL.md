@@ -5,4 +5,4 @@ description: Use when two or more independent workstreams can run concurrently w
 
 # Dispatching Parallel Agents
 
-Read [orchestrate.md](../goldilocks/references/orchestrate.md). Split by coherent independent domain, declare interfaces and integration ownership, and give each worker a narrow evidence-backed brief. Keep overlapping fragile edits serial. Use zero agents when setup, context, review, and integration cost erase the saving. Inspect every diff and run combined verification; agent completion messages are not evidence.
+Read [orchestrate.md](../goldilocks/references/orchestrate.md). Build the ready dependency graph, declare interfaces and integration ownership, and fill useful host capacity with independent contracts. Do not impose a fixed worker count. Standard may manage Fast inside a bounded domain; Fast remains a leaf. Keep overlapping fragile edits serial. Use zero agents when briefing, review, and integration erase the saving. Inspect actual diffs and combined evidence.

@@ -6,12 +6,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.2.6"
+RELEASE_VERSION = "0.3.0"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
 CONTINUITY = SKILLS / "goldilocks" / "references" / "continuity.md"
 MODEL_ROUTING = SKILLS / "goldilocks" / "references" / "model-routing.md"
+EXECUTION_MEMORY = SKILLS / "goldilocks" / "references" / "execution-memory.md"
 MODEL_REGISTRY = SKILLS / "goldilocks" / "assets" / "model-registry.json"
 MODEL_SURVEY = ROOT / "docs" / "model-routing-survey-2026-07-18.md"
 ACTIVE_TASK = SKILLS / "goldilocks" / "assets" / "active-task.md"
@@ -25,6 +26,7 @@ TEMPLATE_ASSETS = {
     "project-map.md",
     "work-packet.md",
     "debug-note.md",
+    "execution-pattern.md",
 }
 CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CLAUDE_PLUGIN = PLUGIN / ".claude-plugin" / "plugin.json"
@@ -137,10 +139,12 @@ def validate_case(case: dict, index: int) -> None:
     if not case["material_ambiguity"] and expected["max_user_rounds"] != 0:
         fail(f"{label}: non-ambiguous work must allow zero extra user rounds")
     if expected["quality_mode"] == "Direct":
-        if expected["max_agent_calls"] != 0:
-            fail(f"{label}: Direct work must default to zero agent calls")
-        if expected["max_rule_words"] > 650:
-            fail(f"{label}: Direct path exceeds 650 rule words")
+        orchestrated = "Orchestrated" in expected["overlays"]
+        allowed_calls = 1 if orchestrated else 0
+        if expected["max_agent_calls"] > allowed_calls:
+            fail(f"{label}: Direct work exceeds its make-or-delegate agent bound")
+        if expected["max_rule_words"] > (1100 if orchestrated else 650):
+            fail(f"{label}: Direct path exceeds its rule budget")
     if expected["quality_mode"] == "Guarded" and "Orchestrated" not in expected["overlays"]:
         if expected["max_rule_words"] > 1500:
             fail(f"{label}: ordinary Guarded path exceeds 1500 rule words")
@@ -154,6 +158,7 @@ for required in [
     MAIN,
     CONTINUITY,
     MODEL_ROUTING,
+    EXECUTION_MEMORY,
     MODEL_REGISTRY,
     MODEL_SURVEY,
     ACTIVE_TASK,
@@ -214,14 +219,14 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Agent Routing Guard"),
-    ("CHANGELOG.zh-CN.md", "子智能体路由守卫"),
+    ("CHANGELOG.md", "Hierarchical Orchestration"),
+    ("CHANGELOG.zh-CN.md", "分层动态编排"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
         changelog = changelog_path.read_text(encoding="utf-8")
         if RELEASE_VERSION not in changelog or marker not in changelog:
-            fail(f"{changelog_name} lacks the {RELEASE_VERSION} continuity release notes")
+            fail(f"{changelog_name} lacks the {RELEASE_VERSION} orchestration release notes")
 
 for engine in sorted(ENGINES):
     require_file(SKILLS / "goldilocks" / "references" / f"{engine}.md")
@@ -345,12 +350,38 @@ if MODEL_ROUTING.is_file():
         "combined verification",
         "fast__<name>",
         "fork_turns",
-        "never use `all`",
-        "audits the actual started model",
-        "inheriting Lead is an escalation",
+        "QuotaBurn",
+        "raw-token envelope",
+        "residual discretion",
+        "full-history Lead handoff",
+        "Ambiguous concurrent or nested starts",
     ]:
         if required_text not in routing_text:
             fail(f"model routing lacks required contract: {required_text}")
+
+if EXECUTION_MEMORY.is_file():
+    memory_text = EXECUTION_MEMORY.read_text(encoding="utf-8")
+    for required_text in [
+        "verified execution pattern",
+        "invalidation check",
+        "normal worker stop is an observation, not a verified success",
+        "Keep `CHANGELOG.md` separate",
+    ]:
+        if required_text not in memory_text:
+            fail(f"execution memory lacks required contract: {required_text}")
+
+if ROUTING_HOOK_SCRIPT.is_file():
+    guard_text = ROUTING_HOOK_SCRIPT.read_text(encoding="utf-8")
+    for required_text in [
+        "orchestration.db",
+        "sqlite3",
+        "Fast workers are leaf executors",
+        'tier == "lead" and fork_value == "all"',
+        'confidence = "ambiguous"',
+        "verified_passes",
+    ]:
+        if required_text not in guard_text:
+            fail(f"routing guard lacks v0.3 contract: {required_text}")
 
 registry = load_json(MODEL_REGISTRY)
 if registry:
@@ -386,9 +417,10 @@ if orchestrate_path.is_file():
     orchestrate_text = orchestrate_path.read_text(encoding="utf-8")
     for required_text in [
         "routing pass after planning",
-        "default to parallel",
-        "state the serial reason",
-        "test authoring and focused test execution",
+        "make-or-delegate check",
+        "Lead → Standard → Fast",
+        "Fast is a leaf",
+        "Do not impose a fixed worker count",
         "model-routing.md",
     ]:
         if required_text not in orchestrate_text:
@@ -447,12 +479,12 @@ if MAIN.is_file() and word_count(MAIN) > 650:
 docs = skill_docs + list((SKILLS / "goldilocks" / "references").glob("*.md"))
 if docs:
     total_words = sum(word_count(path) for path in docs)
-    if total_words > 6000:
-        fail(f"capability documentation exceeds 6000 words: {total_words}")
+    if total_words > 6800:
+        fail(f"capability documentation exceeds 6800 words: {total_words}")
 
 cases = load_jsonl(CASES)
-if not 40 <= len(cases) <= 60:
-    fail(f"trigger suite must contain 40-60 cases, found {len(cases)}")
+if not 40 <= len(cases) <= 70:
+    fail(f"trigger suite must contain 40-70 cases, found {len(cases)}")
 
 ids = [case.get("id") for case in cases]
 if len(ids) != len(set(ids)):
@@ -499,7 +531,7 @@ if RESULTS.is_file():
 if failures:
     for message in failures:
         print(f"FAIL: {message}", file=sys.stderr)
-    print(f"\n{len(failures)} Goldilocks v0.2 contract failure(s).", file=sys.stderr)
+    print(f"\n{len(failures)} Goldilocks v0.3 contract failure(s).", file=sys.stderr)
     raise SystemExit(1)
 
-print(f"Goldilocks v0.2 contract passed with {len(cases)} trigger cases.")
+print(f"Goldilocks v0.3 contract passed with {len(cases)} trigger cases.")

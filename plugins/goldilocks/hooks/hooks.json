@@ -1,5 +1,5 @@
 {
-  "description": "Goldilocks continuity recovery plus subagent routing enforcement and audit.",
+  "description": "Goldilocks continuity recovery plus hierarchical, quota-aware subagent routing enforcement and concurrency-safe audit.",
   "hooks": {
     "PreToolUse": [
       {
