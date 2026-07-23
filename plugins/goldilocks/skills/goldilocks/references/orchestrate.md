@@ -16,11 +16,11 @@ Skip a worktree when the current workspace is already isolated or setup and merg
 
 ## Split coherent workstreams
 
-Parallelize only workstreams that are independent or have stable declared interfaces, can be reviewed as meaningful units, and will not edit the same fragile surface. Define shared decisions, ownership, integration order, and combined acceptance first. Keep overlapping work serial.
+Parallelize only workstreams that are independent or have stable declared interfaces, can be reviewed as meaningful units, and will not edit the same fragile surface. Define shared decisions, ownership, integration order, and combined acceptance first. Keep overlapping work serial. Start with the smallest useful wave, normally two or three workers, and add another wave only when it still shortens the critical path.
 
-Prefer delegating read-heavy exploration, mechanical implementation, test authoring and focused test execution, fixtures, and bounded known-pattern work. The Lead keeps the complex core when judgment or shared interfaces make delegation risky; it should not implement every unit merely because it can.
+Prefer delegating read-heavy exploration, mechanical implementation, test authoring and focused test execution, fixtures, and bounded known-pattern work. Let one worker implement a unit and its checks when splitting them would duplicate context. The Lead keeps the complex core when judgment or shared interfaces make delegation risky; it should not implement every unit merely because it can.
 
-Every delegated brief states objective, non-goals, allowed scope, relevant project patterns, interfaces, acceptance checks, expected evidence, and forbidden external or destructive actions. Give agents only task-local context; the Lead owns architecture, shared interfaces, conflicts, integration, and final judgment.
+Every delegated brief states objective, non-goals, allowed scope, relevant project patterns, interfaces, acceptance checks, expected evidence, and forbidden external or destructive actions. Give agents a compact task-local packet and repository paths instead of copying the conversation; the Lead owns architecture, shared interfaces, conflicts, integration, and final judgment.
 
 When workstreams or sessions require durable coordination, read [continuity.md](continuity.md). Give each owner the relevant packet or split plan, keep shared interfaces in one authoritative place, and update handoff state only at coherent milestones.
 
@@ -37,7 +37,7 @@ Use host-declared capability when available:
 
 A lower-capability worker receives a smaller scope, clearer brief, stronger deterministic checks, and review—not a lower quality target. Fast never owns Critical work, authority, architecture, or final integration.
 
-Use subagent-driven development only when a plan contains multiple coherent units whose independent implementation and review save time or context. Do not create one agent per microstep. Review actual diffs and evidence, return bounded defects for correction, then re-review. After three repeated failures or requirement mismatches, stop the loop and reassess with Lead capability.
+Use subagent-driven development only when a plan contains multiple coherent units whose independent implementation and review save time or context. Do not create one agent per microstep. Review actual diffs and evidence, return one bounded repair, then re-review. After a second failure or requirement mismatch, stop the worker loop and reassess with Lead capability.
 
 Agent success messages are not completion evidence. Run integration checks on the combined result.
 

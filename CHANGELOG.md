@@ -2,6 +2,26 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.2.6 — 2026-07-23
+
+### Added
+
+- Added a native Codex **Agent Routing Guard** that intercepts `spawn_agent` before execution without changing user-level model defaults.
+- Added explicit `fast__`, `standard__`, and `lead__` dispatch contracts. Fast calls are rewritten to `gpt-5.3-codex-spark`; Standard and Lead calls require an explicit model.
+- Added expected-versus-actual model auditing through `SubagentStart`, stored in plugin data rather than the project. A mismatched child is instructed not to execute the delegated task.
+- Added a [deterministic hook contract test](evals/results/2026-07-23-v026-routing-guard.md) covering unclassified calls, implicit and explicit full-history forks, oversized context forks, Spark rewriting, explicit Standard/Lead routing, successful audit, and mismatch handling.
+
+### Changed
+
+- Full-history subagent forks are blocked. Delegated work receives a task-local packet with `fork_turns="none"` or at most four recent turns.
+- Worker repair loops stop after a second failure or requirement mismatch. One cohesive worker normally implements a bounded unit and its focused tests instead of duplicating context across micro-agents.
+- Native Codex hard enforcement is separated from portable Skill guidance: Skill-only installs remain cross-platform but cannot intercept Codex tools.
+
+### Compatibility and evidence
+
+- The routing hooks require Codex trust review after installation or hook changes. Direct tasks remain unaffected because the guard runs only around subagent activity.
+- v0.2.6 closes the observed v0.2.5 failure where five child agents silently inherited `gpt-5.6-sol` and full parent history. It does not claim a new performance result until real projects measure Lead quota, total tokens, wall-clock time, retries, and integration defects.
+
 ## 0.2.5 — 2026-07-20
 
 ### Added

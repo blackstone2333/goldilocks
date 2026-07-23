@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "A lean Superpowers-compatible workflow suite with dynamic process depth and constant quality standards.",
   "author": {
     "name": "Charles Roc"

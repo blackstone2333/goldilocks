@@ -1,6 +1,44 @@
 {
-  "description": "Optional Goldilocks continuity reminders; the repository ledger remains the source of truth.",
+  "description": "Goldilocks continuity recovery plus subagent routing enforcement and audit.",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Agent|spawn_agent)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking Goldilocks agent routing"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
+            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "startup|resume|compact",

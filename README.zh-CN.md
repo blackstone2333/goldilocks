@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.5-D4A72C" alt="版本 0.2.5">
+  <img src="https://img.shields.io/badge/version-0.2.6-D4A72C" alt="版本 0.2.6">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -32,7 +32,7 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 - **记录新想法但不扩张范围：** 有价值的旁支想法会留到后续迭代，不会偷偷塞进当前任务。
 - **证据先于完成声明：** 信心、旧测试结果和子代理汇报都不能替代针对当前结果的新证据。
 - **该并行时并行：** 计划完成后，独立且有意义的单元默认交给合适的工作模型，Lead 保留架构、审核与集成。
-- **模型性价比路由：** 先过任务质量门，再比较成本；Codex Pro 对符合条件的 Fast 工作优先使用独立额度通道的 GPT-5.3-Codex-Spark。
+- **强制模型性价比路由：** 先过任务质量门，再比较成本；Codex 原生插件无需修改全局默认模型，就会把符合条件的 Fast 工作交给 GPT-5.3-Codex-Spark，同时阻止完整上下文的 Lead 克隆并核验真正启动的模型。
 
 ## Goldilocks 到底能做什么
 
@@ -169,6 +169,8 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 
 针对多单元计划，共享的 **Model Routing Protocol（模型路由协议）** 会把机械代码、聚焦测试、fixture 和探索交给合适的 Fast/Standard 工作模型，Lead 保留复杂核心与组合验证。模型选择综合质量门、公开与本地证据、每次成功交付成本、延迟、置信度、时效性和 Pareto 候选集。详见[模型路由公开筛查报告](docs/model-routing-survey-2026-07-18.md)。
 
+Codex 原生插件会把这套协议变成执行守卫。每次派发都必须在任务名中声明 `fast__`、`standard__` 或 `lead__`，并且最多只继承四轮必要上下文。`fast__` 会被自动改写为 Spark；Standard 与 Lead 子智能体必须显式指定模型。未分级派发、隐式或完整历史继承、静默继承 Lead 模型都会在执行前被拦截。`SubagentStart` 会核验真正启动的模型；发现不一致时，子智能体不会执行任务，而是把工作交回 Lead。整个过程使用插件 Hook 与插件数据目录，不修改用户级 `config.toml`。只安装跨平台 Skill 时仍有路由指导，但无法强制约束 Codex 原生工具。
+
 ## 公开模型路由种子
 
 下面的种子数据截至 **2026-07-18**。它是模型路由的初始参考，不是永久排行榜，也不意味着模型必须机械地调用某个名字。可用性、工具权限、上下文、模态、语言、数据政策和任务风险属于硬门槛；同仓库、同任务形态的近期本地证据优先于公开种子。未列出的模型只要通过同样的门槛，仍然可以参与选择。
@@ -258,7 +260,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.2.5`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，执行边界连续性和并行模型路由还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.2.6`。现有证据表明，它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都具有绝对优势。公开的运行认证仍是 v0.2.2 的结果，执行边界连续性和新增的强制路由守卫还需要积累真实项目证据。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

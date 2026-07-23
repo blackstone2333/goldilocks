@@ -73,7 +73,9 @@ Start a new Codex task after installation so the new Skill context is loaded. Up
 
 ### Codex continuity recovery
 
-The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. Codex requires review before non-managed plugin hooks run; use `/hooks` to inspect and trust the Goldilocks definition after installation. The ledger remains the source of truth if a hook is disabled, delayed, or unavailable.
+The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. It also bundles a routing guard for `PreToolUse`, `SubagentStart`, and `SubagentStop`. The guard only runs around subagent activity: it blocks unclassified or full-history spawns, rewrites `fast__` work to Spark, requires explicit Standard/Lead models, and records expected versus actual models in the plugin data directory. It does not edit `config.toml` or add work to Direct tasks.
+
+Codex requires review before non-managed plugin hooks run. Use `/hooks` to inspect and trust the Goldilocks definition after installation, and review it again after an update changes the hook hash. The continuity ledger remains the source of truth if a recovery hook is disabled; routing becomes advisory rather than enforced when the routing hook is not trusted or the platform only installed portable Skills.
 
 For an additional compaction layer, copy `plugins/goldilocks/skills/goldilocks/assets/codex-compact-prompt.md` from this repository to a stable local path and point user-level `~/.codex/config.toml` at that copy:
 

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.2.5-D4A72C" alt="Version 0.2.5">
+  <img src="https://img.shields.io/badge/version-0.2.6-D4A72C" alt="Version 0.2.6">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -32,7 +32,7 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Ideas without scope creep:** useful adjacent ideas are preserved for later rather than silently expanding the current task.
 - **Evidence before completion:** confidence, old test output, and agent reports never replace fresh evidence for material claims.
 - **Parallel when earned:** after planning, independent meaningful units default to capable workers while the Lead keeps architecture, review, and integration.
-- **Model value routing:** task-specific quality gates come before price; Codex Pro prefers GPT-5.3-Codex-Spark for eligible Fast work on its separate usage channel.
+- **Enforced model value routing:** task-specific quality gates come before price; the native Codex plugin sends eligible Fast work to GPT-5.3-Codex-Spark without requiring global model defaults, blocks full-context Lead clones, and audits the model that actually starts.
 
 ## What Goldilocks actually does
 
@@ -169,6 +169,8 @@ When compaction or mid-flight steering threatens an active long task, Continuity
 
 For multi-unit plans, a shared **Model Routing Protocol** assigns mechanical code, focused tests, fixtures, and exploration to suitable Fast/Standard workers while the Lead retains complex core logic and combined verification. Selection uses a quality gate, public and local evidence, expected cost per successful delivery, latency, confidence, recency, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md).
 
+The native Codex plugin turns that protocol into an execution guard. Every spawn declares `fast__`, `standard__`, or `lead__` in its task name and uses no more than four task-relevant parent turns. `fast__` is rewritten to Spark; Standard and Lead workers require an explicit model. Unclassified calls, implicit/full-history forks, and silent Lead inheritance are blocked before execution. `SubagentStart` audits the actual model; a mismatch tells the child not to execute and returns the work to Lead. This uses plugin hooks and writable plugin data, not user-level `config.toml`. Portable Skill-only installs retain the routing guidance but cannot enforce native Codex tool calls.
+
 ## Public model-routing seed
 
 The following seed is dated **2026-07-18**. It is an advisory starting point for routing, not a permanent leaderboard or an instruction to call a named model blindly. Availability, tool access, context, modality, language, data policy, and task risk are hard gates; recent local evidence on the same repository and task shape overrides this public seed. Unlisted models remain eligible when they clear the same gates.
@@ -258,7 +260,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.2.5`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while execution-frontier continuity and parallel model routing gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.2.6`. Current evidence shows that it is a better replacement for Superpowers, but it does not have an absolute advantage across every possible workflow. The published runtime certification remains the v0.2.2 result while execution-frontier continuity and the new enforced routing guard gather real-project evidence. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 

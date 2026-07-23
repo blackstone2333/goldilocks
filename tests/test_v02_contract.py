@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.2.5"
+RELEASE_VERSION = "0.2.6"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -18,6 +18,7 @@ ACTIVE_TASK = SKILLS / "goldilocks" / "assets" / "active-task.md"
 COMPACT_PROMPT = SKILLS / "goldilocks" / "assets" / "codex-compact-prompt.md"
 HOOK_CONFIG = PLUGIN / "hooks" / "hooks.json"
 HOOK_SCRIPT = PLUGIN / "scripts" / "recovery_reminder.py"
+ROUTING_HOOK_SCRIPT = PLUGIN / "scripts" / "agent_routing_guard.py"
 TEMPLATE_ASSETS = {
     "active-task.md",
     "codex-compact-prompt.md",
@@ -159,6 +160,7 @@ for required in [
     COMPACT_PROMPT,
     HOOK_CONFIG,
     HOOK_SCRIPT,
+    ROUTING_HOOK_SCRIPT,
     CASES,
     RESULTS,
     ROOT / "docs" / "installation.md",
@@ -212,8 +214,8 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Continuity Protocol"),
-    ("CHANGELOG.zh-CN.md", "连续性协议"),
+    ("CHANGELOG.md", "Agent Routing Guard"),
+    ("CHANGELOG.zh-CN.md", "子智能体路由守卫"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
@@ -310,9 +312,22 @@ if COMPACT_PROMPT.is_file():
 hook_config = load_json(HOOK_CONFIG)
 if hook_config:
     hook_events = set(hook_config.get("hooks", {}))
-    for event in ["SessionStart", "PostCompact", "UserPromptSubmit"]:
+    for event in [
+        "PreToolUse",
+        "SubagentStart",
+        "SubagentStop",
+        "SessionStart",
+        "PostCompact",
+        "UserPromptSubmit",
+    ]:
         if event not in hook_events:
-            fail(f"recovery hook config lacks event: {event}")
+            fail(f"hook config lacks event: {event}")
+    routing_hook_config = json.dumps(hook_config.get("hooks", {}), ensure_ascii=False)
+    if "agent_routing_guard.py" not in routing_hook_config:
+        fail("hook config does not register the agent routing guard")
+    pre_tool_groups = hook_config.get("hooks", {}).get("PreToolUse", [])
+    if not any("Agent" in str(group.get("matcher", "")) for group in pre_tool_groups):
+        fail("routing guard does not match the Agent alias")
 
 if MODEL_ROUTING.is_file():
     routing_text = MODEL_ROUTING.read_text(encoding="utf-8")
@@ -328,6 +343,11 @@ if MODEL_ROUTING.is_file():
         "separate usage limits",
         "test authoring",
         "combined verification",
+        "fast__<name>",
+        "fork_turns",
+        "never use `all`",
+        "audits the actual started model",
+        "inheriting Lead is an escalation",
     ]:
         if required_text not in routing_text:
             fail(f"model routing lacks required contract: {required_text}")
