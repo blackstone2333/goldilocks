@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Emit small Codex hook reminders only when an active Goldilocks ledger exists."""
+"""Emit a small routing reminder plus continuity guidance when a ledger exists."""
 
 from __future__ import annotations
 
@@ -25,23 +25,29 @@ def main() -> None:
         payload = json.load(sys.stdin)
         cwd = Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
         ledger = find_ledger(cwd)
-        if ledger is None:
-            return
-
         event = payload.get("hook_event_name")
         if event == "SessionStart":
-            message = (
-                f"Goldilocks recovery state exists at {ledger}. Before acting, read it, "
-                "reconcile it with repository evidence, honor applied steering and Do not "
-                "repeat, then continue from Exact next action."
+            routing = (
+                "Goldilocks routing: make one quick Direct-versus-delegate check before implementation. "
+                "Lead owns intent, architecture, integration, and final acceptance. Send a complete "
+                "execution contract to Fast; give bounded unresolved domain judgment to Standard, which "
+                "may contract Fast. Fast is a leaf. Use an explicit host-supported native model, or the "
+                "packaged Spark codex-exec adapter when native Spark is unavailable."
             )
+            if ledger is not None:
+                routing += (
+                    f" Recovery state exists at {ledger}; read it, reconcile repository evidence, honor "
+                    "applied steering and Do not repeat, then continue from Exact next action."
+                )
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
-                    "additionalContext": message,
+                    "additionalContext": routing,
                 }
             }
         elif event == "UserPromptSubmit":
+            if ledger is None:
+                return
             message = (
                 f"An active Goldilocks task ledger exists at {ledger}. Interpret this prompt "
                 "against its stable Objective as ADD, REPLACE, CANCEL, or QUESTION; after "
@@ -54,6 +60,8 @@ def main() -> None:
                 }
             }
         elif event == "PostCompact":
+            if ledger is None:
+                return
             output = {
                 "continue": True,
                 "systemMessage": (

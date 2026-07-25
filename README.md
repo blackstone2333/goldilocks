@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-D4A72C" alt="Version 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.3.2-D4A72C" alt="Version 0.3.2">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -34,7 +34,7 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 - **Hierarchical delegation:** Lead can dispatch execution contracts directly to Fast or give a bounded domain to Standard, which may organize its own Fast workers.
 - **Quota-weighted economics:** optimize scarce, high-multiplier model usage and critical-path time while keeping total raw tokens inside a reasonable envelope.
 - **Execution memory:** reuse a verified route for recurring task shapes after checking its invalidators instead of paying for the same orchestration decision twice.
-- **Enforced Codex routing:** eligible Fast work is sent to GPT-5.3-Codex-Spark, Fast remains a leaf, Lead-only full-context handoff stays possible, and concurrent audit never invents a false match.
+- **Real Codex worker routes:** native subagents use explicit host-supported models; eligible Fast work can use the packaged `codex exec` GPT-5.3-Codex-Spark adapter when Spark is missing from the native model list.
 - **Quiet update awareness:** the native Codex plugin checks at most once per day, stays silent when current or offline, and reports a newer release once without changing an active task.
 
 ## What Goldilocks actually does
@@ -78,8 +78,14 @@ flowchart TD
     U -- "Yes" --> K
     U -- "No" --> V["Standard implements or escalates"]
 
+    K --> W{"Is the selected Fast model available on this route?"}
+    W -- "Native host advertises it" --> X["Native worker<br/>Explicit model, bounded context"]
+    W -- "Spark is CLI-only" --> Y["Packaged codex exec worker<br/>GPT-5.3-Codex-Spark"]
+    W -- "No eligible worker" --> V
+
     D --> M["Produce fresh acceptance evidence<br/>Tests, review, browser/device checks or targeted verification"]
-    K --> M
+    X --> M
+    Y --> M
     V --> M
     L --> M
     M --> N{"Acceptance passes?"}
@@ -100,6 +106,8 @@ The invariant is the acceptance floor, not who typed the code. Fast describes lo
 Goldilocks treats an agent team like a small company. The user sets direction and accepts the result. Lead acts as product, technical, and project leadership. Standard owns a domain and can turn its decisions into Fast execution contracts. Fast implements and runs focused checks but cannot delegate further.
 
 The hierarchy is dynamic rather than mandatory. A tiny task may stay with Lead or go to one Fast worker. A medium task may go directly to Fast, to Standard, or remain local. A large project can use several Standard domain owners, each coordinating independent Fast work, before evidence integrates upward. There is no fixed worker count: useful concurrency is bounded by the ready dependency graph, host capacity, isolation, integration risk, and reviewer throughput.
+
+Codex routing is equally dynamic. Goldilocks uses native subagents when the host advertises the selected model. If the native host omits Spark while the installed CLI still supports it, `dispatch_codex_worker.py` launches a contract-only `codex exec -m gpt-5.3-codex-spark` worker in the assigned repository or worktree. The adapter disables plugins, apps, MCP servers, and further delegation for that worker, keeps the configured provider and repository instructions, and never silently falls back to Lead.
 
 The routing objective is not minimum raw tokens at any cost. Quality and authority are hard gates; total raw tokens remain bounded; among valid routes Goldilocks minimizes quota-weighted expensive usage and the wall-clock critical path. A route may use slightly more low-coefficient or separately metered worker tokens when it materially reduces scarce Lead usage without increasing defects or review debt.
 
@@ -191,7 +199,7 @@ When compaction or mid-flight steering threatens an active long task, Continuity
 
 For multi-unit plans, a shared **Hierarchical Orchestration Protocol** first compares Direct execution with delegation. It can route a complete contract to Fast, assign a bounded domain to Standard, or let Standard organize Fast workers after local decisions are fixed. Selection uses a quality gate, quota-weighted subscription burn, a raw-token envelope, critical-path latency, confidence, recency, execution memory, and a Pareto shortlist. See the [dated model-routing survey](docs/model-routing-survey-2026-07-18.md) for the public seed; local evidence wins.
 
-The native Codex plugin turns that protocol into an execution guard. Every spawn declares `fast__`, `standard__`, or `lead__`. `fast__` is rewritten to Spark and Fast cannot spawn; Standard requires an explicit model and may organize Fast within its contract. Task-local routes use no context or at most four relevant turns. A justified `lead__` handoff may inherit full history and the parent Lead model. SQLite-backed plugin data makes route observation safe under concurrent writers; when the host cannot uniquely correlate a concurrent or nested start, the audit records ambiguity instead of stopping the wrong child. Portable Skill-only installs retain the protocol but cannot enforce native Codex calls.
+The native Codex plugin turns that protocol into an execution guard. Every native spawn declares `fast__`, `standard__`, or `lead__` and an explicit host-supported worker model; omitted models cannot silently inherit Lead. Fast cannot delegate further, while Standard may organize Fast inside its contract. A justified `lead__` handoff may inherit full history and the parent Lead model. The packaged Goldilocks Skill also carries `dispatch_codex_worker.py` for the verified case where native `collaboration.spawn_agent` does not advertise Spark but `codex exec` does. SQLite-backed audit remains concurrency-safe; ambiguous starts are recorded without stopping the wrong child, and an unplanned Sol child receives a soft return-to-owner check.
 
 ## Public model-routing seed
 
@@ -285,7 +293,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.3.1`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. The native Codex plugin now provides low-frequency update awareness without automatic installation or portable-Skill startup overhead. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.3.2`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. This release makes the company-style route executable in current Codex hosts by separating native workers from the packaged Spark CLI worker, without claiming a new end-to-end performance result. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 

@@ -18,7 +18,7 @@ def run_hook(cwd: Path, event: str) -> subprocess.CompletedProcess[str]:
         "hook_event_name": event,
     }
     if event == "SessionStart":
-        payload["source"] = "compact"
+        payload["source"] = "startup"
     elif event == "PostCompact":
         payload["trigger"] = "auto"
     elif event == "UserPromptSubmit":
@@ -44,9 +44,21 @@ def main() -> None:
         nested = repo / "src" / "nested"
         nested.mkdir(parents=True)
 
-        quiet = run_hook(nested, "SessionStart")
-        assert quiet.returncode == 0, quiet.stderr
-        assert quiet.stdout == "", "hook must not cross the current Git boundary"
+        startup = run_hook(nested, "SessionStart")
+        assert startup.returncode == 0, startup.stderr
+        startup_output = json.loads(startup.stdout)
+        startup_context = startup_output["hookSpecificOutput"]["additionalContext"]
+        assert len(startup_context.split()) <= 120
+        assert "Direct" in startup_context
+        assert "Lead owns intent, architecture, integration, and final acceptance" in startup_context
+
+        no_ledger_steer = run_hook(nested, "UserPromptSubmit")
+        assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
+        assert no_ledger_steer.stdout == "", "steering context remains ledger-gated"
+
+        no_ledger_compact = run_hook(nested, "PostCompact")
+        assert no_ledger_compact.returncode == 0, no_ledger_compact.stderr
+        assert no_ledger_compact.stdout == "", "compaction recovery remains ledger-gated"
 
         ledger = repo / ".goldilocks" / "ACTIVE.md"
         ledger.parent.mkdir()
@@ -59,6 +71,9 @@ def main() -> None:
         assert str(ledger) in context
         assert "Exact next action" in context
         assert "Do not repeat" in context
+        assert "Direct" in context
+        assert "Lead owns intent, architecture, integration, and final acceptance" in context
+        assert len(context.split()) <= 120
 
         steer = run_hook(nested, "UserPromptSubmit")
         steer_output = json.loads(steer.stdout)

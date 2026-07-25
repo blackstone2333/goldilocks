@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.3.1"
+RELEASE_VERSION = "0.3.2"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -20,6 +20,7 @@ COMPACT_PROMPT = SKILLS / "goldilocks" / "assets" / "codex-compact-prompt.md"
 HOOK_CONFIG = PLUGIN / "hooks" / "hooks.json"
 HOOK_SCRIPT = PLUGIN / "scripts" / "recovery_reminder.py"
 ROUTING_HOOK_SCRIPT = PLUGIN / "scripts" / "agent_routing_guard.py"
+WORKER_SCRIPT = SKILLS / "goldilocks" / "scripts" / "dispatch_codex_worker.py"
 UPDATE_HOOK_SCRIPT = PLUGIN / "scripts" / "update_checker.py"
 TEMPLATE_ASSETS = {
     "active-task.md",
@@ -167,6 +168,7 @@ for required in [
     HOOK_CONFIG,
     HOOK_SCRIPT,
     ROUTING_HOOK_SCRIPT,
+    WORKER_SCRIPT,
     UPDATE_HOOK_SCRIPT,
     CASES,
     RESULTS,
@@ -219,10 +221,17 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
                 fail(f"{readme_name} lacks installation command: {command}")
         if f"version-{RELEASE_VERSION}" not in readme:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
+        for route_contract in [
+            "gpt-5.3-codex-spark",
+            "dispatch_codex_worker.py",
+            "codex exec",
+        ]:
+            if route_contract not in readme:
+                fail(f"{readme_name} lacks the dual Codex worker route: {route_contract}")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Quiet Update Awareness"),
-    ("CHANGELOG.zh-CN.md", "安静的更新感知"),
+    ("CHANGELOG.md", "Dual Codex Worker Routes"),
+    ("CHANGELOG.zh-CN.md", "Codex 双通道工作成员"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
@@ -337,6 +346,12 @@ if hook_config:
     pre_tool_groups = hook_config.get("hooks", {}).get("PreToolUse", [])
     if not any("Agent" in str(group.get("matcher", "")) for group in pre_tool_groups):
         fail("routing guard does not match the Agent alias")
+    if not any("collaboration" in str(group.get("matcher", "")) for group in pre_tool_groups):
+        fail("routing guard does not match the collaboration.spawn_agent namespace")
+
+    manifest_interface = codex_plugin.get("interface", {}) if codex_plugin else {}
+    if len(manifest_interface.get("defaultPrompt", [])) > 3:
+        fail("Codex plugin exposes more than the host maximum of three default prompts")
 
 if MODEL_ROUTING.is_file():
     routing_text = MODEL_ROUTING.read_text(encoding="utf-8")
@@ -359,6 +374,10 @@ if MODEL_ROUTING.is_file():
         "residual discretion",
         "full-history Lead handoff",
         "Ambiguous concurrent or nested starts",
+        "native host",
+        "dispatch_codex_worker.py",
+        "`codex exec`",
+        "silent fallback",
     ]:
         if required_text not in routing_text:
             fail(f"model routing lacks required contract: {required_text}")
@@ -383,9 +402,25 @@ if ROUTING_HOOK_SCRIPT.is_file():
         'tier == "lead" and fork_value == "all"',
         'confidence = "ambiguous"',
         "verified_passes",
+        "normalized_tool_name",
+        "unplanned Lead-model subagent",
     ]:
         if required_text not in guard_text:
             fail(f"routing guard lacks v0.3 contract: {required_text}")
+
+if WORKER_SCRIPT.is_file():
+    worker_text = WORKER_SCRIPT.read_text(encoding="utf-8")
+    for required_text in [
+        "gpt-5.3-codex-spark",
+        "agents.enabled=false",
+        "mcp_servers={}",
+        '"plugins"',
+        "leaf executor",
+        "Do not broaden scope",
+        "--output-last-message",
+    ]:
+        if required_text not in worker_text:
+            fail(f"external Codex worker lacks required contract: {required_text}")
 
 registry = load_json(MODEL_REGISTRY)
 if registry:

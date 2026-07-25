@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.1-D4A72C" alt="版本 0.3.1">
+  <img src="https://img.shields.io/badge/version-0.3.2-D4A72C" alt="版本 0.3.2">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -34,7 +34,7 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 - **分层动态委派：** Lead 可以直接把执行合同交给 Fast，也可以把一个板块交给 Standard，再由 Standard 组织自己的 Fast 成员。
 - **额度加权经济性：** 在控制总 token 的前提下，优先减少高系数、稀缺模型额度，并通过并行缩短关键路径。
 - **执行经验复用：** 相似任务先检查已验证路径和失效条件，不重复支付同一轮组织判断成本。
-- **Codex 强制路由：** 合格 Fast 工作自动交给 GPT-5.3-Codex-Spark；Fast 是叶子执行者；复杂 Lead 交接仍可继承完整上下文；并发审计不会凭错误关联误杀子任务。
+- **真实可用的 Codex 路由：** 原生子智能体显式使用宿主支持的模型；原生列表没有 Spark 时，合格 Fast 工作可走打包好的 `codex exec` GPT-5.3-Codex-Spark 适配器。
 - **安静的更新感知：** Codex 原生插件每天最多检查一次；已是最新版、离线或检查失败时完全静默，发现新版本只提醒一次且不改变当前任务。
 
 ## Goldilocks 到底能做什么
@@ -78,8 +78,14 @@ flowchart TD
     U -- "能" --> K
     U -- "不能" --> V["Standard 实现或上报 Lead"]
 
+    K --> W{"当前通道是否支持所选 Fast 模型？"}
+    W -- "原生宿主支持" --> X["原生工作成员<br/>显式模型 + 有界上下文"]
+    W -- "Spark 仅 CLI 可用" --> Y["打包的 codex exec 工作成员<br/>GPT-5.3-Codex-Spark"]
+    W -- "没有合格工作通道" --> V
+
     D --> M["产生新的验收证据<br/>测试、审查、浏览器/设备检查或针对性验证"]
-    K --> M
+    X --> M
+    Y --> M
     V --> M
     L --> M
     M --> N{"是否满足验收？"}
@@ -100,6 +106,8 @@ Goldilocks 固定的是验收底线，而不是谁亲手写代码。Fast 表示�
 Goldilocks 把 Agent 团队看作一个小型公司。用户负责方向和结果；Lead 承担产品、技术与项目管理；Standard 负责一个具体板块，并把已经做完的局部决策转成 Fast 执行合同；Fast 负责实现和聚焦验证，但不能继续分发任务。
 
 层级不是必走流程。小任务可以由 Lead 直做，也可以交给一个 Fast；中等任务可以直接交给 Fast、交给 Standard，或留在 Lead；大型项目可以由多个 Standard 各自管理 Fast，最后将板块证据逐级汇总。Goldilocks 不写死并行数量，实际并发由就绪任务图、平台容量、隔离工作区、集成风险和审核吞吐共同决定。
+
+Codex 的调用通道同样动态选择：宿主原生支持所选模型时使用原生子智能体；如果原生列表没有 Spark，但当前 CLI 仍支持它，`dispatch_codex_worker.py` 会在指定仓库或 worktree 中启动只接收执行合同的 `codex exec -m gpt-5.3-codex-spark` 工作成员。适配器会关闭该 worker 的插件、App、MCP 和继续分派能力，保留用户已有模型供应商配置和仓库规则，并且绝不会静默降级成 Lead。
 
 优化目标也不再是机械追求总 token 最少。质量与授权属于硬门槛，总 token 必须保持在合理范围；在有效方案中，优先降低额度加权后的昂贵 token 占比和真实关键路径。只要没有增加缺陷或审核债，略多的低系数、独立额度工作模型 token 可以换取更少的 Lead 额度和更短时间。
 
@@ -191,7 +199,7 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 
 针对多单元计划，共享的 **Hierarchical Orchestration Protocol（分层编排协议）** 会先比较 Direct 与委派，再把完整执行合同交给 Fast、把具体板块交给 Standard，或者由 Standard 在完成局部设计后继续组织 Fast。模型选择综合质量门、额度加权消耗、总 token 包络、关键路径、置信度、时效性、执行经验和 Pareto 候选集。公开模型数据只是种子，[本地证据优先](docs/model-routing-survey-2026-07-18.md)。
 
-Codex 原生插件会把这套协议变成执行守卫。每次派发都必须声明 `fast__`、`standard__` 或 `lead__`。`fast__` 自动改写为 Spark，且 Fast 不能继续创建子智能体；Standard 必须显式选择模型，并可在合同范围内组织 Fast。任务本地路由使用零到四轮相关上下文；真正需要完整对话的 `lead__` 交接可以继承父 Lead 模型和完整历史。路由观察写入支持并发的 SQLite 本地状态；宿主无法唯一关联并发或嵌套启动时，只记录“不可验证”，不会误停正确子任务。跨平台 Skill 安装保留协议，但无法强制拦截 Codex 原生调用。
+Codex 原生插件会把这套协议变成执行守卫。每次原生派发都必须声明 `fast__`、`standard__` 或 `lead__`，并显式选择宿主支持的工作模型，缺省值不能再偷偷继承 Lead。Fast 不能继续派发；Standard 可以在合同边界内组织 Fast；真正需要完整对话的 `lead__` 交接仍可继承父 Lead 模型和完整历史。Goldilocks 主 Skill 同时打包 `dispatch_codex_worker.py`，专门处理原生 `collaboration.spawn_agent` 没有 Spark、但 `codex exec` 可以使用 Spark 的真实情况。SQLite 审计继续保证并发安全；关联不唯一时不会误停任务，未规划的 Sol 子智能体则收到柔性的退回检查。
 
 ## 公开模型路由种子
 
@@ -285,7 +293,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.3.1`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。Codex 原生插件现在能够低频感知更新，但不会自动安装，也不会给纯 Skill 增加启动开销。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.3.2`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。这一版把原生工作成员与 Spark CLI 工作成员分成两条真实可执行的通道，让公司式编排能适配当前 Codex 宿主，但不声称已经获得新的端到端性能结果。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

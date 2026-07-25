@@ -51,6 +51,8 @@ Detect existing isolation before creating worktrees. Inspect branch, dirty state
 
 Read [model-routing.md](model-routing.md) when multiple models, billing channels, or capability levels are available. Apply the quality and authority gates first. Then prefer the route that lowers quota-weighted expensive usage and wall-clock time while keeping total raw tokens inside a reasonable envelope.
 
+Confirm the model exists on the actual route; use `model-routing.md`'s packaged Spark adapter when native Codex omits it, and never silently inherit Lead.
+
 Fast describes low remaining discretion, not small original scope. Standard describes bounded residual judgment, not medium file count. Lead describes authority and integration responsibility, not a requirement to type every line.
 
 ## Integrate upward

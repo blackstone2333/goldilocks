@@ -151,21 +151,49 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         )
         assert "full-history" in denial_reason(full_history)
 
-    fast = run_hook(
+    fast_without_model = run_hook(
         data_dir,
         "PreToolUse",
         tool_input=spawn_input(
             "fast__inspect_logs",
             fork_turns="none",
-            model=LEAD_MODEL,
-            reasoning_effort="xhigh",
         ),
-        tool_use_id="fast-rewrite",
     )
-    rewritten = hook_output(fast)["updatedInput"]
-    assert rewritten["model"] == SPARK_MODEL
-    assert rewritten["fork_turns"] == "none"
-    assert "reasoning_effort" not in rewritten
+    assert "explicit model" in denial_reason(fast_without_model)
+
+    fast_terra_input = spawn_input(
+        "fast__inspect_logs",
+        fork_turns="none",
+        model=TERRA_MODEL,
+        reasoning_effort="low",
+    )
+    fast_terra = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_name="collaboration.spawn_agent",
+        tool_input=fast_terra_input,
+        tool_use_id="fast-terra-explicit",
+    )
+    assert_silent(fast_terra, "explicit Terra Fast routing should pass through unchanged")
+    recorded_fast = next(
+        row for row in rows(data_dir, "decisions") if row["tool_use_id"] == "fast-terra-explicit"
+    )
+    assert recorded_fast["expected_model"] == TERRA_MODEL
+    assert recorded_fast["fork_turns"] == "none"
+
+    fast_spark_input = spawn_input(
+        "fast__spark_when_available",
+        fork_turns="none",
+        model=SPARK_MODEL,
+        reasoning_effort="low",
+    )
+    fast_spark = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input=fast_spark_input,
+        tool_use_id="fast-spark-explicit",
+    )
+    assert_silent(fast_spark, "an explicitly selected available Spark Fast route should pass through unchanged")
 
     recursive_fast = run_hook(
         data_dir,
@@ -186,7 +214,10 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         data_dir,
         "PreToolUse",
         tool_input=spawn_input(
-            "standard__known_pattern", fork_turns="2", model=TERRA_MODEL
+            "standard__known_pattern",
+            fork_turns="2",
+            model=TERRA_MODEL,
+            reasoning_effort="medium",
         ),
         tool_use_id="standard-explicit",
     )
@@ -231,9 +262,9 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="decision-a",
-        tool_input=spawn_input("fast__spark_a", fork_turns="none"),
+        tool_input=spawn_input("fast__spark_a", fork_turns="none", model=SPARK_MODEL),
     )
-    assert hook_output(fast)["updatedInput"]["model"] == SPARK_MODEL
+    assert_silent(fast, "explicit Spark Fast plan should be recorded")
     standard = run_hook(
         data_dir,
         "PreToolUse",
@@ -253,7 +284,7 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         model=SPARK_MODEL,
         turn_id="spark-child-turn",
     )
-    assert_silent(spark_start, "Spark Start must uniquely match Spark decision A")
+    assert_silent(spark_start, "Spark Start must uniquely match the Fast Spark decision A")
     terra_start = run_hook(
         data_dir,
         "SubagentStart",
@@ -315,15 +346,15 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="stop-decision",
-        tool_input=spawn_input("fast__stop_target", fork_turns="none"),
+        tool_input=spawn_input("fast__stop_target", fork_turns="none", model=TERRA_MODEL),
     )
-    assert hook_output(planned)["updatedInput"]["model"] == SPARK_MODEL
+    assert_silent(planned, "explicit Terra Fast plan should be recorded")
     started = run_hook(
         data_dir,
         "SubagentStart",
         session_id=session,
         agent_id="stopped-agent",
-        model=SPARK_MODEL,
+        model=TERRA_MODEL,
     )
     assert_silent(started, "matching start should stay silent")
     stopped = run_hook(
@@ -331,7 +362,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "SubagentStop",
         session_id=session,
         agent_id="stopped-agent",
-        model=SPARK_MODEL,
+        model=TERRA_MODEL,
         turn_id="stop-turn",
     )
     assert_silent(stopped, "SubagentStop should stay silent")
@@ -354,9 +385,9 @@ def test_real_mismatch(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="mismatch-decision",
-        tool_input=spawn_input("fast__focused_tests", fork_turns="none"),
+        tool_input=spawn_input("fast__focused_tests", fork_turns="none", model=TERRA_MODEL),
     )
-    assert hook_output(planned)["updatedInput"]["model"] == SPARK_MODEL
+    assert_silent(planned, "explicit Terra Fast plan should be recorded")
     mismatch = run_hook(
         data_dir,
         "SubagentStart",
@@ -369,8 +400,33 @@ def test_real_mismatch(data_dir: Path) -> None:
     assert "routing mismatch" in output["systemMessage"].lower()
     context = output["hookSpecificOutput"]["additionalContext"]
     assert "do not execute" in context.lower()
-    assert SPARK_MODEL in context
+    assert TERRA_MODEL in context
     assert LEAD_MODEL in context
+
+
+def test_unplanned_sol_soft_return(data_dir: Path) -> None:
+    unplanned_sol = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="unplanned-sol-session",
+        model=LEAD_MODEL,
+        agent_id="unplanned-sol-agent",
+    )
+    output = output_json(unplanned_sol)
+    assert "systemMessage" not in output
+    context = output["hookSpecificOutput"]["additionalContext"]
+    assert "Lead" in context
+    assert "Fast/Standard" in context
+    assert "return" in context.lower()
+
+    unplanned_terra = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="unplanned-terra-session",
+        model=TERRA_MODEL,
+        agent_id="unplanned-terra-agent",
+    )
+    assert_silent(unplanned_terra, "unplanned Terra starts remain silent")
 
 
 def main() -> None:
@@ -382,8 +438,9 @@ def main() -> None:
         test_ambiguous_same_model_correlation(data_dir)
         test_stop_reconnects_by_agent_id(data_dir)
         test_real_mismatch(data_dir)
+        test_unplanned_sol_soft_return(data_dir)
 
-    print("Goldilocks v0.3.0 agent routing hook contract passed.")
+    print("Goldilocks v0.3.2 agent routing hook contract passed.")
 
 
 if __name__ == "__main__":

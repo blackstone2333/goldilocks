@@ -2,6 +2,26 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.3.2 — 2026-07-25
+
+### Added — Dual Codex Worker Routes
+
+- Added a packaged `dispatch_codex_worker.py` Fast adapter for the verified host case where native `collaboration.spawn_agent` does not advertise `gpt-5.3-codex-spark` but the installed `codex exec` CLI can run it.
+- The adapter fixes the worker model to Spark, accepts a complete `fast__` contract through a UTF-8 file and stdin, disables plugin/app/MCP context and further agent spawning, limits sandbox choices to read-only or workspace-write, supports a per-worker result file, and propagates failures without silent fallback.
+- Added a short `SessionStart` organization reminder even when no continuity ledger exists: Lead owns intent, architecture, integration, and final acceptance; Standard owns bounded judgment; Fast is a leaf execution layer.
+
+### Changed
+
+- Native Fast dispatch no longer rewrites an omitted model to Spark. Every native Fast or Standard route must explicitly select a model advertised by that host, preventing accidental Sol inheritance while remaining compatible with future native Spark support.
+- Expanded the Hook matcher and script normalization to recognize `Agent`, `spawn_agent`, and `collaboration.spawn_agent`. When a specialized native path still bypasses `PreToolUse`, an unplanned Sol child receives a soft return-to-owner check instead of a user-facing interruption.
+- Documented actual upward integration: Fast returns changed files and focused evidence; Standard reviews and combines one domain; Lead reviews shared boundaries and reruns the final gate.
+
+### Evidence and compatibility
+
+- Historical logs contain 22 real `codex_exec` Spark worker sessions on Codex `0.144.0-alpha.4`. A fresh probe on `0.146.0-alpha.3.1` also returned `SPARK_OK` from the exact model, while the same host's native collaboration path advertised only Sol and Terra.
+- Added [deterministic and live-route evidence](evals/results/2026-07-25-v032-dual-codex-routing.md) for the external command contract, leaf enforcement, stdin-safe briefing, explicit native routing, namespace matching, failure propagation, startup routing context, and unplanned-Sol soft return.
+- v0.3.2 makes the company-style route executable on the observed Codex host; it does not claim a new end-to-end quality, quota, token, or latency result.
+
 ## 0.3.1 — 2026-07-23
 
 ### Added — Quiet Update Awareness

@@ -2,6 +2,26 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.3.2 — 2026-07-25
+
+### 新增——Codex 双通道工作成员
+
+- 新增打包在 Goldilocks Skill 中的 `dispatch_codex_worker.py` Fast 适配器，用于原生 `collaboration.spawn_agent` 不公开 `gpt-5.3-codex-spark`、但当前安装的 `codex exec` CLI 可以运行该模型的真实宿主情况。
+- 适配器固定使用 Spark，通过 UTF-8 文件和标准输入接收完整 `fast__` 合同，关闭插件/App/MCP 上下文和继续创建 Agent 的能力，只允许只读或工作区可写沙箱，支持每个 worker 独立结果文件，并原样返回失败，绝不静默降级。
+- 即使项目没有连续性账本，`SessionStart` 也会提供一句精简组织提醒：Lead 负责意图、架构、集成和最终验收；Standard 负责边界内判断；Fast 是叶子执行层。
+
+### 调整
+
+- 原生 Fast 派发不再把缺省模型自动改写成 Spark。每条原生 Fast 或 Standard 路由都必须显式选择当前宿主公开的模型，既防止意外继承 Sol，也保留未来原生 Spark 支持。
+- Hook matcher 与脚本归一化现在同时识别 `Agent`、`spawn_agent` 和 `collaboration.spawn_agent`。如果专用原生路径仍绕过 `PreToolUse`，未规划的 Sol 子智能体只收到一次柔性的退回检查，不会弹出面向用户的中断警告。
+- 明确证据逐级汇总：Fast 返回改动文件和聚焦证据；Standard 审核并合成一个板块结果；Lead 检查共享边界并重跑最终验收。
+
+### 证据与兼容性
+
+- 历史日志中存在 22 个 Codex `0.144.0-alpha.4` 的真实 `codex_exec` Spark 工作会话；在 `0.146.0-alpha.3.1` 上的新探针也由准确模型返回了 `SPARK_OK`，而同一宿主的原生 collaboration 通道当时只公开 Sol 与 Terra。
+- 新增[确定性测试与真实通道证据](evals/results/2026-07-25-v032-dual-codex-routing.md)，覆盖外部命令合同、叶子限制、标准输入安全传递、原生显式路由、命名空间匹配、失败原样返回、启动路由提醒和未规划 Sol 柔性退回。
+- v0.3.2 让公司式编排在已观察的 Codex 宿主上真正可执行，但不声称获得新的端到端质量、额度、token 或耗时结果。
+
 ## 0.3.1 — 2026-07-23
 
 ### 新增——安静的更新感知

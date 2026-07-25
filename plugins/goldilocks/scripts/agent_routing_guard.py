@@ -16,8 +16,9 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.3.0"
+POLICY_VERSION = "0.3.2"
 SPARK_MODEL = "gpt-5.3-codex-spark"
+LEAD_MODEL = "gpt-5.6-sol"
 MAX_FORK_TURNS = 4
 ROUTE_PREFIXES = {
     "fast__": "fast",
@@ -216,7 +217,8 @@ def record_plan(
 
 def handle_pre_tool_use(payload: dict[str, Any]) -> None:
     tool_name = str(payload.get("tool_name") or "")
-    if tool_name not in {"spawn_agent", "Agent"}:
+    normalized_tool_name = tool_name.rsplit(".", 1)[-1]
+    if normalized_tool_name not in {"spawn_agent", "Agent"}:
         return
 
     if str(payload.get("model") or "") == SPARK_MODEL:
@@ -244,21 +246,15 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
 
     fork_value = str(tool_input.get("fork_turns") or "").strip().lower()
     if tier == "fast":
-        rewritten = dict(tool_input)
-        rewritten["model"] = SPARK_MODEL
-        rewritten.pop("reasoning_effort", None)
-        rewritten.pop("service_tier", None)
-        rewritten.pop("agent_type", None)
-        record_plan(payload, rewritten, tier, SPARK_MODEL)
-        emit(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "allow",
-                    "updatedInput": rewritten,
-                }
-            }
-        )
+        requested_model = str(tool_input.get("model") or "").strip()
+        if not requested_model:
+            deny(
+                "Goldilocks requires an explicit model for native Fast subagents so they cannot "
+                "silently inherit Lead. Choose a model advertised by the host; when native Spark "
+                "is unavailable, use the packaged dispatch_codex_worker.py adapter."
+            )
+            return
+        record_plan(payload, tool_input, tier, requested_model)
         return
 
     if tier == "lead" and fork_value == "all":
@@ -360,7 +356,24 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
 
 def handle_subagent_start(payload: dict[str, Any]) -> None:
     decision, confidence = claim_plan(payload)
-    if decision is None or confidence in {"ambiguous", "unplanned", "unavailable"}:
+    if decision is None and confidence == "unplanned":
+        actual_model = str(payload.get("model") or "")
+        if actual_model == LEAD_MODEL:
+            emit(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "SubagentStart",
+                        "additionalContext": (
+                            "You started as an unplanned Lead-model subagent. Before implementing, "
+                            "check whether the task is ready for Fast/Standard. If it is, return to "
+                            "the parent for explicit lower-cost dispatch. Continue only when this "
+                            "subtask genuinely needs Lead judgment or owns an inseparable critical boundary."
+                        ),
+                    }
+                }
+            )
+        return
+    if decision is None or confidence in {"ambiguous", "unavailable"}:
         return
 
     expected_model = str(decision["expected_model"] or "")
