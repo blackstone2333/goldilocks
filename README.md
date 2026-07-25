@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.2-D4A72C" alt="Version 0.3.2">
+  <img src="https://img.shields.io/badge/version-0.3.3-D4A72C" alt="Version 0.3.3">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -107,7 +107,7 @@ Goldilocks treats an agent team like a small company. The user sets direction an
 
 The hierarchy is dynamic rather than mandatory. A tiny task may stay with Lead or go to one Fast worker. A medium task may go directly to Fast, to Standard, or remain local. A large project can use several Standard domain owners, each coordinating independent Fast work, before evidence integrates upward. There is no fixed worker count: useful concurrency is bounded by the ready dependency graph, host capacity, isolation, integration risk, and reviewer throughput.
 
-Codex routing is equally dynamic. Goldilocks uses native subagents when the host advertises the selected model. If the native host omits Spark while the installed CLI still supports it, `dispatch_codex_worker.py` launches a contract-only `codex exec -m gpt-5.3-codex-spark` worker in the assigned repository or worktree. The adapter disables plugins, apps, MCP servers, and further delegation for that worker, keeps the configured provider and repository instructions, and never silently falls back to Lead.
+Codex routing is equally dynamic. Goldilocks uses native subagents when the host advertises the selected model. If the native host omits Spark while the installed CLI still supports it, `dispatch_codex_worker.py` launches a contract-only `codex exec -m gpt-5.3-codex-spark` worker in the assigned repository or worktree. The adapter disables only further agent spawning. Plugins, apps, and MCP remain available when the contract needs them; ordinary tool availability, sandbox, and permission gates still apply, and the worker never silently falls back to Lead.
 
 The routing objective is not minimum raw tokens at any cost. Quality and authority are hard gates; total raw tokens remain bounded; among valid routes Goldilocks minimizes quota-weighted expensive usage and the wall-clock critical path. A route may use slightly more low-coefficient or separately metered worker tokens when it materially reduces scarce Lead usage without increasing defects or review debt.
 
@@ -293,7 +293,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.3.2`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. This release makes the company-style route executable in current Codex hosts by separating native workers from the packaged Spark CLI worker, without claiming a new end-to-end performance result. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.3.3`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. The company-style Codex route now separates native workers from the packaged Spark CLI worker while preserving the tools each contract may need. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 

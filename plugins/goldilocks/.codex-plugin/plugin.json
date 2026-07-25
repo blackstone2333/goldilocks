@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.3.2+codex.20260725102711",
+  "version": "0.3.3+codex.20260725120139",
   "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
   "author": {
     "name": "Charles Roc"

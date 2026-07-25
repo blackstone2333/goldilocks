@@ -61,7 +61,7 @@ python3 <resolved-script> \
   --reasoning-effort medium
 ```
 
-External startup/context is fixed raw-token overhead; use it only when avoided Lead work or parallel time pays back. Use isolated worktrees for parallel writers and unique result files. The adapter fixes Spark, sends the contract over stdin, disables plugins, apps, MCP, and further spawning, preserves provider and repository instructions, forbids danger-full-access, and propagates failure. It never performs a silent fallback. On failure, repair once, select another eligible worker, upgrade to Standard, or keep work local; never inherit Lead accidentally.
+External startup/context is fixed overhead; require Lead or parallel savings. Isolate parallel writers and use unique result files. The adapter fixes Spark, sends the contract over stdin, and disables only agent spawning. Plugins, apps, and MCP remain available as needed; host, sandbox, and permission gates still apply. It forbids danger-full-access and propagates failure without silent fallback. On failure, repair once, choose another worker, upgrade to Standard, or keep work local; never inherit Lead.
 
 ## Refresh discipline
 

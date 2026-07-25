@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.3.2"
+RELEASE_VERSION = "0.3.3"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -230,8 +230,8 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
                 fail(f"{readme_name} lacks the dual Codex worker route: {route_contract}")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Dual Codex Worker Routes"),
-    ("CHANGELOG.zh-CN.md", "Codex 双通道工作成员"),
+    ("CHANGELOG.md", "Capability-Preserving Spark Workers"),
+    ("CHANGELOG.zh-CN.md", "保留能力的 Spark 工作成员"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
@@ -413,14 +413,15 @@ if WORKER_SCRIPT.is_file():
     for required_text in [
         "gpt-5.3-codex-spark",
         "agents.enabled=false",
-        "mcp_servers={}",
-        '"plugins"',
         "leaf executor",
         "Do not broaden scope",
         "--output-last-message",
     ]:
         if required_text not in worker_text:
             fail(f"external Codex worker lacks required contract: {required_text}")
+    for forbidden_text in ["mcp_servers={}", '"plugins"', '"apps"']:
+        if forbidden_text in worker_text:
+            fail(f"external Codex worker unnecessarily disables a capability: {forbidden_text}")
 
 registry = load_json(MODEL_REGISTRY)
 if registry:

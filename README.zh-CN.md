@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.2-D4A72C" alt="版本 0.3.2">
+  <img src="https://img.shields.io/badge/version-0.3.3-D4A72C" alt="版本 0.3.3">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -107,7 +107,7 @@ Goldilocks 把 Agent 团队看作一个小型公司。用户负责方向和结�
 
 层级不是必走流程。小任务可以由 Lead 直做，也可以交给一个 Fast；中等任务可以直接交给 Fast、交给 Standard，或留在 Lead；大型项目可以由多个 Standard 各自管理 Fast，最后将板块证据逐级汇总。Goldilocks 不写死并行数量，实际并发由就绪任务图、平台容量、隔离工作区、集成风险和审核吞吐共同决定。
 
-Codex 的调用通道同样动态选择：宿主原生支持所选模型时使用原生子智能体；如果原生列表没有 Spark，但当前 CLI 仍支持它，`dispatch_codex_worker.py` 会在指定仓库或 worktree 中启动只接收执行合同的 `codex exec -m gpt-5.3-codex-spark` 工作成员。适配器会关闭该 worker 的插件、App、MCP 和继续分派能力，保留用户已有模型供应商配置和仓库规则，并且绝不会静默降级成 Lead。
+Codex 的调用通道同样动态选择：宿主原生支持所选模型时使用原生子智能体；如果原生列表没有 Spark，但当前 CLI 仍支持它，`dispatch_codex_worker.py` 会在指定仓库或 worktree 中启动只接收执行合同的 `codex exec -m gpt-5.3-codex-spark` 工作成员。适配器只关闭继续创建 Agent 的能力；合同需要的插件、App 和 MCP 默认保留，但仍受宿主可用性、沙箱和权限控制，并且绝不会静默降级成 Lead。
 
 优化目标也不再是机械追求总 token 最少。质量与授权属于硬门槛，总 token 必须保持在合理范围；在有效方案中，优先降低额度加权后的昂贵 token 占比和真实关键路径。只要没有增加缺陷或审核债，略多的低系数、独立额度工作模型 token 可以换取更少的 Lead 额度和更短时间。
 
@@ -293,7 +293,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.3.2`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。这一版把原生工作成员与 Spark CLI 工作成员分成两条真实可执行的通道，让公司式编排能适配当前 Codex 宿主，但不声称已经获得新的端到端性能结果。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.3.3`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。公司式 Codex 路由继续区分原生工作成员与 Spark CLI 工作成员，同时保留每份合同真正需要的工具能力。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 

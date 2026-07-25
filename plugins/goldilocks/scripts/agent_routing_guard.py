@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.3.2"
+POLICY_VERSION = "0.3.3"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LEAD_MODEL = "gpt-5.6-sol"
 MAX_FORK_TURNS = 4

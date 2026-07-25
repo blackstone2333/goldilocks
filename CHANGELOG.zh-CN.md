@@ -2,6 +2,19 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.3.3 — 2026-07-25
+
+### 调整——保留能力的 Spark 工作成员
+
+- 外部 Spark 适配器现在只通过 `agents.enabled=false` 关闭继续创建 Agent 的能力。Fast 仍然是叶子成员，但执行合同需要的插件、App 与 MCP 工具继续可用。
+- 工具访问依旧受到宿主可用性、沙箱、权限和边界合同约束。保留能力不代表扩大授权，也不允许 Fast 自行改变架构、范围或共享接口。
+- 删除默认的 `--disable plugins`、`--disable apps` 和 `mcp_servers={}` 覆盖。先前探针表明，这些限制只节省约 480 个报告 token，却会让依赖工具的有效 Fast 任务无法执行。
+
+### 证据与兼容性
+
+- 新增[回归验证记录](evals/results/2026-07-25-v033-capability-preserving-spark.md)，证明生成的 Codex 命令会保留插件/App/MCP 配置，只留下叶子成员限制。
+- 这是对 v0.3.2 的能力修正，不是新的性能认证；原生/CLI 双通道路由与质量门保持不变。
+
 ## 0.3.2 — 2026-07-25
 
 ### 新增——Codex 双通道工作成员

@@ -2,6 +2,19 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.3.3 — 2026-07-25
+
+### Changed — Capability-Preserving Spark Workers
+
+- The external Spark adapter now disables only further agent spawning through `agents.enabled=false`. Fast remains a leaf, but plugins, apps, and MCP tools stay available when the execution contract needs them.
+- Tool access still follows host availability, sandbox, permissions, and the bounded contract. Preserving capability does not grant broader authority or allow Fast to change architecture, scope, or shared interfaces.
+- Removed the default `--disable plugins`, `--disable apps`, and `mcp_servers={}` overrides. The earlier probe showed that those restrictions saved only about 480 reported tokens while making valid tool-dependent Fast tasks impossible.
+
+### Evidence and compatibility
+
+- Added [a regression record](evals/results/2026-07-25-v033-capability-preserving-spark.md) proving that the generated Codex command keeps plugin/App/MCP configuration and retains only the leaf-agent override.
+- This is a capability correction to v0.3.2, not a new performance certification. The dual native/CLI routing design and its quality gates are unchanged.
+
 ## 0.3.2 — 2026-07-25
 
 ### Added — Dual Codex Worker Routes

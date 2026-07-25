@@ -118,9 +118,11 @@ Implement the bounded parser change.
         assert ["--sandbox", "workspace-write"] == argv[
             argv.index("--sandbox") : argv.index("--sandbox") + 2
         ]
-        assert "--disable" in argv and "plugins" in argv
         assert "agents.enabled=false" in argv
-        assert "mcp_servers={}" in argv
+        assert "--disable" not in argv
+        assert "plugins" not in argv
+        assert "apps" not in argv
+        assert "mcp_servers={}" not in argv
         assert 'model_reasoning_effort="medium"' in argv
         assert argv[-1] == "-", "the contract must travel over stdin, not shell interpolation"
         assert Path(invocation["cwd"]).samefile(worktree)
