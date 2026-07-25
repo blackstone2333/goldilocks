@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.3.3",
-  "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
+  "version": "0.4.0",
+  "description": "A Superpowers-compatible workflow and structured-artifact orchestration suite with constant quality standards.",
   "author": {
     "name": "Charles Roc"
   },
@@ -16,6 +16,8 @@
     "testing",
     "verification",
     "multi-agent",
-    "quota-aware"
+    "quota-aware",
+    "artifact-production",
+    "presentations"
   ]
 }

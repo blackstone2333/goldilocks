@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.3-D4A72C" alt="版本 0.3.3">
+  <img src="https://img.shields.io/badge/version-0.4.0-D4A72C" alt="版本 0.4.0">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears：Goldilocks 27/27 通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提出的 **Just-Necessary Principle（刚好必要原则）**：
+Goldilocks 是一套面向 Codex 的动态工作流与结构化产物编排插件，核心是我们提出的 **Just-Necessary Principle（刚好必要原则）**：
 
 > 只使用维持固定质量、安全、授权与验证底线所必需的最少流程。
 
@@ -26,12 +26,13 @@ Goldilocks 是一套面向 Codex 的动态工作流插件，核心是我们提�
 ## 为什么做 Goldilocks
 
 - **动态流程深度：** 明确任务先快速比较 Lead 直做与委派；复杂任务只增加真正有收益的管理层级。
-- **渐进式加载：** 十三个兼容入口共享六个能力引擎，不复制十四套冗长流程。
+- **渐进式加载：** 十三个 Superpowers 兼容入口和一个产物入口共享六个能力引擎及少量按需 Profile，不复制冗长流程。
 - **原生与复用优先：** 先检查现有项目方法、标准库、成熟库和平台原生能力，再考虑自造方案。
 - **只问关键问题：** 只有答案会实质改变终局、安全、范围或授权时才询问用户。
 - **记录新想法但不扩张范围：** 有价值的旁支想法会留到后续迭代，不会偷偷塞进当前任务。
 - **证据先于完成声明：** 信心、旧测试结果和子代理汇报都不能替代针对当前结果的新证据。
 - **分层动态委派：** Lead 可以直接把执行合同交给 Fast，也可以把一个板块交给 Standard，再由 Standard 组织自己的 Fast 成员。
+- **产物单元可替换：** PPT 等结构化交付物可以统一规划、按独立单元生产、局部返工，再由唯一集成人组装。
 - **额度加权经济性：** 在控制总 token 的前提下，优先减少高系数、稀缺模型额度，并通过并行缩短关键路径。
 - **执行经验复用：** 相似任务先检查已验证路径和失效条件，不重复支付同一轮组织判断成本。
 - **真实可用的 Codex 路由：** 原生子智能体显式使用宿主支持的模型；原生列表没有 Spark 时，合格 Fast 工作可走打包好的 `codex exec` GPT-5.3-Codex-Spark 适配器。
@@ -48,6 +49,7 @@ Goldilocks 是一个动态路由器，不是一套必须走完的瀑布流程。
 | 不知道根因的 Bug | 先复现、追踪、验证假设并定位根因，再修复 | 问题可能复发时，保留可复用的 debug 经验 |
 | 多步骤实现 | 只制定必要深度的计划，优先复用项目现有模式和成熟库，再按连贯单元执行 | 连续性需要时保存 plan、工作包、handoff 或项目结构图 |
 | 多个互相独立的工作单元 | 构建就绪任务图，动态使用 Lead→Fast 或 Lead→Standard→Fast | 工作成员与板块证据逐级汇总，最终由 Lead 集成 |
+| PPT、报告、工作簿或其他结构化产物 | 冻结一份 Artifact Contract，把内容拆成可独立替换的单元，调用专业生产 Skill，并在全局验收前执行 localized rework | 只有长期有用时才保留分镜、合同与经验 |
 | Critical 或会影响外部系统的动作 | 要求明确授权、Lead 负责、更强验证，并在适当时独立审查 | 授权与验证证据 |
 | 当前范围之外但有价值的新想法 | 记录下来，不偷偷扩大当前任务范围 | 后续想法条目 |
 
@@ -115,6 +117,31 @@ Codex 的调用通道同样动态选择：宿主原生支持所选模型时使�
 
 完整的角色边界、路由顺序、上下文策略、审计行为和发布验收见 [v0.3 分层动态编排设计](docs/v0.3-hierarchical-orchestration.zh-CN.md)。
 
+### v0.4 的结构化产物编排
+
+Goldilocks 现在把同一套公司式组织方法扩展到代码之外的交付物，但不会吞并各类文件的专业制作 Skill。通用路径如下：
+
+```mermaid
+flowchart LR
+    A["目标"] --> B["全局 Artifact Contract"]
+    B --> C["可替换单元合同"]
+    C --> D["专业 Skill 并行生产"]
+    D --> E["单元验收"]
+    E -- "单元失败" --> F["localized rework"]
+    F --> E
+    E -- "单元通过" --> G["唯一集成人"]
+    G --> H["全局验收"]
+    H --> I["只保留长期有用的经验"]
+```
+
+Lead 负责受众、结果、共享叙事/设计/数据系统、接口、集成与最终验收；Standard 可以负责分镜等有边界的领域；Fast 生产已经完成决策外置的单元或安全批次。单元保持足够小，失败时可以单独替换；同一个工作会话仍可批量承接若干兼容单元，摊薄启动开销。
+
+v0.4 首先提供 Presentation Profile：一页就是一个可替换单元，并行生产者不碰最终 PPTX；集成人逐页全尺寸检查，再用总览检查节奏；除非全局合同变化，只返工失败页面。随仓库提供的 HSK4 一对一课程试验只证明这套架构可以运行，不代表已经获得通用性能优势。详见 [v0.4 设计](docs/v0.4-structured-artifact-orchestration.zh-CN.md)和[试验报告](evals/results/2026-07-25-v040-structured-artifact-pilot.md)。
+
+<p align="center">
+  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="Goldilocks v0.4 结构化产物试验生成的 12 页 HSK4 一对一课程">
+</p>
+
 ## 证据：Goldilocks vs Superpowers
 
 Goldilocks 对外只主张一个经过验证的窄结论：在已测试的工作流范围内，它是一个比 Superpowers 更可靠、更高效的**替代方案**。下面两轮验证回答不同问题，不把设计评分和真实运行成本混成一个总分。
@@ -169,7 +196,7 @@ claude plugin install goldilocks@goldilocks
 
 ## 包含哪些能力
 
-Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
+Goldilocks 暴露了替换 Superpowers 所需的熟悉入口，并新增一个结构化生产入口：
 
 | 需求 | 入口 |
 |---|---|
@@ -181,8 +208,11 @@ Goldilocks 暴露了替换 Superpowers 所需的熟悉入口：
 | 请求或处理代码审查 | `requesting-code-review`、`receiving-code-review` |
 | 验证完成并收尾分支 | `verification-before-completion`、`finishing-a-development-branch` |
 | 创建或改进 Skill | `writing-skills` |
+| 编排 PPT 和其他结构化产物 | `artifact-production` |
 
 显式的 `goldilocks` 路由器替代 `using-superpowers`。它不会被自动注入每个任务，因此简单任务可以走零工作流 Skill 读取的 Direct 路径。
+
+`artifact-production` 不增加第七个引擎，也不复制 PPT、文档、表格或视频的实现说明。它只加载一份通用 Artifact Contract 协议和当前所需 Profile；入口、通用协议与 Presentation Profile 的活动路径控制在 1,600 个英文词以内。
 
 这些兼容入口按需加载六个共享引擎：
 
@@ -293,7 +323,7 @@ python3 benchmarks/three_bears/run.py \
 
 ## 当前阶段与方向
 
-Goldilocks 现已更新至 `v0.3.3`。现有证据表明，它能够在已测试范围内更高效地替代 Superpowers，但分层动态编排仍属于架构方向，不冒充新的性能认证。公司式 Codex 路由继续区分原生工作成员与 Spark CLI 工作成员，同时保留每份合同真正需要的工具能力。公开运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token 变化、关键路径、重试和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 现已更新至 `v0.4.0`。现有证据表明，它能够在已测试工作流范围内更高效地替代 Superpowers，并通过可替换单元、localized rework 和唯一集成人，把公司式编排扩展到结构化产物。随附的 PPT 试验证明新架构能够真实产出并验收文件，但不声称在所有领域都具有速度或成本优势。公开工作流运行认证仍是 v0.2.2；真实项目需要继续测量质量不劣于原方案、Lead 额度占比、总 token、关键路径、重试、局部返工和集成缺陷。详见[更新记录](CHANGELOG.zh-CN.md)，欢迎提出[意见和建议](https://github.com/blackstone2333/goldilocks/issues)。
 
 接下来的迭代重点：
 
@@ -301,6 +331,7 @@ Goldilocks 现已更新至 `v0.3.3`。现有证据表明，它能够在已测试
 - 扩展到更大的真实仓库和更多编程语言；
 - 增加重复次数，再考虑更广泛的性能声明；
 - 在长期项目中验证 Standard→Fast 嵌套委派、连续性和执行经验复用；
+- 在增加文档、表格或视频 Profile 之前，用更多主题验证 PPT 生产；
 - 测量总 token 变化、额度加权后的 Lead 占比、关键路径、重试和集成缺陷；
 - 保持 Superpowers 入口兼容，同时确保 Direct 路径始终足够直接。
 

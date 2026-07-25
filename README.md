@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.3.3-D4A72C" alt="Version 0.3.3">
+  <img src="https://img.shields.io/badge/version-0.4.0-D4A72C" alt="Version 0.4.0">
   <img src="https://img.shields.io/badge/Three_Bears-27%2F27_passed-2ea44f" alt="Three Bears: 27 of 27 Goldilocks cells passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks is a Codex workflow plugin built around the **Just-Necessary Principle**:
+Goldilocks is a Codex workflow and structured-artifact orchestration plugin built around the **Just-Necessary Principle**:
 
 > Use the minimum process that preserves a constant quality, safety, authorization, and verification floor.
 
@@ -26,12 +26,13 @@ It provides a Superpowers-compatible workflow surface without requiring every ta
 ## Why Goldilocks
 
 - **Dynamic depth:** clear work gets a constant-time Direct-versus-delegate check; complex work receives only the useful management layers.
-- **Progressive disclosure:** thirteen compatibility entries route into six shared engines instead of duplicating fourteen long procedures.
+- **Progressive disclosure:** thirteen Superpowers-compatible entries and one artifact entry route into six shared engines and small on-demand profiles instead of duplicating long procedures.
 - **Native and reuse first:** inspect the project, standard library, established helpers, and proven libraries before inventing new machinery.
 - **Decision-frontier questions:** ask only when an answer can materially change the end state, safety, scope, or authorization.
 - **Ideas without scope creep:** useful adjacent ideas are preserved for later rather than silently expanding the current task.
 - **Evidence before completion:** confidence, old test output, and agent reports never replace fresh evidence for material claims.
 - **Hierarchical delegation:** Lead can dispatch execution contracts directly to Fast or give a bounded domain to Standard, which may organize its own Fast workers.
+- **Replaceable artifact units:** presentations and other structured deliverables can be planned globally, produced in independent units, repaired locally, and assembled by one integration owner.
 - **Quota-weighted economics:** optimize scarce, high-multiplier model usage and critical-path time while keeping total raw tokens inside a reasonable envelope.
 - **Execution memory:** reuse a verified route for recurring task shapes after checking its invalidators instead of paying for the same orchestration decision twice.
 - **Real Codex worker routes:** native subagents use explicit host-supported models; eligible Fast work can use the packaged `codex exec` GPT-5.3-Codex-Spark adapter when Spark is missing from the native model list.
@@ -48,6 +49,7 @@ Goldilocks is an adaptive router, not a mandatory waterfall. It inspects the rep
 | Bug with an unknown cause | Reproduce, trace, test hypotheses, identify the root cause, then patch | Reusable debug lesson when recurrence is plausible |
 | Multi-step implementation | Create only the necessary plan, prefer existing project patterns and libraries, then execute in coherent units | Plan, work packet, handoff, or project map when continuity requires it |
 | Multiple independent units | Build the ready graph; use Lead→Fast or Lead→Standard→Fast while each layer reviews its own scope | Worker and domain evidence plus Lead integration, not parallel-document noise |
+| Presentation, report, workbook, or other structured artifact | Freeze one Artifact Contract, contract independently replaceable units, use specialist production skills, and apply localized rework before one global QA pass | Storyboard/contracts and reusable lessons only when they earn persistence |
 | Critical or externally consequential action | Require explicit authorization, Lead ownership, stronger evidence, and independent review where appropriate | Approval and verification evidence |
 | Useful idea outside current scope | Preserve it without silently expanding the current task | Deferred-ideas entry |
 
@@ -115,6 +117,31 @@ Recurring routes can be stored as selective project execution patterns after com
 
 Read the [v0.3 hierarchical orchestration design](docs/v0.3-hierarchical-orchestration.md) for the role boundaries, routing order, context policy, audit behavior, and release acceptance.
 
+### Structured artifacts in v0.4
+
+Goldilocks now applies the same company structure to deliverables beyond code without absorbing their specialist authoring skills. The generic path is:
+
+```mermaid
+flowchart LR
+    A["Goal"] --> B["Global Artifact Contract"]
+    B --> C["Replaceable unit contracts"]
+    C --> D["Parallel production<br/>with specialist skills"]
+    D --> E["Unit QA"]
+    E -- "failed unit" --> F["Localized rework"]
+    F --> E
+    E -- "accepted units" --> G["Single integration owner"]
+    G --> H["Global QA"]
+    H --> I["Durable lessons only when useful"]
+```
+
+Lead owns the audience, outcome, shared narrative/design/data system, interfaces, integration, and final acceptance. Standard may own a bounded storyboard or domain. Fast produces already-decided units or safe batches. A unit stays small enough to replace independently, while a worker session may batch several compatible units to amortize startup cost.
+
+v0.4 ships one progressive profile for presentations. It treats one slide as the replaceable unit, keeps concurrent workers away from the canonical PPTX, inspects every slide full-size, uses a montage for global rhythm, and repairs only failed slides unless the global contract changed. The included HSK4 one-to-one lesson pilot is architecture evidence, not a new universal performance claim. Read the [v0.4 design](docs/v0.4-structured-artifact-orchestration.md) and [pilot report](evals/results/2026-07-25-v040-structured-artifact-pilot.md).
+
+<p align="center">
+  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="Twelve-slide HSK4 one-to-one lesson produced by the Goldilocks v0.4 structured-artifact pilot">
+</p>
+
 ## Evidence: Goldilocks vs Superpowers
 
 Goldilocks makes one deliberately narrow public claim: it is a more reliable and more efficient **Superpowers replacement** on the tested workflow surface. Two evaluations support that claim without mixing design scores with runtime measurements.
@@ -169,7 +196,7 @@ Do not enable Goldilocks and Superpowers together. See the [complete installatio
 
 ## What ships
 
-Goldilocks exposes the familiar workflow entry names needed to replace Superpowers:
+Goldilocks exposes the familiar workflow entry names needed to replace Superpowers, plus one new entry for structured production:
 
 | Need | Entry |
 |---|---|
@@ -181,8 +208,11 @@ Goldilocks exposes the familiar workflow entry names needed to replace Superpowe
 | Request or process review | `requesting-code-review`, `receiving-code-review` |
 | Prove completion and finish a branch | `verification-before-completion`, `finishing-a-development-branch` |
 | Create or improve Skills | `writing-skills` |
+| Coordinate presentations and other structured artifacts | `artifact-production` |
 
 The explicit `goldilocks` router replaces `using-superpowers`. It is intentionally not injected into every task, so trivial work can remain on the Direct path with zero workflow Skill reads.
+
+`artifact-production` adds no seventh engine and no duplicate PPT/document/spreadsheet/video implementation. It loads one generic Artifact Contract protocol and only the relevant profile; the entry, generic protocol, and Presentation Profile stay under a 1,600-word active-route budget.
 
 The compatibility entries progressively disclose six shared engines:
 
@@ -293,7 +323,7 @@ The full reproducible matrix is documented in [Three Bears](benchmarks/three_bea
 
 ## Status and direction
 
-Goldilocks is now at `v0.3.3`. It can replace Superpowers more efficiently on the tested surface, but hierarchical orchestration remains an architectural direction rather than a new performance certification. The company-style Codex route now separates native workers from the packaged Spark CLI worker while preserving the tools each contract may need. The published runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks is now at `v0.4.0`. It can replace Superpowers more efficiently on the tested workflow surface and now extends its company-style orchestration to structured artifacts through replaceable units, localized rework, and one integration owner. The included presentation pilot proves that the new architecture can produce and validate a real artifact; it does not claim universal speed or cost superiority. The published workflow runtime certification remains the v0.2.2 result while real projects measure quality non-inferiority, Lead quota share, total raw-token change, wall-clock critical path, retries, localized rework, and integration defects. See the [changelog](CHANGELOG.md); [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Next iterations will focus on:
 
@@ -301,6 +331,7 @@ Next iterations will focus on:
 - expanding the benchmark into larger repositories and additional languages;
 - adding more repetitions before making broad public performance claims;
 - validating nested Standard→Fast delegation, continuity, and execution-memory reuse on long-running projects;
+- validating presentation production on more subjects before adding document, workbook, or video profiles;
 - measuring raw-token change, quota-weighted Lead share, wall-clock critical path, retries, and integration defects;
 - preserving Superpowers entry compatibility while keeping the Direct path truly direct.
 

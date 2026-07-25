@@ -2,6 +2,27 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.0 — 2026-07-25
+
+### Added — Structured Artifact Orchestration
+
+- Added the thin `artifact-production` entry and a generic Artifact Contract protocol for presentations, reports, workbooks, videos, and other deliverables with a shared system and separable units.
+- Added a progressive Presentation Profile. Lead owns audience, outcome, narrative, design system, integration, and final QA; Standard may own the storyboard; Fast produces already-decided slide units or safe batches; one integration owner controls the canonical deck.
+- Added reusable global and unit contract templates covering structure, terminology and sources, dependency graph, acceptance rubric, merge order, boundaries, and returned evidence.
+- Added four routing cases for parallel presentation production, specialist-assisted report sections, localized unit repair, and the Direct boundary for one tiny artifact edit.
+
+### Changed
+
+- Goldilocks now distinguishes an independently replaceable artifact unit from an agent session. Several compatible units may share one worker session to amortize startup cost without weakening per-unit acceptance.
+- Unit failures trigger localized rework. Passing slides or sections remain intact unless the global contract changed; concurrent workers do not edit one fragile final file.
+- The new path remains progressively disclosed: the entry, generic protocol, and Presentation Profile total fewer than 1,600 words and do not copy production-library instructions into Goldilocks.
+
+### Evidence and compatibility
+
+- Added a real 12-slide HSK4 one-to-one lesson pilot, full-slide render inspection, montage review, final file validation, and a [v0.4 evidence record](evals/results/2026-07-25-v040-structured-artifact-pilot.md).
+- This pilot proves that the architecture can produce and validate a structured artifact. It is not a universal speed, token, quota, or quality comparison; the published Superpowers runtime certification remains v0.2.2.
+- Existing Superpowers-compatible entries and the six shared engines remain intact. v0.4 adds one optional production entry rather than embedding document, presentation, spreadsheet, or video tooling.
+
 ## 0.3.3 — 2026-07-25
 
 ### Changed — Capability-Preserving Spark Workers

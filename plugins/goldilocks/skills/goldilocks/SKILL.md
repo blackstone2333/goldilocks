@@ -33,6 +33,7 @@ If `.goldilocks/ACTIVE.md` exists, continuity recovery takes precedence over rec
 - Bugs, failures, unexpected behavior, or unclear causality: read [diagnose.md](references/diagnose.md).
 - Reuse, planning, implementation, or test-first development: read [build.md](references/build.md).
 - Worktrees, parallel work, subagents, or capability routing: read [orchestrate.md](references/orchestrate.md).
+- Multi-unit presentations, reports, workbooks, videos, or other structured artifacts: use `artifact-production`, which reads [artifacts.md](references/artifacts.md) and only the relevant format profile.
 - Review, runtime evidence, completion claims, or branch integration: read [prove.md](references/prove.md).
 - Mid-flight ideas, skill authoring, or workflow improvement: read [evolve.md](references/evolve.md).
 

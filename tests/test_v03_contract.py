@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.3.3"
+RELEASE_VERSION = "0.4.0"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -50,6 +50,7 @@ ENTRIES = {
     "verification-before-completion",
     "finishing-a-development-branch",
     "writing-skills",
+    "artifact-production",
 }
 MODES = {"Direct", "Guarded", "Critical"}
 CAPABILITIES = {"Lead", "Standard", "Fast", "Unknown"}
@@ -519,8 +520,8 @@ if MAIN.is_file() and word_count(MAIN) > 650:
 docs = skill_docs + list((SKILLS / "goldilocks" / "references").glob("*.md"))
 if docs:
     total_words = sum(word_count(path) for path in docs)
-    if total_words > 6800:
-        fail(f"capability documentation exceeds 6800 words: {total_words}")
+    if total_words > 7800:
+        fail(f"capability documentation exceeds 7800 words: {total_words}")
 
 cases = load_jsonl(CASES)
 if not 40 <= len(cases) <= 70:

@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.3.3+codex.20260725120139",
-  "description": "A Superpowers-compatible workflow suite with dynamic hierarchical orchestration and constant quality standards.",
+  "version": "0.4.0+codex.20260725153745",
+  "description": "A Superpowers-compatible workflow and structured-artifact orchestration suite with constant quality standards.",
   "author": {
     "name": "Charles Roc"
   },
@@ -17,13 +17,15 @@
     "multi-agent",
     "quota-aware",
     "minimalism",
-    "superpowers-compatible"
+    "superpowers-compatible",
+    "artifact-production",
+    "presentations"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Goldilocks",
     "shortDescription": "Right-sized teams with constant quality",
-    "longDescription": "Provides thirteen familiar workflow entries plus a Goldilocks router backed by six shared engines. It dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; uses explicit native models or a packaged Spark CLI worker; minimizes quota-weighted expensive work within a raw-token envelope; preserves continuity; and keeps final review and integration with Lead.",
+    "longDescription": "Provides thirteen familiar workflow entries, a structured-artifact production entry, and a Goldilocks router backed by six shared engines. It dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; coordinates replaceable artifact units with localized rework and one integration owner; preserves continuity; and keeps final review and integration with Lead.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [
@@ -34,7 +36,7 @@
     "defaultPrompt": [
       "Use the smallest workflow that preserves full quality.",
       "Plan and execute this with the shallowest useful agent hierarchy.",
-      "Keep Lead focused on direction and integration; delegate complete execution contracts to lower-cost workers and replace Superpowers entries when applicable."
+      "Keep Lead on direction and integration; delegate complete contracts, including replaceable artifact units."
     ],
     "brandColor": "#D4A72C",
     "composerIcon": "./assets/icon.png",
