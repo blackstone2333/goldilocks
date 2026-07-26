@@ -123,6 +123,26 @@ def main() -> None:
         if "Caveman" not in body or "ADHD" not in body:
             failures.append(f"{path.name} does not explain the lean-output influence")
 
+    install_docs = {
+        ROOT / "README.md": (
+            "Ask an AI to install it",
+            "Hook authorization is expected",
+            "Goldilocks damaged the installation",
+            "GOLDILOCKS_UPDATE_CHECK=0",
+        ),
+        ROOT / "README.zh-CN.md": (
+            "让 AI 一键安装",
+            "出现 Hook 授权是正常现象",
+            "并不表示 Goldilocks 把安装环境弄坏了",
+            "GOLDILOCKS_UPDATE_CHECK=0",
+        ),
+    }
+    for path, markers in install_docs.items():
+        body = read(path)
+        for marker in markers:
+            if marker not in body:
+                failures.append(f"{path.name} lacks install trust guidance: {marker}")
+
     codex_interface = codex_manifest["interface"]
     if codex_interface["shortDescription"] != "Adaptive workflow; Direct when enough":
         failures.append("Codex short description does not state the general adaptive default")

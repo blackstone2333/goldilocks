@@ -164,6 +164,14 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 Do not enable Goldilocks and Superpowers together.
 
+### Ask an AI to install it
+
+Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
+
+```text
+Install the latest Goldilocks from https://github.com/blackstone2333/goldilocks. Detect this agent's platform first: prefer the native plugin installation documented in the repository when supported; otherwise install Goldilocks globally as a compatible Skill. Do not enable Goldilocks and Superpowers together. Before any Hook approval, explain what the requested Hooks do and ask me to confirm; do not approve unrelated permissions. After installation, verify the installed version and availability, then tell me whether a new conversation is required. Do not modify unrelated configuration.
+```
+
 ### Any Skills-compatible agent
 
 ```bash
@@ -184,6 +192,16 @@ Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `
 codex plugin marketplace add blackstone2333/goldilocks
 codex plugin add goldilocks@goldilocks-local
 ```
+
+#### Hook authorization is expected
+
+The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
+
+- `recovery_reminder.py` restores compacted task state when `.goldilocks/ACTIVE.md` exists and adds the concise response contract.
+- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory.
+- `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
+
+If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
 
 ### Native Claude Code plugin
 
