@@ -1,7 +1,0 @@
-interface:
-  display_name: "Verification Before Completion"
-  short_description: "Require fresh evidence before claims"
-  icon_small: "./assets/icon.png"
-  icon_large: "./assets/logo.png"
-  brand_color: "#D4A72C"
-  default_prompt: "Use $verification-before-completion to prove the work before declaring it complete."

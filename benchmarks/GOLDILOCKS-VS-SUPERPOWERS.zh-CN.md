@@ -91,4 +91,3 @@ Goldilocks 在 5 个可比效率指标中领先 4 个。Superpowers 在这 8 个
 - [`v0.2.2` 完整工作流认证](three_bears/results/2026-07-18-terra-low-full-certification.md)
 - [Three Bears 测试方法与运行器](three_bears/README.md)
 - [正面对照计算数据](three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)
-- [完整逐格审计数据](three_bears/results/data/2026-07-18-terra-low-full/results.json)

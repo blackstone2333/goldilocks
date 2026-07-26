@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Emit a small routing reminder plus continuity guidance when a ledger exists."""
+"""Inject a tiny response contract and continuity guidance when needed."""
 
 from __future__ import annotations
 
@@ -8,6 +8,13 @@ import json
 import os
 import sys
 from pathlib import Path
+
+
+MICRO_STYLE = (
+    "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
+    "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
+    "decisive evidence."
+)
 
 
 def find_ledger(cwd: Path) -> Path | None:
@@ -22,23 +29,19 @@ def find_ledger(cwd: Path) -> Path | None:
 
 def main() -> None:
     try:
+        if os.environ.get("GOLDILOCKS_WORKER") == "1":
+            return
         payload = json.load(sys.stdin)
         cwd = Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
         ledger = find_ledger(cwd)
         event = payload.get("hook_event_name")
         if event == "SessionStart":
+            if ledger is None:
+                return
             routing = (
-                "Goldilocks routing: make one quick Direct-versus-delegate check before implementation. "
-                "Lead owns intent, architecture, integration, and final acceptance. Send a complete "
-                "execution contract to Fast; give bounded unresolved domain judgment to Standard, which "
-                "may contract Fast. Fast is a leaf. Use an explicit host-supported native model, or the "
-                "packaged Spark codex-exec adapter when native Spark is unavailable."
+                f"Recovery state exists at {ledger}; read it, reconcile repository evidence, honor "
+                "applied steering and Do not repeat, then continue from Exact next action."
             )
-            if ledger is not None:
-                routing += (
-                    f" Recovery state exists at {ledger}; read it, reconcile repository evidence, honor "
-                    "applied steering and Do not repeat, then continue from Exact next action."
-                )
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
@@ -46,13 +49,13 @@ def main() -> None:
                 }
             }
         elif event == "UserPromptSubmit":
-            if ledger is None:
-                return
-            message = (
-                f"An active Goldilocks task ledger exists at {ledger}. Interpret this prompt "
-                "against its stable Objective as ADD, REPLACE, CANCEL, or QUESTION; after "
-                "handling it, mark the steering entry applied before continuing."
-            )
+            message = MICRO_STYLE
+            if ledger is not None:
+                message += (
+                    f" An active Goldilocks task ledger exists at {ledger}. Interpret this prompt "
+                    "against its stable Objective as ADD, REPLACE, CANCEL, or QUESTION; after "
+                    "handling it, mark the steering entry applied before continuing."
+                )
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "UserPromptSubmit",

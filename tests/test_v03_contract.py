@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.4.0"
+RELEASE_VERSION = "0.4.1"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -24,6 +24,8 @@ WORKER_SCRIPT = SKILLS / "goldilocks" / "scripts" / "dispatch_codex_worker.py"
 UPDATE_HOOK_SCRIPT = PLUGIN / "scripts" / "update_checker.py"
 TEMPLATE_ASSETS = {
     "active-task.md",
+    "artifact-contract.md",
+    "artifact-unit-contract.md",
     "codex-compact-prompt.md",
     "project-map.md",
     "work-packet.md",
@@ -33,25 +35,8 @@ TEMPLATE_ASSETS = {
 CLAUDE_MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 CLAUDE_PLUGIN = PLUGIN / ".claude-plugin" / "plugin.json"
 CASES = ROOT / "evals" / "trigger-cases.jsonl"
-RESULTS = ROOT / "evals" / "results" / "red-baseline.jsonl"
 
 ENGINES = {"align", "diagnose", "build", "orchestrate", "prove", "evolve"}
-ENTRIES = {
-    "brainstorming",
-    "writing-plans",
-    "executing-plans",
-    "test-driven-development",
-    "systematic-debugging",
-    "using-git-worktrees",
-    "dispatching-parallel-agents",
-    "subagent-driven-development",
-    "requesting-code-review",
-    "receiving-code-review",
-    "verification-before-completion",
-    "finishing-a-development-branch",
-    "writing-skills",
-    "artifact-production",
-}
 MODES = {"Direct", "Guarded", "Critical"}
 CAPABILITIES = {"Lead", "Standard", "Fast", "Unknown"}
 
@@ -137,8 +122,8 @@ def validate_case(case: dict, index: int) -> None:
         fail(f"{label}: invalid overlay")
     if set(expected["engines"]) - ENGINES:
         fail(f"{label}: invalid engine")
-    if expected["entry"] is not None and expected["entry"] not in ENTRIES:
-        fail(f"{label}: invalid thin entry")
+    if expected["entry"] is not None:
+        fail(f"{label}: legacy independent Skill entry must be null")
     if not case["material_ambiguity"] and expected["max_user_rounds"] != 0:
         fail(f"{label}: non-ambiguous work must allow zero extra user rounds")
     if expected["quality_mode"] == "Direct":
@@ -172,7 +157,6 @@ for required in [
     WORKER_SCRIPT,
     UPDATE_HOOK_SCRIPT,
     CASES,
-    RESULTS,
     ROOT / "docs" / "installation.md",
     ROOT / "docs" / "installation.zh-CN.md",
     ROOT / "CHANGELOG.md",
@@ -224,6 +208,7 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
         for route_contract in [
             "gpt-5.3-codex-spark",
+            "gpt-5.6-luna",
             "dispatch_codex_worker.py",
             "codex exec",
         ]:
@@ -231,8 +216,8 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
                 fail(f"{readme_name} lacks the dual Codex worker route: {route_contract}")
 
 for changelog_name, marker in [
-    ("CHANGELOG.md", "Capability-Preserving Spark Workers"),
-    ("CHANGELOG.zh-CN.md", "保留能力的 Spark 工作成员"),
+    ("CHANGELOG.md", "Thin Adaptive Superpowers Replacement"),
+    ("CHANGELOG.zh-CN.md", "精简动态的 Superpowers 替代版本"),
 ]:
     changelog_path = ROOT / changelog_name
     if changelog_path.is_file():
@@ -365,6 +350,7 @@ if MODEL_ROUTING.is_file():
         "local evidence",
         "billing channel",
         "gpt-5.3-codex-spark",
+        "gpt-5.6-luna",
         "separate usage limits",
         "test authoring",
         "combined verification",
@@ -413,9 +399,10 @@ if WORKER_SCRIPT.is_file():
     worker_text = WORKER_SCRIPT.read_text(encoding="utf-8")
     for required_text in [
         "gpt-5.3-codex-spark",
-        "agents.enabled=false",
-        "leaf executor",
-        "Do not broaden scope",
+        "gpt-5.6-luna",
+        "multi_agent",
+        "Goldilocks Fast leaf",
+        "Do not delegate, reroute, broaden scope",
         "--output-last-message",
     ]:
         if required_text not in worker_text:
@@ -423,10 +410,12 @@ if WORKER_SCRIPT.is_file():
     for forbidden_text in ["mcp_servers={}", '"plugins"', '"apps"']:
         if forbidden_text in worker_text:
             fail(f"external Codex worker unnecessarily disables a capability: {forbidden_text}")
+    if "agents.enabled=false" in worker_text:
+        fail("external Codex worker retains the CLI-version-specific agents.enabled override")
 
 registry = load_json(MODEL_REGISTRY)
 if registry:
-    if registry.get("as_of") != "2026-07-18":
+    if registry.get("as_of") != "2026-07-26":
         fail("model registry must carry its evidence date")
     if len(registry.get("sources", [])) < 8:
         fail("model registry needs broad public benchmark and pricing sources")
@@ -472,15 +461,9 @@ for engine in sorted(ENGINES - {"evolve"}):
     if engine_path.is_file() and "evolve.md" not in engine_path.read_text(encoding="utf-8"):
         fail(f"{engine} engine lacks conditional idea-capture routing")
 
-for entry in sorted(ENTRIES):
-    path = SKILLS / entry / "SKILL.md"
-    require_file(path)
-    if path.is_file() and body_word_count(path) > 80:
-        fail(f"thin entry exceeds 80 body words: {entry}")
-
 skill_docs = sorted(SKILLS.glob("*/SKILL.md")) if SKILLS.is_dir() else []
 skill_names = {path.parent.name for path in skill_docs}
-expected_skill_names = ENTRIES | {"goldilocks"}
+expected_skill_names = {"goldilocks"}
 if skill_names != expected_skill_names:
     fail(
         "visible skill set mismatch: "
@@ -492,27 +475,13 @@ require_file(main_metadata)
 if main_metadata.is_file() and "allow_implicit_invocation: false" not in main_metadata.read_text(encoding="utf-8"):
     fail("goldilocks router must disable implicit invocation")
 
-verification_entry = SKILLS / "verification-before-completion" / "SKILL.md"
-if verification_entry.is_file():
-    verification_text = verification_entry.read_text(encoding="utf-8")
-    if "Do not invoke for a clear Direct edit" not in verification_text:
-        fail("verification entry must exclude clear Direct edits from implicit triggering")
-    if "For clear Direct work, do not load another engine" not in verification_text:
-        fail("verification entry must degrade safely when Direct work invokes it explicitly")
-
-executing_entry = SKILLS / "executing-plans" / "SKILL.md"
-if executing_entry.is_file():
-    executing_text = executing_entry.read_text(encoding="utf-8")
-    if "orchestrate.md" not in executing_text:
-        fail("executing-plans must route multi-unit plans through orchestration")
-    if "eligible independent units default to workers" not in executing_text:
-        fail("executing-plans must not silently assign every unit to Lead")
-    if "delegate by default" in executing_text:
-        fail("executing-plans retains the v0.2.3 anti-delegation bias")
-
-writing_entry = SKILLS / "writing-plans" / "SKILL.md"
-if writing_entry.is_file() and "parallel waves" not in writing_entry.read_text(encoding="utf-8"):
-    fail("writing-plans must expose routing-ready parallel waves")
+if MAIN.is_file():
+    main_text = MAIN.read_text(encoding="utf-8")
+    for engine in sorted(ENGINES):
+        if f"{engine}.md" not in main_text:
+            fail(f"single visible router does not expose internal engine: {engine}")
+    if "artifacts.md" not in main_text:
+        fail("single visible router does not expose artifact orchestration")
 
 if MAIN.is_file() and word_count(MAIN) > 650:
     fail(f"main router exceeds 650 words: {word_count(MAIN)}")
@@ -541,33 +510,6 @@ covered_engines = {
 }
 if cases and covered_engines != ENGINES:
     fail(f"engine coverage mismatch: {sorted(covered_engines)}")
-
-results = load_jsonl(RESULTS)
-if RESULTS.is_file():
-    if not results:
-        fail("RED baseline results are empty")
-    elif not any(result.get("valid") is True and result.get("status") == "FAIL" for result in results):
-        fail("RED baseline must contain at least one valid observed failure")
-
-    for engine in sorted(ENGINES):
-        engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"
-        if engine_path.is_file() and not any(
-            result.get("valid") is True
-            and result.get("status") == "FAIL"
-            and engine in result.get("gap_engines", [])
-            for result in results
-        ):
-            fail(f"implemented engine lacks reproducible RED evidence: {engine}")
-
-    for entry in sorted(ENTRIES):
-        entry_path = SKILLS / entry / "SKILL.md"
-        if entry_path.is_file() and not any(
-            result.get("valid") is True
-            and result.get("status") == "FAIL"
-            and entry in result.get("gap_entries", [])
-            for result in results
-        ):
-            fail(f"implemented thin entry lacks reproducible RED evidence: {entry}")
 
 if failures:
     for message in failures:

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Executing Plans"
-  short_description: "Execute an existing plan with checkpoints"
-  icon_small: "./assets/icon.png"
-  icon_large: "./assets/logo.png"
-  brand_color: "#D4A72C"
-  default_prompt: "Use $executing-plans to review and carry out this implementation plan."

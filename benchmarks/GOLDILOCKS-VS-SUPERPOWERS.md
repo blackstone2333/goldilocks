@@ -91,4 +91,3 @@ The defensible conclusion is narrow: **Goldilocks is the better Superpowers repl
 - [Full `v0.2.2` workflow certification](three_bears/results/2026-07-18-terra-low-full-certification.md)
 - [Three Bears methodology and runner](three_bears/README.md)
 - [Head-to-head calculation data](three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)
-- [Complete per-cell audit data](three_bears/results/data/2026-07-18-terra-low-full/results.json)

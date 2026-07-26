@@ -16,27 +16,14 @@ The randomized first cell doubles as a live model/account preflight. If it canno
 
 Each task ships a good and bad reference. `--selftest` proves the good reference passes and the bad reference is caught before any model call.
 
-## Arms
+## Compared workflows
 
 | Arm | Activation |
 |---|---|
-| `baseline` | No non-system workflow Skill |
-| `goldilocks` | Current repository's 14 Skill directories; entries trigger only when applicable |
-| `superpowers` | Original Superpowers directories plus explicit `using-superpowers` bootstrap |
-| `ponytail` | Original Ponytail full mode on coding tasks; inactive on the design task |
-| `grill` | Original Matt Pocock `grilling` primitive on the design task; inactive on coding tasks |
+| `goldilocks` | The current repository's single visible `goldilocks` Skill; internal engines load only when triggered |
+| `superpowers` | Original Superpowers directories plus the explicit `using-superpowers` bootstrap |
 
-The conditional activation avoids pretending Ponytail is a general design interview or Grill is a coding workflow. All five arms remain available in one matrix.
-
-The official product comparison is intentionally limited to `goldilocks` versus `superpowers`. The other arms remain available for independent exploration and are not ranked in the Goldilocks product claim.
-
-By default the external source paths are sibling repositories already used during Goldilocks development:
-
-- `../superpowers-clean-baseline/skills`
-- `../ponytail/skills/ponytail`
-- `../mattpocock-skills/skills/productivity/grilling`
-
-Override them with `SUPERPOWERS_SKILLS`, `PONYTAIL_SKILL`, and `GRILL_SKILL`. Override Goldilocks with `GOLDILOCKS_SKILLS`.
+The published product claim is intentionally limited to Goldilocks versus Superpowers. Override the external Superpowers source with `SUPERPOWERS_SKILLS` and Goldilocks with `GOLDILOCKS_SKILLS`.
 
 ## Metrics
 
@@ -68,7 +55,7 @@ Preview a matrix without spending tokens:
 ```bash
 python3 benchmarks/three_bears/run.py \
   --level all \
-  --arms baseline,goldilocks,superpowers,ponytail,grill \
+  --arms goldilocks,superpowers \
   --dry-run
 ```
 
@@ -97,20 +84,6 @@ python3 benchmarks/three_bears/run.py \
 ```
 
 That command runs 54 isolated cells. Cell order is deterministically randomized (`--seed 1729`) to reduce warm-cache and ordering bias. Start with one run per cell before paying for repetitions. Report medians only after at least three runs; use five or more when making broad public performance claims. Always publish cached and uncached input separately: a single warm-cache imbalance can dominate both latency and apparent cost.
-
-Optional exploratory five-arm matrix:
-
-```bash
-python3 benchmarks/three_bears/run.py \
-  --level all \
-  --arms baseline,goldilocks,superpowers,ponytail,grill \
-  --model gpt-5.6-terra \
-  --reasoning low \
-  --runs 3 \
-  --workers 3
-```
-
-That optional command runs 135 isolated cells. Its additional arms are available for readers to evaluate themselves; they are not part of the official Goldilocks-versus-Superpowers claim.
 
 Recompute graders and summary tables without another model call:
 

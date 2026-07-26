@@ -18,6 +18,10 @@ For every slide, state: ID and order; purpose/one takeaway; audience-facing cont
 
 Several non-dependent slides may be a **batch** for one worker session, but batching never merges their contracts or removes individual acceptance checks. Batch only contiguous slides with the same inputs, style, and low hand-off risk. Do not batch a slide that changes global structure, owns a shared visual, or awaits another unit's output.
 
+Treat the slide contract as the rework boundary and the coherent content batch as the **session boundary**. For a simple **12-slide** text-led deck with one frozen storyboard and shared design system, begin with **one worker session** for all ready slide-content units; add another only when independent specialist work or measured critical-path savings repays its startup.
+
+When the packaged Codex Fast adapter is used for slide content, select Luna with `--work-type general`. Spark remains the coding default for presentation-generation scripts or deterministic file automation, not for teaching design, narrative copy, or visual judgment.
+
 Workers produce contracted units and return evidence. Unit QA checks content accuracy, the contract, visual consistency, notes/sources, and local legibility. Rework is **localized rework**: repair only the failed slide and its direct dependency unless the global contract changed.
 
 Exactly one **single integration owner** edits the final deck and resolves ordering, shared elements, transitions, and global consistency. Global QA inspects every slide at **full-size** for legibility, clipping, and notes, then uses a **montage** only to judge sequence, rhythm, and the design system. It also confirms the opening-to-close narrative, cross-slide terminology, required sources, and final-format acceptance rubric.

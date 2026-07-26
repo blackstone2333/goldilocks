@@ -2,177 +2,26 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
-## 0.4.0 — 2026-07-25
+## 0.4.1 — 2026-07-26
 
-### Added — Structured Artifact Orchestration
+### Thin Adaptive Superpowers Replacement
 
-- Added the thin `artifact-production` entry and a generic Artifact Contract protocol for presentations, reports, workbooks, videos, and other deliverables with a shared system and separable units.
-- Added a progressive Presentation Profile. Lead owns audience, outcome, narrative, design system, integration, and final QA; Standard may own the storyboard; Fast produces already-decided slide units or safe batches; one integration owner controls the canonical deck.
-- Added reusable global and unit contract templates covering structure, terminology and sources, dependency graph, acceptance rubric, merge order, boundaries, and returned evidence.
-- Added four routing cases for parallel presentation production, specialist-assisted report sections, localized unit repair, and the Direct boundary for one tiny artifact edit.
+- Consolidated the complete workflow surface into one visible `goldilocks` Skill. Align, Diagnose, Build, Orchestrate, Prove, Evolve, and the explicit Artifacts profile remain progressively disclosed internal engines.
+- Made Direct a hard, silent exit for clear work. No workflow reference, continuity state, delegation ceremony, or route announcement is loaded unless a concrete trigger earns it.
+- Added a 26-word decision-first communication contract influenced by Caveman and i-have-adhd (ADHD): result first, no work preambles or repeated state, concise decisive logs, and full wording for safety or ambiguity.
+- Preserved deliberate brainstorming, compact specs and plans, TDD, root-cause debugging, worktrees, review, verification, idea capture, and safe branch completion without requiring them on every task.
+- Kept durable project memory conditional: `docs/PROJECT.md`, `docs/work/`, `docs/debug/`, `docs/ideas.md`, `CHANGELOG.md`, and `.goldilocks/ACTIVE.md` appear only when continuity or correctness justifies them.
+- Retained dynamic Lead → Standard → Fast orchestration. Lead owns intent, architecture, integration, and final acceptance; Standard owns bounded domain judgment; Fast receives a complete low-discretion contract and remains a leaf.
+- Added work-type-aware Codex routing: Fast coding prefers `gpt-5.3-codex-spark`; Fast general non-coding prefers `gpt-5.6-luna`. Native supported models are preferred, with `dispatch_codex_worker.py` and `codex exec` as the packaged fallback.
+- Added ready-route failure economy and context-lean worker evidence. Delegation starts only on a verified route; transport startup failures return to Direct or another proven route instead of consuming the product task on adapter repair.
+- Retained explicit structured-artifact orchestration through one global Artifact Contract, replaceable unit contracts, localized rework, one integration owner, and global QA. Specialist production Skills remain responsible for authoring quality.
+- Kept quiet update awareness for native Codex installs: at most one GitHub check per day, silence when current or offline, one reminder per newer release, and no automatic update without approval.
 
-### Changed
+### Verification
 
-- Goldilocks now distinguishes an independently replaceable artifact unit from an agent session. Several compatible units may share one worker session to amortize startup cost without weakening per-unit acceptance.
-- Unit failures trigger localized rework. Passing slides or sections remain intact unless the global contract changed; concurrent workers do not edit one fragile final file.
-- The new path remains progressively disclosed: the entry, generic protocol, and Presentation Profile total fewer than 1,600 words and do not copy production-library instructions into Goldilocks.
+- Added deterministic contracts for the single-Skill surface, sub-300-word router, Direct exit, lean communication, cross-version worker leaf switch, Spark/Luna routing, context-lean evidence, route-failure behavior, continuity, Artifacts, manifests, bilingual documentation, and third-party attribution.
+- Certified the Direct branch on simple, moderate, and complex coding fixtures with GPT-5.6 Sol at high reasoning, fresh repositories, hidden deterministic acceptance, simultaneous Direct/Goldilocks waves, and excluded warm-ups.
+- Both arms passed all 114/114 external checks. Across eleven runs per arm, Goldilocks used 10.9% less cumulative time, 6.3% less official GPT-5.6 Sol Standard token cost, and 11.5% fewer processing tokens.
+- Retained the published Goldilocks/Superpowers evidence: 27/27 versus 8/27 successful Three Bears deliveries, plus the eight-scenario instruction stress test.
 
-### Evidence and compatibility
-
-- Added a real 12-slide HSK4 one-to-one lesson pilot, full-slide render inspection, montage review, final file validation, and a [v0.4 evidence record](evals/results/2026-07-25-v040-structured-artifact-pilot.md).
-- This pilot proves that the architecture can produce and validate a structured artifact. It is not a universal speed, token, quota, or quality comparison; the published Superpowers runtime certification remains v0.2.2.
-- Existing Superpowers-compatible entries and the six shared engines remain intact. v0.4 adds one optional production entry rather than embedding document, presentation, spreadsheet, or video tooling.
-
-## 0.3.3 — 2026-07-25
-
-### Changed — Capability-Preserving Spark Workers
-
-- The external Spark adapter now disables only further agent spawning through `agents.enabled=false`. Fast remains a leaf, but plugins, apps, and MCP tools stay available when the execution contract needs them.
-- Tool access still follows host availability, sandbox, permissions, and the bounded contract. Preserving capability does not grant broader authority or allow Fast to change architecture, scope, or shared interfaces.
-- Removed the default `--disable plugins`, `--disable apps`, and `mcp_servers={}` overrides. The earlier probe showed that those restrictions saved only about 480 reported tokens while making valid tool-dependent Fast tasks impossible.
-
-### Evidence and compatibility
-
-- Added [a regression record](evals/results/2026-07-25-v033-capability-preserving-spark.md) proving that the generated Codex command keeps plugin/App/MCP configuration and retains only the leaf-agent override.
-- This is a capability correction to v0.3.2, not a new performance certification. The dual native/CLI routing design and its quality gates are unchanged.
-
-## 0.3.2 — 2026-07-25
-
-### Added — Dual Codex Worker Routes
-
-- Added a packaged `dispatch_codex_worker.py` Fast adapter for the verified host case where native `collaboration.spawn_agent` does not advertise `gpt-5.3-codex-spark` but the installed `codex exec` CLI can run it.
-- The adapter fixes the worker model to Spark, accepts a complete `fast__` contract through a UTF-8 file and stdin, disables plugin/app/MCP context and further agent spawning, limits sandbox choices to read-only or workspace-write, supports a per-worker result file, and propagates failures without silent fallback.
-- Added a short `SessionStart` organization reminder even when no continuity ledger exists: Lead owns intent, architecture, integration, and final acceptance; Standard owns bounded judgment; Fast is a leaf execution layer.
-
-### Changed
-
-- Native Fast dispatch no longer rewrites an omitted model to Spark. Every native Fast or Standard route must explicitly select a model advertised by that host, preventing accidental Sol inheritance while remaining compatible with future native Spark support.
-- Expanded the Hook matcher and script normalization to recognize `Agent`, `spawn_agent`, and `collaboration.spawn_agent`. When a specialized native path still bypasses `PreToolUse`, an unplanned Sol child receives a soft return-to-owner check instead of a user-facing interruption.
-- Documented actual upward integration: Fast returns changed files and focused evidence; Standard reviews and combines one domain; Lead reviews shared boundaries and reruns the final gate.
-
-### Evidence and compatibility
-
-- Historical logs contain 22 real `codex_exec` Spark worker sessions on Codex `0.144.0-alpha.4`. A fresh probe on `0.146.0-alpha.3.1` also returned `SPARK_OK` from the exact model, while the same host's native collaboration path advertised only Sol and Terra.
-- Added [deterministic and live-route evidence](evals/results/2026-07-25-v032-dual-codex-routing.md) for the external command contract, leaf enforcement, stdin-safe briefing, explicit native routing, namespace matching, failure propagation, startup routing context, and unplanned-Sol soft return.
-- v0.3.2 makes the company-style route executable on the observed Codex host; it does not claim a new end-to-end quality, quota, token, or latency result.
-
-## 0.3.1 — 2026-07-23
-
-### Added — Quiet Update Awareness
-
-- Added a native Codex `SessionStart` check through the GitHub Contents API for the public Goldilocks manifest. It runs at most once every 24 hours, uses a short timeout and ETag, and stores only check time, latest version, ETag, and notified version in plugin-data SQLite.
-- A newer semantic version produces one notice per release with the installed version and exact Codex update commands. The active task remains on its loaded version, and installation still requires explicit user approval.
-- Current versions, repeated sessions, opt-out, malformed responses, timeouts, and offline use remain completely silent. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
-
-### Compatibility and evidence
-
-- Portable Skill installs do not gain a startup hook or recurring network/model cost; they continue to update explicitly through `npx skills update`.
-- The checker compares version metadata only. It never downloads or executes remote code and never self-modifies the active plugin.
-- Added [deterministic local-server coverage](evals/results/2026-07-23-v031-update-awareness.md) for update detection, 24-hour throttling, ETag reuse, one-notice-per-version behavior, downgrade comparison, opt-out, offline failure, and Hook registration.
-
-## 0.3.0 — 2026-07-23
-
-### Added — Hierarchical Orchestration
-
-- Added a constant-time make-or-delegate check before expensive implementation. Clear work may stay Direct or become one complete Fast contract; larger work can use Lead→Fast, Lead→Standard, or Lead→Standard→Fast.
-- Added Standard domain ownership. Standard can resolve bounded local design, dispatch Fast execution contracts inside that boundary, review the domain result, and return one coherent evidence packet to Lead.
-- Added selective execution memory. Projects may preserve a verified route, preconditions, invalidators, organization depth, quota mix, elapsed time, retries, and acceptance evidence without using the release changelog as an internal database.
-- Added six v0.3 routing scenarios covering Direct dispatch, nested delegation, post-decomposition Fast eligibility, quota-weighted routing, execution-memory reuse, and full-context Lead handoff.
-
-### Changed
-
-- Fast now means low residual discretion after decomposition, not mechanical code, small file count, or a small original project. A large implementation may be Fast-ready after Lead or Standard freezes its decisions and acceptance.
-- Model selection now minimizes quota-weighted expensive usage and critical-path time after the quality gate, while total raw tokens stay inside a reasonable evidence-based envelope.
-- Useful concurrency is no longer described by a fixed two-or-three-worker default. It is bounded by the ready dependency graph, host capacity, isolation, integration risk, and reviewer throughput.
-- Lead owns user intent, shared interfaces, conflicts, combined verification, and final judgment. Lead implementation now needs a Direct, Critical-core, unblocking, or failed-worker reason rather than being the silent default.
-- Full-history context is allowed only for an explicit Lead handoff that inherits the parent Lead model. Fast and Standard continue to use task-local contracts or at most four relevant turns.
-
-### Routing guard and evidence
-
-- Replaced unlocked JSONL matching with a standard-library SQLite audit store. Concurrent writes are atomic, starts bind by a unique model match when possible, and ambiguous concurrent or nested starts are recorded as unverifiable instead of producing a false mismatch.
-- Fast workers are enforced as leaf executors. Standard and Lead route choices remain explicit; Spark rewriting still uses the separate Codex usage channel when eligible.
-- Plugin data records observed completions separately from verified passes. A normal child stop never becomes successful execution memory without Lead acceptance.
-- Added [deterministic RED/GREEN coverage](evals/results/2026-07-23-v030-hierarchical-orchestration.md) for Fast recursion, Lead full-history inheritance, out-of-order unique-model starts, ambiguous same-model starts, SQLite decisions/executions, Stop correlation, and true mismatch handling.
-- v0.3.0 makes no new runtime performance claim. The acceptance target is quality non-inferiority with lower Lead quota share, bounded total-token change, shorter critical path where parallelism exists, and no increase in integration defects.
-
-## 0.2.6 — 2026-07-23
-
-### Added
-
-- Added a native Codex **Agent Routing Guard** that intercepts `spawn_agent` before execution without changing user-level model defaults.
-- Added explicit `fast__`, `standard__`, and `lead__` dispatch contracts. Fast calls are rewritten to `gpt-5.3-codex-spark`; Standard and Lead calls require an explicit model.
-- Added expected-versus-actual model auditing through `SubagentStart`, stored in plugin data rather than the project. A mismatched child is instructed not to execute the delegated task.
-- Added a [deterministic hook contract test](evals/results/2026-07-23-v026-routing-guard.md) covering unclassified calls, implicit and explicit full-history forks, oversized context forks, Spark rewriting, explicit Standard/Lead routing, successful audit, and mismatch handling.
-
-### Changed
-
-- Full-history subagent forks are blocked. Delegated work receives a task-local packet with `fork_turns="none"` or at most four recent turns.
-- Worker repair loops stop after a second failure or requirement mismatch. One cohesive worker normally implements a bounded unit and its focused tests instead of duplicating context across micro-agents.
-- Native Codex hard enforcement is separated from portable Skill guidance: Skill-only installs remain cross-platform but cannot intercept Codex tools.
-
-### Compatibility and evidence
-
-- The routing hooks require Codex trust review after installation or hook changes. Direct tasks remain unaffected because the guard runs only around subagent activity.
-- v0.2.6 closes the observed v0.2.5 failure where five child agents silently inherited `gpt-5.6-sol` and full parent history. It does not claim a new performance result until real projects measure Lead quota, total tokens, wall-clock time, retries, and integration defects.
-
-## 0.2.5 — 2026-07-20
-
-### Added
-
-- Extended the **Continuity Protocol** with a temporary, under-100-line `.goldilocks/ACTIVE.md` Execution Frontier for long tasks exposed to compaction, steering, waiting, delegation, or handoff.
-- Added explicit `ADD`, `REPLACE`, `CANCEL`, and `QUESTION` steering semantics with `pending`, `applied`, and `superseded` lifecycle states.
-- Added an exact-next-action and do-not-repeat recovery boundary, repository reconciliation, verification state, authority blockers, and terminal conditions.
-- Added silent-by-default Codex recovery hooks plus an optional complete compaction-prompt asset.
-
-### Changed
-
-- Recovery now reads durable state first, checks Git and current files, and resumes from the first unfinished action instead of reconstructing work from chat salience.
-- Direct work still creates no workflow state by default; the live ledger is activated only by observable continuity risk and is removed after useful outcomes are transferred.
-
-### Compatibility and evidence
-
-- Hooks are optional reminders and require Codex trust review; the ledger remains authoritative when hooks are delayed or unavailable.
-- v0.2.5 is an experimental continuity release. One [fresh-context smoke test](evals/results/2026-07-20-v025-continuity-smoke.md) passed; the published runtime certification remains v0.2.2 while real projects test actual compaction recovery and non-repetition behavior.
-
-## 0.2.4 — 2026-07-18
-
-### Added
-
-- Added a parallel-first routing pass after multi-unit plans: eligible independent work defaults to workers instead of silently accumulating on the Lead.
-- Added task-specific model scoring based on a quality gate, public and local evidence, confidence, recency, expected cost per successful delivery, latency, and a Pareto shortlist.
-- Added a Codex adapter that prefers `gpt-5.3-codex-spark` for eligible Fast text-only work when its separate usage limits are available.
-- Added a dated public model registry and research survey covering independent coding benchmarks and official pricing sources across major providers.
-
-### Changed
-
-- Fast workers now preferentially receive mechanical implementation, test authoring, focused test execution, fixtures, and read-heavy exploration.
-- Lead retains architecture, complex shared logic, Critical work, diff review, conflict resolution, combined verification, and final integration.
-- Serial execution of an otherwise eligible multi-unit plan must state why coordination cost exceeds the saving.
-- Public model rankings are advisory; local repository evidence and current host availability override the dated seed.
-
-### Compatibility and evidence
-
-- The visible surface remains fourteen Skills and six engines. Model routing is a shared protocol and zero-default-context registry asset.
-- Existing published runtime certification remains the v0.2.2 result; v0.2.4 requires new real-project evidence before performance claims are expanded.
-
-## 0.2.3 — 2026-07-18
-
-### Added
-
-- Added an on-demand **Continuity Protocol** for work that must survive sessions or transfer between humans and agents.
-- Added proportional persistence: one compact work packet for ordinary multi-stage work, or split `spec.md`, `plan.md`, and `handoff.md` for Critical, Orchestrated, or substantial cross-session work.
-- Added a project structure contract for new projects and architecture-level changes, covering directory layout, module ownership, dependency direction, entry points, data flow, test layout, extension points, and forbidden coupling.
-- Added selective debug memory under the project's existing convention or `docs/debug/`, with search-before-debugging, root-cause notes, failed-attempt capture, regression-test links, and secret-safe recording rules.
-- Added three optional templates: project map, work packet, and debug note.
-
-### Changed
-
-- Direct work no longer pays a default workflow-documentation cost. It still retains full autonomy to create or update normal documentation when documentation is the deliverable, project conventions require it, or correctness would otherwise suffer.
-- Align, Build, Diagnose, Orchestrate, Prove, and Evolve now route to continuity only when durable state has positive value.
-- Prove now checks that used specs, plans, project maps, debug links, idea ledgers, and handoffs remain current before completion.
-- Codex, Claude Code, and cross-platform Skill metadata now report version `0.2.3`.
-
-### Compatibility and evidence
-
-- The public surface remains fourteen Skills backed by six engines; Continuity is a shared progressive-disclosure protocol, not another visible Skill.
-- Existing published agentic certification remains the v0.2.2 result. v0.2.3 does not claim a new live benchmark result until the continuity behavior is tested on long-running projects and cross-agent handoffs.
+Goldilocks can better replace Superpowers on the tested workflow surface, but this release does not claim an absolute advantage across every possible workflow. More project tests and feedback are welcome.

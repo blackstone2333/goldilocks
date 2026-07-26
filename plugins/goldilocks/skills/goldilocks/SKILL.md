@@ -1,53 +1,38 @@
 ---
 name: goldilocks
-description: Use when explicitly asked to apply Goldilocks, choose a project workflow, replace Superpowers, or decide how much brainstorming, planning, testing, isolation, delegation, review, and verification a task actually needs.
+description: Use only when explicitly asked to apply Goldilocks, choose a workflow, replace Superpowers, or calibrate project process. This is a thin router; clear Direct work exits without loading another workflow Skill or reference.
 ---
 
 # Goldilocks
 
-Use the minimum process that preserves the same high quality, safety, authorization, and evidence floor.
+Default to Direct. Preserve quality, safety, authority, and acceptance; add process only when it changes the outcome.
 
-A capable worker may need fewer instructions. A simple task may need fewer stages. Neither gets weaker acceptance criteria.
+## Zero-cost gate
 
-## Route the current stage
+Before loading workflow, make one check:
 
-Re-evaluate as facts change; do not assign one workflow depth to an entire project.
+- Does a material product, architecture, authority, safety, or irreversible decision remain?
+- Must the work survive compaction, several stages, waiting, delegation, or handoff?
+- Are there at least two independent ready units, or one large complete Fast contract that clearly avoids substantial Lead work on a verified route?
 
-| Mode | Observable condition | Default shape |
-|---|---|---|
-| Direct | Clear, local, reversible, low-risk | Act inline; inspect output and run one relevant check |
-| Guarded | Behavior change, bug, multi-file work, or limited ambiguity | State assumptions; use a short plan and focused evidence |
-| Critical | Security, permissions, money, production, migration, data loss, public contract, or costly architecture | Resolve authority/design; add risk-specific tests and independent review |
+If all answers are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow documents or continuity state. Do not announce the route. Inspect task-local facts, make the smallest coherent change, and run the smallest decisive check.
 
-Before an expensive model starts implementation, make a constant-time Direct-versus-delegate check. If a verified route for the same task shape still applies, reuse it after checking invalidators. Add orchestration only when delegation, hierarchy, isolation, or parallelism has positive net value after briefing, review, integration, retry risk, quota-channel cost, and raw-token growth.
+Direct: do not create workflow continuity documents by default; documentation is the deliverable or correctness may still require normal docs. Only after a compaction, multi-stage, steering, waiting, delegation, or handoff trigger may [continuity.md](references/continuity.md) create `.goldilocks/ACTIVE.md`.
 
-After a Guarded or Critical plan exposes meaningful units, run the orchestration routing pass before the Lead starts implementing everything. A ready execution contract can go directly to Fast; a bounded domain can go to Standard, which may split it into Fast contracts. Lead owns direction and final quality rather than defaulting to high-cost implementation.
+## Escalate one internal engine
 
-Direct: do not create workflow continuity documents by default. Creating or updating documentation is still appropriate when documentation is the deliverable, project conventions require it, or omission would make the change misleading. For Guarded work that genuinely spans stages, Critical or Orchestrated work, cross-session handoff, or new-project architecture, read [continuity.md](references/continuity.md) and persist only the minimum useful state.
+- Material ambiguity or end-state design: read [align.md](references/align.md).
+- Bug, failure, or unclear causality: read [diagnose.md](references/diagnose.md).
+- Reuse, durable planning, execution, or deliberate TDD: read [build.md](references/build.md).
+- Worktrees, delegation, parallelism, or model routing: read [orchestrate.md](references/orchestrate.md).
+- Review, release, safety, integration, or multi-claim acceptance: read [prove.md](references/prove.md).
+- Ideas, Skill authoring, or workflow experiments: read [evolve.md](references/evolve.md).
+- Explicit multi-unit artifact production: read [artifacts.md](references/artifacts.md).
 
-If `.goldilocks/ACTIVE.md` exists, continuity recovery takes precedence over reconstructing the task from chat: read it, reconcile it with repository evidence, classify the current user message, and continue from its exact frontier. Create it only when continuity risk appears, such as likely compaction, a long-running multi-stage task, mid-flight steering, waiting, delegation, or handoff.
+Load only that engine. Add another only when facts cross its boundary.
 
-## Load only the needed engine
+Lead owns intent, shared decisions, integration, and final acceptance. Fast receives a complete contract and remains a leaf; Standard receives only bounded domain judgment.
 
-- Material product, design, architecture, scope, or authority decisions: read [align.md](references/align.md).
-- Bugs, failures, unexpected behavior, or unclear causality: read [diagnose.md](references/diagnose.md).
-- Reuse, planning, implementation, or test-first development: read [build.md](references/build.md).
-- Worktrees, parallel work, subagents, or capability routing: read [orchestrate.md](references/orchestrate.md).
-- Multi-unit presentations, reports, workbooks, videos, or other structured artifacts: use `artifact-production`, which reads [artifacts.md](references/artifacts.md) and only the relevant format profile.
-- Review, runtime evidence, completion claims, or branch integration: read [prove.md](references/prove.md).
-- Mid-flight ideas, skill authoring, or workflow improvement: read [evolve.md](references/evolve.md).
+## Decision-first communication
 
-Load multiple engines only when the stage genuinely crosses their boundaries. Explicit compatibility skills route directly to the same engines.
-
-## Minimum complete loop
-
-1. Define the requested end state, constraints, non-goals, and acceptance evidence.
-2. Inspect the real project flow, structure, documentation, and existing solutions before inventing.
-3. Choose the smallest safe execution and organizational shape.
-4. Implement the smallest coherent change.
-5. Obtain fresh evidence for every completion claim.
-6. Separate useful follow-up ideas from delivered scope.
-
-Ask only when the answer changes the end state, authority, external effect, safety boundary, or a costly-to-reverse choice. Investigate project facts yourself. Honor explicit scope and tool constraints; when a necessary check is forbidden or unavailable, report the exact unverified claim.
-
-Never optimize away acceptance, regression evidence, security, accessibility, trust-boundary validation, data-loss prevention, integration checks, real-runtime evidence, destructive-action confirmation, or explicit authority for external effects.
+Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Expand when safety, ambiguity, or authority requires it.

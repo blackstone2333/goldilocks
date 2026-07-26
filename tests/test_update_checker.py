@@ -54,6 +54,7 @@ def run_checker(
     url: str,
     *,
     enabled: str = "1",
+    worker: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.update(
@@ -63,6 +64,7 @@ def run_checker(
             "GOLDILOCKS_UPDATE_CHECK": enabled,
             "GOLDILOCKS_UPDATE_URL": url,
             "GOLDILOCKS_UPDATE_TIMEOUT_SECONDS": "0.5",
+            "GOLDILOCKS_WORKER": "1" if worker else "0",
         }
     )
     return subprocess.run(
@@ -139,6 +141,15 @@ def main() -> None:
             assert "0.3.2" in json.loads(cached_notice.stdout)["systemMessage"], (
                 "a 304 response must still compare cached latest version after a downgrade"
             )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_manifest(root / "plugin", "0.3.0")
+            before = ManifestHandler.requests
+            worker = run_checker(root / "plugin", root / "data", url, worker=True)
+            assert worker.returncode == 0, worker.stderr
+            assert worker.stdout == ""
+            assert ManifestHandler.requests == before, "workers must never perform update checks"
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

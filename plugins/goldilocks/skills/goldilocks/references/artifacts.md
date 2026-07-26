@@ -2,6 +2,8 @@
 
 Use this protocol when a deliverable has a global system and independently checkable units: slides in a deck, sections in a report, sheets or regions in a workbook, or scenes in a video. Goldilocks owns the organization of production. A format-specific specialist skill owns the actual file format, rendering APIs, and domain mechanics.
 
+For presentations, load the progressive [Presentation Profile](presentations.md) after this protocol. Other formats stay with their specialist skill until a measured profile earns inclusion.
+
 The minimum complete route is:
 
 `Goal → Global Artifact Contract → Unit Contracts → Parallel Production → Unit QA → Localized Rework → Integration → Global QA → Durable Lessons`
@@ -21,13 +23,15 @@ Before units are dispatched, name one Lead owner and settle only the decisions e
 - acceptance rubric and global verification method;
 - merge order and exactly one integration owner.
 
-Use [artifact-contract.md](../../artifact-production/assets/artifact-contract.md) when the contract must survive delegation or compaction. Adapt the repository's existing spec instead when it already carries the same information. Do not create a second planning hierarchy.
+Use [artifact-contract.md](../assets/artifact-contract.md) when the contract must survive delegation or compaction. Adapt the repository's existing spec instead when it already carries the same information. Do not create a second planning hierarchy.
 
 ## Externalize one unit at a time
 
-Turn the structure map into unit contracts using [artifact-unit-contract.md](../../artifact-production/assets/artifact-unit-contract.md). Each contract must be independently reviewable and replaceable without guessing global intent. It states identity, objective, inputs, dependencies, output shape, shared-system constraints, acceptance checks, ownership, forbidden changes, and evidence returned.
+Turn the structure map into unit contracts using [artifact-unit-contract.md](../assets/artifact-unit-contract.md). Each contract must be independently reviewable and replaceable without guessing global intent. It states identity, objective, inputs, dependencies, output shape, shared-system constraints, acceptance checks, ownership, forbidden changes, and evidence returned.
 
 An execution unit is not necessarily an agent session. Keep the unit small enough for localized rework, but batch several independent, similarly tooled units in one worker session when startup and context cost would otherwise dominate. A batch never weakens per-unit acceptance or creates hidden cross-unit state.
+
+When startup cost is unknown, **start with one worker session** for the first coherent ready batch. Raise the **session count** only after route evidence or clear parallel critical-path savings justifies another startup. Select the narrowest useful **capability profile**: clean project execution by default, minimal for self-contained work, and inherited global tools only when the unit contract names them.
 
 ## Route the production graph
 

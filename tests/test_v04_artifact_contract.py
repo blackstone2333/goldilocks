@@ -6,15 +6,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
-ENTRY = SKILLS / "artifact-production" / "SKILL.md"
-ENTRY_UI = SKILLS / "artifact-production" / "agents" / "openai.yaml"
+ENTRY = SKILLS / "goldilocks" / "SKILL.md"
+ENTRY_UI = SKILLS / "goldilocks" / "agents" / "openai.yaml"
 PROTOCOL = SKILLS / "goldilocks" / "references" / "artifacts.md"
-PRESENTATIONS = SKILLS / "artifact-production" / "references" / "presentations.md"
-GLOBAL_CONTRACT = SKILLS / "artifact-production" / "assets" / "artifact-contract.md"
-UNIT_CONTRACT = SKILLS / "artifact-production" / "assets" / "artifact-unit-contract.md"
+PRESENTATIONS = SKILLS / "goldilocks" / "references" / "presentations.md"
+GLOBAL_CONTRACT = SKILLS / "goldilocks" / "assets" / "artifact-contract.md"
+UNIT_CONTRACT = SKILLS / "goldilocks" / "assets" / "artifact-unit-contract.md"
 REPORT = ROOT / "evals" / "results" / "2026-07-25-v040-structured-artifact-pilot.md"
 DECK = ROOT / "evals" / "artifacts" / "v040-hsk4-network-shopping.pptx"
 
@@ -55,16 +55,14 @@ for required in [
 
 entry = text(ENTRY)
 for marker in [
-    "name: artifact-production",
-    "structured artifact",
+    "name: goldilocks",
+    "Explicit multi-unit artifact production",
     "artifacts.md",
-    "presentations.md",
-    "specialist",
 ]:
     if marker not in entry:
-        fail(f"artifact-production entry lacks: {marker}")
-if ENTRY.is_file() and words(ENTRY) > 150:
-    fail("artifact-production entry exceeds 150 words")
+        fail(f"single Goldilocks router lacks artifact trigger: {marker}")
+if ENTRY.is_file() and words(ENTRY) > 380:
+    fail("single Goldilocks router exceeds 380 words including metadata")
 
 
 protocol = text(PROTOCOL)
@@ -168,7 +166,7 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
     readme = text(ROOT / readme_name)
     for marker in [
         f"version-{VERSION}",
-        "artifact-production",
+        "Artifacts",
         "Artifact Contract",
         "localized rework",
     ]:
@@ -195,7 +193,8 @@ for marker in [
     "HSK4",
     "artifact quality",
     "expensive-token share",
-    "raw tokens",
+    "uncached input + output",
+    "total processed tokens",
     "elapsed time",
     "localized rework",
     "integration defects",
@@ -205,9 +204,9 @@ for marker in [
 
 
 if failures:
-    print("Goldilocks v0.4.0 artifact contract failed:")
+    print("Goldilocks v0.4.1 artifact contract failed:")
     for failure in failures:
         print(f"- {failure}")
     sys.exit(1)
 
-print("Goldilocks v0.4.0 structured-artifact contract passed.")
+print("Goldilocks v0.4.1 structured-artifact contract passed.")

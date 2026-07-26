@@ -29,7 +29,10 @@ VERSION_PATTERN = re.compile(
 
 
 def enabled() -> bool:
-    return os.environ.get("GOLDILOCKS_UPDATE_CHECK", "1").strip().lower() not in DISABLED_VALUES
+    return (
+        os.environ.get("GOLDILOCKS_WORKER") != "1"
+        and os.environ.get("GOLDILOCKS_UPDATE_CHECK", "1").strip().lower() not in DISABLED_VALUES
+    )
 
 
 def plugin_root() -> Path:

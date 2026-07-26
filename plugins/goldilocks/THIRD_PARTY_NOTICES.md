@@ -21,4 +21,18 @@ Goldilocks is an independent implementation influenced by workflow concepts in t
 - Source: https://github.com/mattpocock/skills
 - Studied commit: `9603c1cc8118d08bc1b3bf34cf714f62178dea3b`
 
+## Caveman
+
+- Copyright (c) 2026 Julius Brussee
+- Source: https://github.com/JuliusBrussee/caveman
+- Studied commit: `0d95a81d35a9f2d123a5e9430d1cfc43d55f1bb0`
+- Goldilocks adopts the general lesson that filler, repeated narration, and oversized log excerpts should be removed. It does not copy Caveman's persistent persona or fragment style.
+
+## i-have-adhd
+
+- Copyright (c) 2026 Ayoub Ghriss
+- Source: https://github.com/ayghri/i-have-adhd
+- Studied commit: `16a42a01f7783e29db8557dfc46226baf8015618`
+- Goldilocks adopts decision-first, bounded-step, tangent-suppression, and matter-of-fact error-shaping ideas without forcing per-turn state repetition or user handoffs.
+
 Each project is distributed under the MIT License. See its source repository for the original license and notices.

@@ -1,6 +1,6 @@
 {
   "schema": "goldilocks-superpowers-head-to-head-v1",
-  "source": "results.json",
+  "source": "published Goldilocks/Superpowers certification slice",
   "filter": {
     "arms": [
       "goldilocks",

@@ -1,6 +1,6 @@
 # Orchestrate
 
-Orchestration allocates decision work, implementation work, and review to the cheapest capable layer. Run a routing pass after planning, or a constant-time check before clear Direct work. It is not a ceremony and not a task-size label. The Lead owns the outcome; Standard owns a bounded domain; Fast executes contracts whose material decisions have already been made.
+Orchestration assigns decisions, implementation, and review to the cheapest capable layer. Run a routing pass after planning or check clear Direct work in constant time. Lead owns the outcome; Standard a bounded domain; Fast fixed-decision contracts.
 
 ## Run the make-or-delegate check
 
@@ -8,14 +8,20 @@ Before an expensive model starts implementation, make one quick comparison:
 
 `delegation gain = Lead work avoided + parallel time saved + quota-channel benefit - briefing - review - integration - retry risk`
 
-Search a verified execution pattern first when the repository contains one. Reuse its route after a short invalidation check; read [execution-memory.md](execution-memory.md) only when a task shape is recurring or the route will likely be reused.
+Reuse a verified project pattern after checking invalidators. Read [execution-memory.md](execution-memory.md) only for recurring or reusable routes.
 
-- Keep Direct when the Lead can implement and verify before a worker can be briefed and reviewed.
-- Delegate directly to Fast when the objective, scope, interfaces, acceptance, and prohibitions form a complete execution contract.
-- Delegate a bounded domain to Standard when domain planning or local judgment remains. Standard may then convert its design into Fast contracts.
+- Keep Direct when Lead finishes before worker briefing and review.
+- Use Fast for a complete objective, scope, interfaces, acceptance, and prohibitions.
+- Use Standard when bounded domain judgment remains; it may contract Fast.
 - Keep Critical judgment, cross-domain interfaces, authority, and final integration with Lead.
 
 This check is constant-time for clear work. Do not write a plan merely to decide that a two-minute task is Direct.
+
+## Require a ready route before delegation
+
+Route readiness is a prerequisite. Reuse cached route evidence only when executable, model, provider, sandbox, authentication, and tools still match. Otherwise run one minimal probe before writing a full contract and count its cost.
+
+Do not debug worker transport inside a product task. On first startup or host-boundary failure, keep the decisive error, invalidate the route, and fall back to Direct or another verified route. Repair adapters separately; never combine contract, diagnosis, retry, and full Lead implementation.
 
 ## Choose only the useful depth
 
@@ -29,7 +35,7 @@ Use the shallowest organization that shortens the critical path or reduces quota
 
 Fast is a leaf executor and does not delegate. Standard may delegate Fast only inside its assigned domain and may not expand scope, change shared interfaces, cross an authority boundary, or claim final integration. Each additional management layer must earn itself; remove it when transfer and review cost exceed the saving.
 
-The Lead should not implement merely because it can produce the highest-quality code. Lead implementation needs a reason: faster Direct delivery, inseparable Critical core, shared-interface ownership, emergency unblocking, or worker failure after one bounded repair.
+Lead implements only for faster Direct delivery, inseparable Critical core, shared interfaces, emergency unblocking, or worker failure after valid task execution. Transport startup failure returns to the ready-route rule.
 
 ## Split into execution contracts
 
@@ -51,7 +57,7 @@ Detect existing isolation before creating worktrees. Inspect branch, dirty state
 
 Read [model-routing.md](model-routing.md) when multiple models, billing channels, or capability levels are available. Apply the quality and authority gates first. Then prefer the route that lowers quota-weighted expensive usage and wall-clock time while keeping total raw tokens inside a reasonable envelope.
 
-Confirm the model exists on the actual route; use `model-routing.md`'s packaged Spark adapter when native Codex omits it, and never silently inherit Lead.
+Confirm the model exists on the actual route; use `model-routing.md`'s packaged Fast adapter when native Codex omits the selected coding or general model, and never silently inherit Lead.
 
 Fast describes low remaining discretion, not small original scope. Standard describes bounded residual judgment, not medium file count. Lead describes authority and integration responsibility, not a requirement to type every line.
 

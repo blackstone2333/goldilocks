@@ -39,9 +39,9 @@ Fast is a leaf. Standard delegates only within its domain and escalates shared d
 
 ## Codex adapter
 
-When `gpt-5.3-codex-spark` has separate usage limits, prefer it for eligible Fast text-only contracts: fixed-decision implementation, tests, fixtures, deterministic migrations, focused checks, exploration, and bounded documentation. Exclude architecture, ambiguous repository-wide change, Critical work, browser/vision judgment, and integration. Use a verified domain-capable Standard model; the dated seed starts with Terra for general implementation and Luna for lower-risk volume, but current availability and local evidence win.
+Use `gpt-5.3-codex-spark` first for eligible Fast **coding** contracts when its separate usage limits reduce quota burn: fixed-decision implementation, tests, fixtures, deterministic migrations, and focused code checks. Use `gpt-5.6-luna` first for Fast **general** production such as presentation copy, document sections, report drafting, content-oriented spreadsheet work, and video storyboards. Classify by the work actually produced, not the file extension: formula/code automation remains coding. Exclude architecture, ambiguous repository-wide change, Critical work, final visual judgment, and integration from both Fast defaults. Use Terra or another verified Standard model when bounded non-coding work still needs material domain judgment.
 
-Codex has two worker routes: native subagents for models advertised by the native host, and the packaged external route when Spark is available to `codex exec` but absent natively. Host evidence belongs in the public design document, not a permanent rule here.
+Codex has two worker routes: native subagents for models advertised by the native host, and the packaged external route when the selected Fast model is available to `codex exec` but absent natively. Host evidence belongs in the public design document, not a permanent rule here.
 
 Every native Codex spawn encodes the route in `task_name`: `fast__<name>`, `standard__<name>`, or `lead__<name>`.
 
@@ -51,17 +51,29 @@ Every native Codex spawn encodes the route in `task_name`: `fast__<name>`, `stan
 
 Native Fast and Standard require explicit host-supported models. Fast normally uses `fork_turns="none"`; Standard uses none or at most four relevant turns. Only a justified full-history Lead handoff may use `all` and inherit Lead. Fast cannot delegate. The hook accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; if a specialized path bypasses `PreToolUse`, an unplanned Lead child gets a soft return check. Ambiguous concurrent or nested starts remain unverifiable rather than becoming false mismatches.
 
-For an eligible Spark Fast contract when the native host does not advertise Spark, resolve `../scripts/dispatch_codex_worker.py` relative to this reference and run:
+For an eligible external Fast contract, resolve `../scripts/dispatch_codex_worker.py` relative to this reference and run with `coding` for Spark or `general` for Luna:
 
 ```bash
 python3 <resolved-script> \
   --workdir <assigned-repository-or-worktree> \
   --task-name fast__<name> \
   --task-file <complete-contract.md> \
+  --work-type coding \
+  --capabilities project \
   --reasoning-effort medium
 ```
 
-External startup/context is fixed overhead; require Lead or parallel savings. Isolate parallel writers and use unique result files. The adapter fixes Spark, sends the contract over stdin, and disables only agent spawning. Plugins, apps, and MCP remain available as needed; host, sandbox, and permission gates still apply. It forbids danger-full-access and propagates failure without silent fallback. On failure, repair once, choose another worker, upgrade to Standard, or keep work local; never inherit Lead.
+External startup/context is fixed overhead; require Lead or parallel savings. When no verified route memory exists, **start with one Fast session** and give it **one coherent batch** whose units remain separately checkable. Increase the session count only when measured useful work or critical-path savings repay another startup. Do not split implementation from its focused checks or turn every replaceable unit into a session.
+
+The adapter offers three explicit capability profiles:
+
+- `project` is the default: isolate global plugins, Apps, MCP, Skills, and Hooks while preserving repository instructions and rules.
+- `minimal` uses the same clean worker home and also ignores user/project execpolicy rules for contracts that need only built-in execution tools.
+- `inherit` keeps the user's full environment only when the contract names an installed external capability it actually needs.
+
+Clean profiles preserve authentication, provider, `models_cache.json`, and bundled runtime. Every profile sets `GOLDILOCKS_WORKER=1`, silencing inherited continuity/update Hooks without weakening leaf enforcement. The adapter fixes the model (`coding` → Spark, `general` → Luna), sends the contract over stdin, forbids danger-full-access, and propagates failure without silent fallback. Startup failure invalidates the route; repair it separately rather than inside product work.
+
+For measured or long-running work, set `GOLDILOCKS_WORKER_EVENTS_DIR` to a persistent directory. The adapter writes child JSONL there and returns only its path, exit code, and short final result to Lead, preventing raw worker transcripts from re-entering expensive context while keeping usage auditable. Without the variable, output behavior remains unchanged.
 
 ## Refresh discipline
 

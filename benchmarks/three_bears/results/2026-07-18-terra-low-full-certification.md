@@ -15,13 +15,12 @@ This report certifies one product claim: Goldilocks is a better Superpowers repl
 - Timeout: 1,200 seconds per cell
 - Seed: `1729`
 - Published head-to-head turns: 54/54
-- Source exploratory experiment: 135/135 valid turns
 - Infrastructure failures: 0
 - Published comparison telemetry: 5,346,349 total tokens, 950,832 uncached input
 - Goldilocks: `386cb4b`
 - Superpowers: `d884ae04`
 
-Each cell ran in a freshly generated git repository with isolated Skill sources and a reduced provider-only Codex configuration. The deterministic graders were validated against good and bad references before model calls, then rerun offline after the matrix completed. The retained artifacts contain the complete exploratory experiment; all product conclusions and tables below use only the 54 Goldilocks/Superpowers turns.
+Each cell ran in a freshly generated git repository with isolated Skill sources and a reduced provider-only Codex configuration. The deterministic graders were validated against good and bad references before model calls, then rerun offline after the matrix completed. All product conclusions and tables below use only the 54 Goldilocks/Superpowers turns.
 
 ## Result
 
@@ -77,9 +76,9 @@ Counting failed attempts and dividing all cost by successful deliveries:
 
 ## Scope of claim
 
-This report ranks Goldilocks only against Superpowers. It does not claim universal superiority over workflow-free execution, unrelated workflow systems, other models, or real production repositories. The harness retains additional exploratory arms so readers can run broader comparisons themselves; those arms are not part of the Goldilocks product claim.
+This report ranks Goldilocks only against Superpowers. It does not claim universal superiority over workflow-free execution, unrelated workflow systems, other models, or real production repositories.
 
-One limitation remains visible in the direct comparison: on the eight exact cells both workflows successfully completed, Goldilocks used 9.7% more uncached input. It still used fewer total tokens, less time, fewer tools, and less Skill activity on that slice. Future `v0.2.x` work should preserve the 27/27 quality floor while reducing uncached context and proof overhead further.
+One limitation remains visible in the direct comparison: on the eight exact cells both workflows successfully completed, Goldilocks used 9.7% more uncached input. It still used fewer total tokens, less time, fewer tools, and less Skill activity on that slice. Future releases should preserve the 27/27 quality floor while reducing uncached context and proof overhead further.
 
 ## Certification conclusion
 
@@ -89,12 +88,9 @@ For this nine-task suite, model, provider, and Codex build:
 2. Goldilocks was substantially more reliable than Superpowers and used less workflow activity on comparable successes.
 3. Goldilocks can serve as the Superpowers replacement target for this tested surface.
 4. The run does not prove universal superiority beyond this specific replacement claim, model, provider, task suite, and benchmark revision.
-5. `v0.2.2` should remain the current version while overhead reduction and broader external validation continue.
 
 ## Published artifacts
 
 - [Goldilocks/Superpowers head-to-head data](data/2026-07-18-terra-low-full/head-to-head.json)
-- [Run metadata](data/2026-07-18-terra-low-full/metadata.json)
-- [Complete per-cell audit results](data/2026-07-18-terra-low-full/results.json)
 
-The artifacts retain the full 135-turn exploratory experiment for audit. Filter `arm` to `goldilocks` and `superpowers` to reproduce the 54-turn published comparison. The full local run also retains cell workspaces, raw event streams, and stderr; generated workspaces are intentionally excluded from git.
+The published JSON contains the complete aggregate and matched-success calculation used by this report.

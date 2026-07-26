@@ -5,9 +5,9 @@ Goldilocks can be installed as portable Agent Skills or as a native Codex or Cla
 ## Choose an installation
 
 - **Core router:** install only `goldilocks` for the Just-Necessary routing logic. It is self-contained and has the smallest footprint.
-- **Complete suite:** install all 14 Skills for the full Superpowers-compatible surface: brainstorming, planning, TDD, debugging, worktrees, delegation, review, verification, branch finishing, and Skill authoring.
+- **Single Skill:** install `goldilocks`; its internal engines retain brainstorming, planning, TDD, debugging, worktrees, delegation, review, verification, branch finishing, and Skill authoring.
 
-Do not install a compatibility entry such as `brainstorming` by itself. Those thin entries share engines bundled with the core `goldilocks` Skill. Also avoid enabling Goldilocks and Superpowers at the same time; overlapping workflow rules can conflict.
+There are no extra workflow Skills to install. Avoid enabling Goldilocks and Superpowers at the same time; overlapping workflow rules can conflict.
 
 ## Portable Skills installation
 
@@ -33,7 +33,7 @@ Install the complete suite globally:
 
 ```bash
 npx skills add blackstone2333/goldilocks \
-  --skill '*' \
+  --skill goldilocks \
   --global \
   --agent <agent> \
   --yes
@@ -88,7 +88,9 @@ Start a new task after updating. Set `GOLDILOCKS_UPDATE_CHECK=0` in the Codex en
 
 ### Codex continuity recovery
 
-The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. It also bundles a routing guard for `PreToolUse`, `SubagentStart`, and `SubagentStop`. The guard only runs around subagent activity: it blocks unclassified calls, rewrites `fast__` work to Spark, prevents Fast from spawning, requires explicit Standard models, and permits full history only for an explicit Lead handoff. Concurrent route observations use a local SQLite database; ambiguous host correlation is recorded without stopping a child. It does not edit user `config.toml` or add work to Direct tasks.
+The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. It also bundles a routing guard for `PreToolUse`, `SubagentStart`, and `SubagentStop`. The guard only runs around subagent activity: it blocks unclassified calls, requires an explicit host-supported model for Fast and Standard, prevents Fast from spawning, and permits full history only for an explicit Lead handoff. Concurrent route observations use a local SQLite database; ambiguous host correlation is recorded without stopping a child. It does not edit user `config.toml` or add work to Direct tasks.
+
+When the selected Fast model is available through `codex exec` but not through native subagents, the bundled adapter can route `coding` work to GPT-5.3-Codex-Spark or `general` non-coding work to GPT-5.6 Luna. Its default `project` capability profile isolates unrelated global plugins, Apps, MCP, Skills, and Hooks while retaining repository rules and the credentials/provider metadata needed to run. Use `inherit` only when a complete contract explicitly requires an installed user capability.
 
 Codex requires review before non-managed plugin hooks run. Use `/hooks` to inspect and trust the Goldilocks definition after installation, and review it again after an update changes the hook hash. The continuity ledger remains the source of truth if a recovery hook is disabled; routing becomes advisory rather than enforced when the routing hook is not trusted or the platform only installed portable Skills.
 

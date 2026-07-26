@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.4.0+codex.20260725153745",
-  "description": "A Superpowers-compatible workflow and structured-artifact orchestration suite with constant quality standards.",
+  "version": "0.4.1+codex.20260726121612",
+  "description": "A Direct-first Superpowers replacement that loads project workflow only when a concrete trigger earns it.",
   "author": {
     "name": "Charles Roc"
   },
@@ -24,8 +24,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Goldilocks",
-    "shortDescription": "Right-sized teams with constant quality",
-    "longDescription": "Provides thirteen familiar workflow entries, a structured-artifact production entry, and a Goldilocks router backed by six shared engines. It dynamically chooses Direct, Lead-to-Fast, Lead-to-Standard, or Lead-to-Standard-to-Fast execution; coordinates replaceable artifact units with localized rework and one integration owner; preserves continuity; and keeps final review and integration with Lead.",
+    "shortDescription": "Direct by default; structure only when earned",
+    "longDescription": "Provides a thin Goldilocks router plus optional brainstorming, planning, debugging, testing, continuity, delegation, and verification capabilities. Clear work exits to Direct without loading workflow references; durable, risky, or genuinely parallel work loads only the capability whose trigger is present.",
     "developerName": "Charles Roc",
     "category": "Developer Tools",
     "capabilities": [
@@ -34,9 +34,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use the smallest workflow that preserves full quality.",
-      "Plan and execute this with the shallowest useful agent hierarchy.",
-      "Keep Lead on direction and integration; delegate complete contracts, including replaceable artifact units."
+      "Default to Direct; load no Goldilocks engine unless a concrete trigger changes the outcome.",
+      "Use continuity for long work, deliberate verification for high-risk work, and delegation only when ready units have net benefit.",
+      "Keep Lead on intent and integration; give Fast complete contracts and Standard only bounded domain judgment."
     ],
     "brandColor": "#D4A72C",
     "composerIcon": "./assets/icon.png",
