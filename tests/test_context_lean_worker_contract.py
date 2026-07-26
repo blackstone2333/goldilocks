@@ -37,7 +37,7 @@ require(
     [
         "Coding → Spark · General → Luna",
         "`project` profile",
-        "Unit boundaries control localized rework",
+        "unit boundaries keep rework local",
         "Fast **coding**",
         "Fast **general non-coding**",
     ],
@@ -47,7 +47,7 @@ require(
     [
         "编程 → Spark · 通用非编程 → Luna",
         "默认 `project` 档位",
-        "单元边界用于控制局部返工",
+        "单元边界让返工保持局部",
         "Fast **编程**",
         "Fast **通用非编程**",
     ],

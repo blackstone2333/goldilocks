@@ -1,9 +1,9 @@
 interface:
   display_name: "Goldilocks"
-  short_description: "Minimum process with constant quality"
+  short_description: "Adaptive workflow for any executable work"
   icon_small: "./assets/icon.png"
   icon_large: "./assets/logo.png"
   brand_color: "#D4A72C"
   default_prompt: "Use $goldilocks to choose and execute the smallest workflow that preserves full quality."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

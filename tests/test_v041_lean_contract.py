@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 
 
 def read(path: Path) -> str:
@@ -53,6 +53,9 @@ def main() -> None:
     ):
         if phrase not in root_skill:
             failures.append(f"Goldilocks root is missing zero-cost Direct rule: {phrase}")
+    for phrase in ("any executable work", "documents", "presentations", "spreadsheets"):
+        if phrase not in root_skill:
+            failures.append(f"Goldilocks root is missing general-work trigger: {phrase}")
     if "## Minimum complete loop" in root_skill:
         failures.append("Goldilocks root still embeds a universal execution loop")
 
@@ -121,8 +124,8 @@ def main() -> None:
             failures.append(f"{path.name} does not explain the lean-output influence")
 
     codex_interface = codex_manifest["interface"]
-    if codex_interface["shortDescription"] != "Direct by default; structure only when earned":
-        failures.append("Codex short description does not state the thin-kernel default")
+    if codex_interface["shortDescription"] != "Adaptive workflow; Direct when enough":
+        failures.append("Codex short description does not state the general adaptive default")
     if not codex_interface["defaultPrompt"][0].startswith("Default to Direct"):
         failures.append("Codex default prompt still biases every task toward workflow")
 
@@ -143,7 +146,7 @@ def main() -> None:
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.1 lean-routing contract passed.")
+    print("Goldilocks v0.4.2 lean-routing contract passed.")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.4.1"
+RELEASE_VERSION = "0.4.2"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -472,8 +472,8 @@ if skill_names != expected_skill_names:
 
 main_metadata = SKILLS / "goldilocks" / "agents" / "openai.yaml"
 require_file(main_metadata)
-if main_metadata.is_file() and "allow_implicit_invocation: false" not in main_metadata.read_text(encoding="utf-8"):
-    fail("goldilocks router must disable implicit invocation")
+if main_metadata.is_file() and "allow_implicit_invocation: true" not in main_metadata.read_text(encoding="utf-8"):
+    fail("goldilocks router must allow implicit invocation for general work")
 
 if MAIN.is_file():
     main_text = MAIN.read_text(encoding="utf-8")

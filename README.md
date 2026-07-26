@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.1-D4A72C" alt="Version 0.4.1">
+  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="Version 0.4.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -22,6 +22,8 @@ Goldilocks is a lean, adaptive replacement for Superpowers. It keeps the workflo
 > Use the minimum process that preserves the quality, safety, authorization, and acceptance floor.
 
 Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; cheaper workers receive complete, independently verifiable contracts.
+
+Goldilocks is domain-agnostic: any executable work may enter the router, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. It chooses how much workflow and coordination the task earns; specialist Skills still own domain-specific production. When decomposition is worthwhile, unit boundaries keep rework local. Short or inseparable creative work may therefore remain entirely Direct.
 
 ## What it does
 
@@ -198,6 +200,6 @@ Repository and skills.sh installs follow the GitHub source but do not silently r
 
 ## Status
 
-Goldilocks remains experimental at `v0.4.1`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks remains experimental at `v0.4.2`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.1-D4A72C" alt="版本 0.4.1">
+  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="版本 0.4.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
@@ -22,6 +22,8 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案。头脑风暴�
 > 只使用足以维持质量、安全、授权和验收底线的流程。
 
 清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给更便宜的工作模型。
+
+Goldilocks 不限定工作领域：软件、研究、分析、文档、演示文稿、表格以及其他结构化交付物，都可以进入同一个路由器。它只决定任务值得使用多少流程和协作；具体领域的制作能力仍由专业 Skill 负责。值得拆分时，单元边界让返工保持局部。因此，短任务或不可拆分的整体创作仍可能全程保持 Direct。
 
 ## 它能做什么
 
@@ -198,6 +200,6 @@ claude plugin install goldilocks@goldilocks
 
 ## 当前状态
 
-Goldilocks 仍是实验版 `v0.4.1`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 仍是实验版 `v0.4.2`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
 
 Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。

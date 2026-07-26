@@ -2,6 +2,17 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.2 — 2026-07-26
+
+### General Adaptive Invocation
+
+- Broadened the single `goldilocks` trigger from explicit project-workflow requests to any executable work, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables.
+- Enabled implicit invocation while preserving the zero-cost Direct gate: clear work still loads no internal engine, creates no workflow residue, and announces no route.
+- Clarified that Goldilocks coordinates workflow and acceptance across domains; specialist Skills remain responsible for domain-specific production.
+- Kept non-coding orchestration experimental. The router may choose Direct for short, inseparable, or holistic creative work instead of forcing delegation.
+
+No new domain-production engine was added; this release broadens eligibility, not mandatory process.
+
 ## 0.4.1 — 2026-07-26
 
 ### Thin Adaptive Superpowers Replacement
