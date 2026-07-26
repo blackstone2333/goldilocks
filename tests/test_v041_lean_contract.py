@@ -143,6 +143,37 @@ def main() -> None:
             if marker not in body:
                 failures.append(f"{path.name} lacks install trust guidance: {marker}")
 
+    readme_order = {
+        ROOT / "README.md": ("## Install", "## What it does"),
+        ROOT / "README.zh-CN.md": ("## 安装", "## 它能做什么"),
+    }
+    for path, (install_heading, capability_heading) in readme_order.items():
+        body = read(path)
+        if body.find(install_heading) > body.find(capability_heading):
+            failures.append(f"{path.name} must show installation before capabilities")
+
+    discovery_markers = {
+        ROOT / "README.md": (
+            "replacement for Superpowers",
+            "token-efficient AI agent workflow",
+            "114/114 external checks",
+            "11.5% fewer processing tokens",
+            "10.9% less cumulative time",
+        ),
+        ROOT / "README.zh-CN.md": (
+            "Superpowers 替代方案",
+            "token-efficient AI Agent 工作流",
+            "114/114 项外部检查",
+            "处理 token 少 11.5%",
+            "累计耗时少 10.9%",
+        ),
+    }
+    for path, markers in discovery_markers.items():
+        body = read(path)
+        for marker in markers:
+            if marker not in body:
+                failures.append(f"{path.name} lacks searchable evidence marker: {marker}")
+
     codex_interface = codex_manifest["interface"]
     if codex_interface["shortDescription"] != "Adaptive workflow; Direct when enough":
         failures.append("Codex short description does not state the general adaptive default")

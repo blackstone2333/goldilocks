@@ -11,6 +11,8 @@
 - Clarified that Goldilocks coordinates workflow and acceptance across domains; specialist Skills remain responsible for domain-specific production.
 - Kept non-coding orchestration experimental. The router may choose Direct for short, inseparable, or holistic creative work instead of forcing delegation.
 - Added a copy-paste AI installation prompt and documented why Codex may request Hook approval again after install or update, what each Hook does, its network boundary, and the effect of declining it.
+- Moved installation ahead of the capability tour so new users can act before reading the implementation details.
+- Clarified the searchable project summary with the bounded v0.4.1 Direct A/B result: 114/114 checks on both paths, 11.5% fewer processing tokens, 10.9% less cumulative time, and 6.3% lower official GPT-5.6 Sol Standard token cost.
 
 No new domain-production engine was added; this release broadens eligibility, not mandatory process.
 

@@ -17,13 +17,71 @@
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks is a lean, adaptive replacement for Superpowers. It keeps the workflow capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
+Goldilocks is a lean, adaptive replacement for Superpowers and a token-efficient AI agent workflow for Codex, Claude Code, and other Skills-compatible agents. It keeps the workflow capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
+
+In the v0.4.1 certified Direct A/B, both paths passed 114/114 external checks while Goldilocks used 11.5% fewer processing tokens and 10.9% less cumulative time; official GPT-5.6 Sol Standard token cost was 6.3% lower. These are measured results on the tested coding fixtures, not a claim of universal superiority.
 
 > Use the minimum process that preserves the quality, safety, authorization, and acceptance floor.
 
 Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; cheaper workers receive complete, independently verifiable contracts.
 
 Goldilocks is domain-agnostic: any executable work may enter the router, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. It chooses how much workflow and coordination the task earns; specialist Skills still own domain-specific production. When decomposition is worthwhile, unit boundaries keep rework local. Short or inseparable creative work may therefore remain entirely Direct.
+
+## Install
+
+Do not enable Goldilocks and Superpowers together.
+
+### Ask an AI to install it
+
+Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
+
+```text
+Install the latest Goldilocks from https://github.com/blackstone2333/goldilocks. Detect this agent's platform first: prefer the native plugin installation documented in the repository when supported; otherwise install Goldilocks globally as a compatible Skill. Do not enable Goldilocks and Superpowers together. Before any Hook approval, explain what the requested Hooks do and ask me to confirm; do not approve unrelated permissions. After installation, verify the installed version and availability, then tell me whether a new conversation is required. Do not modify unrelated configuration.
+```
+
+### Any Skills-compatible agent
+
+```bash
+npx skills add blackstone2333/goldilocks
+```
+
+For a global Codex Skill install:
+
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
+```
+
+Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` when supported by the installer.
+
+### Native Codex plugin
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks
+codex plugin add goldilocks@goldilocks-local
+```
+
+#### Hook authorization is expected
+
+The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
+
+- `recovery_reminder.py` restores compacted task state when `.goldilocks/ACTIVE.md` exists and adds the concise response contract.
+- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory.
+- `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
+
+If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
+
+### Native Claude Code plugin
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+See the [installation guide](docs/installation.md) for project-local installs, updates, and removal.
+
+### Updates
+
+Repository and skills.sh installs follow the GitHub source but do not silently rewrite an active local copy. Run the matching install or upgrade command again to pick up a release. The native Codex plugin performs one quiet GitHub version check per day, stays silent when current or offline, and shows one reminder for a newer version; it never updates itself without approval. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
 
 ## What it does
 
@@ -159,62 +217,6 @@ Goldilocks makes a narrow public claim: it is a better Superpowers replacement o
 On the eight exact cells both workflows completed, Goldilocks used 30.6% fewer total tokens, 7.7% less time, 28.6% fewer tool calls, and 66.7% less Skill activity. Read the [full head-to-head report](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.md) and [published data](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json).
 
 These results support replacing Superpowers; they do not establish absolute superiority across every possible workflow, model, repository, or provider. More project tests and feedback are welcome.
-
-## Install
-
-Do not enable Goldilocks and Superpowers together.
-
-### Ask an AI to install it
-
-Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
-
-```text
-Install the latest Goldilocks from https://github.com/blackstone2333/goldilocks. Detect this agent's platform first: prefer the native plugin installation documented in the repository when supported; otherwise install Goldilocks globally as a compatible Skill. Do not enable Goldilocks and Superpowers together. Before any Hook approval, explain what the requested Hooks do and ask me to confirm; do not approve unrelated permissions. After installation, verify the installed version and availability, then tell me whether a new conversation is required. Do not modify unrelated configuration.
-```
-
-### Any Skills-compatible agent
-
-```bash
-npx skills add blackstone2333/goldilocks
-```
-
-For a global Codex Skill install:
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` when supported by the installer.
-
-### Native Codex plugin
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks
-codex plugin add goldilocks@goldilocks-local
-```
-
-#### Hook authorization is expected
-
-The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
-
-- `recovery_reminder.py` restores compacted task state when `.goldilocks/ACTIVE.md` exists and adds the concise response contract.
-- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory.
-- `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
-
-If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
-
-### Native Claude Code plugin
-
-```bash
-claude plugin marketplace add blackstone2333/goldilocks
-claude plugin install goldilocks@goldilocks
-```
-
-See the [installation guide](docs/installation.md) for project-local installs, updates, and removal.
-
-## Updates
-
-Repository and skills.sh installs follow the GitHub source but do not silently rewrite an active local copy. Run the matching install or upgrade command again to pick up a release. The native Codex plugin performs one quiet GitHub version check per day, stays silent when current or offline, and shows one reminder for a newer version; it never updates itself without approval. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
 
 ## Status
 

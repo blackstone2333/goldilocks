@@ -17,13 +17,71 @@
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
 
-Goldilocks 是一个精简、动态的 Superpowers 替代方案。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
+Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是适用于 Codex、Claude Code 及其他兼容 Agent 的 token-efficient AI Agent 工作流。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
+
+在 v0.4.1 认证的 Direct A/B 对照中，两条路径均通过 114/114 项外部检查；Goldilocks 的处理 token 少 11.5%、累计耗时少 10.9%，按 GPT-5.6 Sol Standard 官方 token 价格计算的成本低 6.3%。这些是已测试编程任务上的实测结果，并非对所有场景都绝对领先的声明。
 
 > 只使用足以维持质量、安全、授权和验收底线的流程。
 
 清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给更便宜的工作模型。
 
 Goldilocks 不限定工作领域：软件、研究、分析、文档、演示文稿、表格以及其他结构化交付物，都可以进入同一个路由器。它只决定任务值得使用多少流程和协作；具体领域的制作能力仍由专业 Skill 负责。值得拆分时，单元边界让返工保持局部。因此，短任务或不可拆分的整体创作仍可能全程保持 Direct。
+
+## 安装
+
+不要同时启用 Goldilocks 和 Superpowers。
+
+### 让 AI 一键安装
+
+把下面整段提示词复制给能够管理自身 Skill 或插件的 Codex、Claude Code、Cursor 等 Agent：
+
+```text
+请从 https://github.com/blackstone2333/goldilocks 安装最新版 Goldilocks。先识别当前 Agent 平台：支持仓库 README 所述原生插件时优先安装原生插件，否则将 Goldilocks 作为兼容 Skill 全局安装。不要同时启用 Goldilocks 和 Superpowers。出现 Hook 授权前，先向我解释所请求 Hook 的作用并征得确认，不要批准无关权限。安装后验证版本和可用状态，并告诉我是否需要新建对话才能生效。不要修改无关配置。
+```
+
+### 任意兼容 Skills 的 Agent
+
+```bash
+npx skills add blackstone2333/goldilocks
+```
+
+全局安装为 Codex Skill：
+
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
+```
+
+安装器支持时，可把 `codex` 换成 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。
+
+### Codex 原生插件
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks
+codex plugin add goldilocks@goldilocks-local
+```
+
+#### 出现 Hook 授权是正常现象
+
+Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
+
+- `recovery_reminder.py`：存在 `.goldilocks/ACTIVE.md` 时恢复压缩后的任务状态，并加入精简沟通约束。
+- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。
+- `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
+
+如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束和更新提醒不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
+
+### Claude Code 原生插件
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+项目级安装、更新和卸载方法见[完整安装说明](docs/installation.zh-CN.md)。
+
+### 更新
+
+仓库和 skills.sh 安装都以 GitHub 为源，但不会静默改写本地正在使用的副本；发布新版本后，需要重新运行对应安装或升级命令。Codex 原生插件每天最多静默检查一次 GitHub：已是最新版或离线时不提示；发现新版本时只提醒一次；未经同意不会自动更新。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可关闭检查。
 
 ## 它能做什么
 
@@ -159,62 +217,6 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 在双方都成功的 8 个完全相同单元里，Goldilocks 总 token 少 30.6%、耗时少 7.7%、工具调用少 28.6%、Skill 活动少 66.7%。参见[完整正面对照报告](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)和[公开数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)。
 
 这些结果支持用 Goldilocks 替换 Superpowers，但不能证明它在所有工作流、模型、仓库或供应商上都绝对领先。欢迎继续做项目测试并反馈。
-
-## 安装
-
-不要同时启用 Goldilocks 和 Superpowers。
-
-### 让 AI 一键安装
-
-把下面整段提示词复制给能够管理自身 Skill 或插件的 Codex、Claude Code、Cursor 等 Agent：
-
-```text
-请从 https://github.com/blackstone2333/goldilocks 安装最新版 Goldilocks。先识别当前 Agent 平台：支持仓库 README 所述原生插件时优先安装原生插件，否则将 Goldilocks 作为兼容 Skill 全局安装。不要同时启用 Goldilocks 和 Superpowers。出现 Hook 授权前，先向我解释所请求 Hook 的作用并征得确认，不要批准无关权限。安装后验证版本和可用状态，并告诉我是否需要新建对话才能生效。不要修改无关配置。
-```
-
-### 任意兼容 Skills 的 Agent
-
-```bash
-npx skills add blackstone2333/goldilocks
-```
-
-全局安装为 Codex Skill：
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-安装器支持时，可把 `codex` 换成 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。
-
-### Codex 原生插件
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks
-codex plugin add goldilocks@goldilocks-local
-```
-
-#### 出现 Hook 授权是正常现象
-
-Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
-
-- `recovery_reminder.py`：存在 `.goldilocks/ACTIVE.md` 时恢复压缩后的任务状态，并加入精简沟通约束。
-- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。
-- `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
-
-如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束和更新提醒不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
-
-### Claude Code 原生插件
-
-```bash
-claude plugin marketplace add blackstone2333/goldilocks
-claude plugin install goldilocks@goldilocks
-```
-
-项目级安装、更新和卸载方法见[完整安装说明](docs/installation.zh-CN.md)。
-
-## 更新
-
-仓库和 skills.sh 安装都以 GitHub 为源，但不会静默改写本地正在使用的副本；发布新版本后，需要重新运行对应安装或升级命令。Codex 原生插件每天最多静默检查一次 GitHub：已是最新版或离线时不提示；发现新版本时只提醒一次；未经同意不会自动更新。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可关闭检查。
 
 ## 当前状态
 
