@@ -164,14 +164,17 @@ for manifest in [
 
 for readme_name in ["README.md", "README.zh-CN.md"]:
     readme = text(ROOT / readme_name)
-    for marker in [
-        f"version-{VERSION}",
-        "Artifacts",
+    if f"version-{VERSION}" not in readme:
+        fail(f"{readme_name} lacks the current version badge")
+    for removed_promotion in [
+        "## Structured Artifacts",
+        "## 结构化 Artifacts",
         "Artifact Contract",
         "localized rework",
+        "v040-hsk4-network-shopping-montage.png",
     ]:
-        if marker not in readme:
-            fail(f"{readme_name} lacks v0.4 public contract: {marker}")
+        if removed_promotion in readme:
+            fail(f"{readme_name} still promotes unproven artifact performance: {removed_promotion}")
 
 
 cases = []

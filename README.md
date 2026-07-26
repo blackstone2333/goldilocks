@@ -33,9 +33,8 @@ Clear work stays Direct. Structure appears only when a concrete trigger earns it
 | **Orchestrate** | Worktrees, independent units, delegation, parallelism, or model routing can improve delivery | A ready dependency graph and bounded worker contracts |
 | **Prove** | Review, release, safety, integration, or several material claims need evidence | Fresh checks proportional to risk and Lead acceptance |
 | **Evolve** | A useful new idea, reusable execution pattern, or Skill improvement appears | Deferred idea or verified lesson without scope creep |
-| **Artifacts** | The user explicitly requests a multi-unit structured deliverable | One Artifact Contract, replaceable units, one integration owner, global QA |
 
-This is the complete workflow surface, not seven separate public Skills. The single `goldilocks` router loads only the relevant internal engine and adds another only when facts cross its boundary.
+These are internal workflow engines, not six separate public Skills. The single `goldilocks` router loads only the relevant engine and adds another only when facts cross its boundary.
 
 ## How it decides
 
@@ -48,7 +47,6 @@ flowchart TD
     B -- "Multi-stage work" --> F["Build"]
     B -- "Independent ready units" --> G["Orchestrate"]
     B -- "Release or higher risk" --> H["Prove"]
-    B -- "Explicit structured artifact" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"Cheapest valid owner?"}
@@ -60,7 +58,6 @@ flowchart TD
     K --> N
     L --> N
     M --> N
-    I --> N
     H --> N
     N --> O["Lead integrates and accepts"]
     O --> P{"Will the knowledge matter later?"}
@@ -130,25 +127,6 @@ The initial model seed is advisory, not a permanent leaderboard:
 | Lead | Current host Lead model such as GPT-5.6 Sol; Claude Opus/Fable; other verified frontier models | Intent, architecture, critical decisions, combined acceptance |
 
 Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json) and [dated methodology](docs/model-routing-survey-2026-07-18.md).
-
-## Structured Artifacts
-
-Goldilocks can organize presentations and other explicit multi-unit deliverables without pretending to replace specialist PPT, document, spreadsheet, or video Skills.
-
-1. Lead freezes one global **Artifact Contract**: audience, outcome, structure, shared design/data rules, dependencies, integration, and acceptance.
-2. Replaceable units receive bounded contracts and may be produced with the appropriate specialist Skill.
-3. Each unit is checked independently; failed units receive **localized rework**.
-4. One integration owner assembles the canonical artifact and runs global QA.
-
-**Unit boundaries control localized rework**; they do not require one new agent per slide or section. Compatible units may share a worker session to amortize startup and context cost.
-
-The included 12-slide HSK4 one-to-one lesson is an architecture example:
-
-<p align="center">
-  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="Twelve-slide HSK4 one-to-one lesson produced with the structured-artifact profile">
-</p>
-
-See the [Artifacts design](docs/v0.4-structured-artifact-orchestration.md) and [pilot evidence](evals/results/2026-07-25-v040-structured-artifact-pilot.md).
 
 ## Evidence
 

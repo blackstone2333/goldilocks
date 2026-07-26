@@ -33,9 +33,8 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案。头脑风暴�
 | **Orchestrate** | worktree、独立单元、委派、并行或模型路由能改善交付 | 就绪依赖图和边界清晰的工作合同 |
 | **Prove** | 审查、发布、安全、集成或多个重要声明需要证据 | 与风险相称的新鲜检查和 Lead 验收 |
 | **Evolve** | 出现有价值的新想法、可复用路径或 Skill 改进 | 留存后续方向或已验证经验，不扩大当前范围 |
-| **Artifacts** | 用户明确要求制作多单元结构化产物 | 一个 Artifact Contract、可替换单元、单一集成负责人和全局 QA |
 
-这是一套完整能力面，不是七个公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的内部引擎；事实跨越边界时才增加第二个。
+这些是内部工作流引擎，不是六个独立公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的引擎；事实跨越边界时才增加第二个。
 
 ## 它如何判断
 
@@ -48,7 +47,6 @@ flowchart TD
     B -- "多阶段工作" --> F["Build"]
     B -- "存在独立就绪单元" --> G["Orchestrate"]
     B -- "发布或较高风险" --> H["Prove"]
-    B -- "明确的结构化产物" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"由谁完成最划算且可靠？"}
@@ -60,7 +58,6 @@ flowchart TD
     K --> N
     L --> N
     M --> N
-    I --> N
     H --> N
     N --> O["Lead 整合并最终验收"]
     O --> P{"这些知识以后还会有用吗？"}
@@ -130,25 +127,6 @@ Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口
 | Lead | 当前宿主 Lead 模型，如 GPT-5.6 Sol、Claude Opus/Fable 及其他已验证前沿模型 | 意图、架构、关键决策和组合验收 |
 
 模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)和[带日期的方法说明](docs/model-routing-survey-2026-07-18.md)。
-
-## 结构化 Artifacts
-
-Goldilocks 可以组织 PPT 等明确的多单元产物，但不会假装替代专业的 PPT、文档、表格或视频 Skill。
-
-1. Lead 冻结全局 **Artifact Contract**：受众、目标、结构、共享设计/数据规则、依赖、整合和验收。
-2. 可替换单元获得边界合同，并可使用相应专业 Skill 制作。
-3. 各单元独立检查，失败单元执行 **localized rework**。
-4. 单一集成负责人组装正式产物并执行全局 QA。
-
-**单元边界用于控制局部返工**；它不意味着每页 PPT 或每个章节都要新开一个 Agent。兼容单元可以共用工作会话，以摊薄启动和上下文成本。
-
-仓库里的 12 页 HSK4 一对一课程是架构样例：
-
-<p align="center">
-  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="使用结构化产物档位制作的 12 页 HSK4 一对一课程">
-</p>
-
-参见 [Artifacts 设计](docs/v0.4-structured-artifact-orchestration.zh-CN.md)和[试制证据](evals/results/2026-07-25-v040-structured-artifact-pilot.md)。
 
 ## 证据
 
