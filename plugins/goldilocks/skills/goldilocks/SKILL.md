@@ -11,7 +11,7 @@ Default to Direct. Preserve quality, safety, authority, and acceptance; add proc
 
 Before loading workflow, make one check:
 
-- Does a material product, architecture, authority, safety, or irreversible decision remain?
+- Does material product, architecture, authority, safety, irreversibility, or causality remain uncertain?
 - Must the work survive compaction, several stages, waiting, delegation, or handoff?
 - Are there at least two independent ready units, or one large complete Fast contract that clearly avoids substantial Lead work on a verified route?
 

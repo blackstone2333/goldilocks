@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="版本 0.4.2">
+  <img src="https://img.shields.io/badge/version-0.4.3-D4A72C" alt="版本 0.4.3">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
@@ -64,7 +64,7 @@ codex plugin add goldilocks@goldilocks-local
 
 Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
 
-- `recovery_reminder.py`：存在 `.goldilocks/ACTIVE.md` 时恢复压缩后的任务状态，并加入精简沟通约束。
+- `recovery_reminder.py`：在专业 Skill 之前为可执行提示注入极小的 Goldilocks 门禁；存在 `.goldilocks/ACTIVE.md` 时恢复压缩后的任务状态，并加入精简沟通约束。本地审计只保存哈希和时间，不保存提示词原文。
 - `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。
 - `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
 
@@ -133,6 +133,8 @@ flowchart TD
 根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会在加载任何工作流参考前直接退出。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。
 
 现有 Hook 会加入一条 26 词沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全或歧义时恢复完整说明。它减少叙述噪声，不会让模型模仿原始人说话，也不会删掉必要证据。
+
+同一个 Hook 现在会在专业 Skill 之前加入紧凑的零成本门禁：纯对话跳过；清晰的可执行任务保持 Direct，不加载完整路由器；出现实质不确定性、未知根因、多阶段连续性或有效拆分空间时，明确加载 `goldilocks:goldilocks`。本地审计只记录提示词与工作区哈希、会话/回合标识和时间，因此能够验证门禁是否生效，又不保留提示词内容。
 
 ## 连续性，但不滥造文档
 
@@ -220,6 +222,6 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 
 ## 当前状态
 
-Goldilocks 仍是实验版 `v0.4.2`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 仍是实验版 `v0.4.3`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
 
 Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。

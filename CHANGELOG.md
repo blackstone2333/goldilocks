@@ -2,6 +2,16 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.3 — 2026-07-28
+
+### Reliable Root Invocation
+
+- Fixed a real activation gap: specialist Skills could previously be selected without Goldilocks ever running its root decision gate.
+- Added a compact `UserPromptSubmit` gate before specialist Skills. Pure conversation skips it, clear work stays Direct without loading the full router, and material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`.
+- Added a privacy-preserving local audit of gate delivery. It stores session/turn identifiers, timestamps, and prompt/workspace hashes in the existing plugin database; prompt text is never retained.
+- Added unknown causality to the root gate so focused debugging cannot incorrectly fall through as clear Direct work.
+- Added regression coverage for gate injection, specialist-Skill precedence, audit idempotency, worker silence, prompt privacy, and the existing sub-300-word router budget.
+
 ## 0.4.2 — 2026-07-26
 
 ### General Adaptive Invocation

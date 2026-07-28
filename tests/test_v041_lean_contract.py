@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.2"
+VERSION = "0.4.3"
 
 
 def read(path: Path) -> str:
@@ -187,17 +187,21 @@ def main() -> None:
     recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")
     for phrase in (
         "MICRO_STYLE",
+        "ROUTING_GATE",
         "Lead with the result",
         "Omit work preambles",
         "Report only changed state",
         "decisive evidence",
+        "goldilocks:goldilocks",
+        "gate_injections",
+        "prompt_fingerprint",
     ):
         if phrase not in recovery:
             failures.append(f"recovery hook lacks micro-style contract: {phrase}")
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.2 lean-routing contract passed.")
+    print("Goldilocks v0.4.3 lean-routing contract passed.")
 
 
 if __name__ == "__main__":
