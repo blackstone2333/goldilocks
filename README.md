@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.3-D4A72C" alt="Version 0.4.3">
+  <img src="https://img.shields.io/badge/version-0.4.4-D4A72C" alt="Version 0.4.4">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -64,7 +64,7 @@ codex plugin add goldilocks@goldilocks-local
 
 The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
 
-- `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, restores compacted state when `.goldilocks/ACTIVE.md` exists, and adds the concise response contract. Its local audit stores hashes and timestamps, never prompt text.
+- `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
 - `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory.
 - `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
 
@@ -135,6 +135,8 @@ The root router is under 300 words. If there is no material decision, unknown ca
 An existing hook adds a 26-word communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
 
 The same Hook now places a compact zero-cost gate before specialist Skills. Pure conversation skips it; clear executable work stays Direct without loading the full router; material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`. A local audit records only prompt and workspace hashes, session/turn identifiers, and timestamps so activation can be verified without retaining prompt content.
+
+Repeated failures earn persistence without turning every task into paperwork. On the second user-confirmed recurrence in the same session and workspace, Goldilocks requires one live `.goldilocks/ACTIVE.md` frontier plus the project's existing debug or validation record. Symptom, evidence, disproven attempts, **Do not repeat**, the exact next test, and related commits survive compaction. Unverified fixes stay out of the changelog; only freshly verified user-visible release changes enter it. Resume and compaction hooks recover unresolved continuity debt even if the frontier was not created on the previous turn.
 
 ## Continuity without document spam
 
@@ -222,6 +224,6 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 ## Status
 
-Goldilocks remains experimental at `v0.4.3`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks remains experimental at `v0.4.4`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

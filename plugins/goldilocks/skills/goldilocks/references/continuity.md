@@ -70,6 +70,8 @@ Keep the original objective stable. Classify each later user message as `ADD / R
 
 The frontier names completed work with evidence, current work, remaining work, one **Exact next action**, repository and verification state, blockers or authority, a **Do not repeat** boundary, and the terminal condition. Update it after a steer is consumed, at coherent milestones, before long waits or delegation, and before handoff or known compaction—not after every command.
 
+Treat a second user-confirmed recurrence, a reverted fix, or a third disproven hypothesis as a hard continuity boundary. Before another patch, create or refresh the frontier and the project's existing debug or validation record. Preserve failed approaches and their evidence once, link related commits, and name the exact next distinguishing test; do not make the next agent reconstruct them from chat.
+
 On startup, resume, or compaction recovery, read the frontier first; inspect `git status`, relevant diffs, commits, and files; then reconcile it. The repository state wins when they disagree. Continue from the Exact next action and do not reopen completed work unless its evidence is stale or contradicted. Codex users may optionally use [codex-compact-prompt.md](../assets/codex-compact-prompt.md); bundled hooks are reminders only, never the source of truth.
 
 ## Preserve ideas without expanding scope
@@ -84,7 +86,7 @@ After a fix, add a focused regression test when practical. Create or update a de
 
 Do not create a debug note for obvious typos, routine dependency drift, transient noise, or a failure already explained by a clear regression test and commit. A useful note records symptom, reproduction, root cause, fix, verification commands, failed attempts, related regression test or commit, prevention, and current status. Link rather than paste large logs. Never store credentials, tokens, private user data, or production secrets.
 
-Keep `CHANGELOG.md` separate: it records user-visible release changes, not internal debugging history. Follow the repository's existing changelog format and update it only when the task includes a release-worthy external change.
+Keep `CHANGELOG.md` separate: it records user-visible release changes, not internal debugging history. Keep unverified fixes out of the changelog. Follow the repository's existing format and add only confirmed user-visible release changes after fresh verification; failed attempts belong in the debug record, and internal routing history belongs only in the plugin audit database.
 
 ## Reuse execution routes selectively
 

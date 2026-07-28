@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 
 
 def read(path: Path) -> str:
@@ -88,6 +88,24 @@ def main() -> None:
     for phrase in required_route_phrases:
         if phrase not in orchestrate:
             failures.append(f"orchestration is missing failure-economy rule: {phrase}")
+
+    diagnose = read(PLUGIN / "skills" / "goldilocks" / "references" / "diagnose.md")
+    continuity = read(PLUGIN / "skills" / "goldilocks" / "references" / "continuity.md")
+    retention_text = f"{diagnose}\n{continuity}"
+    for phrase in (
+        "second user-confirmed recurrence",
+        "before another patch",
+        ".goldilocks/ACTIVE.md",
+        "Do not repeat",
+    ):
+        if phrase.lower() not in retention_text.lower():
+            failures.append(f"repeated-failure retention lacks: {phrase}")
+    for phrase in (
+        "unverified fixes out of the changelog",
+        "confirmed user-visible release changes",
+    ):
+        if phrase not in continuity:
+            failures.append(f"continuity changelog boundary lacks: {phrase}")
 
     dispatcher = read(
         PLUGIN
@@ -188,6 +206,7 @@ def main() -> None:
     for phrase in (
         "MICRO_STYLE",
         "ROUTING_GATE",
+        "CONTINUITY_GATE",
         "Lead with the result",
         "Omit work preambles",
         "Report only changed state",
@@ -195,13 +214,16 @@ def main() -> None:
         "goldilocks:goldilocks",
         "gate_injections",
         "prompt_fingerprint",
+        "repeat_failure_signal",
+        "continuity_required",
+        "Keep unverified work out of CHANGELOG",
     ):
         if phrase not in recovery:
             failures.append(f"recovery hook lacks micro-style contract: {phrase}")
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.3 lean-routing contract passed.")
+    print("Goldilocks v0.4.4 lean-routing contract passed.")
 
 
 if __name__ == "__main__":

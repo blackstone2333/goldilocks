@@ -2,6 +2,18 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.4 — 2026-07-29
+
+### Earned Continuity for Repeated Failures
+
+- Added a hard persistence boundary on the second user-confirmed recurrence in the same session and workspace. Before another patch, Goldilocks requires one live `.goldilocks/ACTIVE.md` frontier and the project's existing debug or validation record.
+- Preserved symptom, evidence, disproven attempts, **Do not repeat**, exact next test, and related commits so compaction or handoff does not force another agent to reconstruct failed work from chat.
+- Kept documentation selective: routine Direct work still creates no workflow files, and obvious or transient failures still need no debug note.
+- Separated release history from debugging memory. Unverified fixes remain out of Changelog; freshly verified user-visible release changes may enter the repository's established Changelog, while failed attempts stay in the debug record.
+- Added privacy-preserving recurrence flags and continuity-debt state to the existing hashed gate audit, including an in-place migration from v0.4.3 databases. Prompt text is still never stored.
+- Added resume and post-compaction recovery when continuity debt exists but a previous turn failed to create the frontier.
+- Added regression coverage for Chinese repeated-failure detection, audit migration and idempotency, worker silence, continuity-debt recovery, Changelog boundaries, and no prompt retention.
+
 ## 0.4.3 — 2026-07-28
 
 ### Reliable Root Invocation

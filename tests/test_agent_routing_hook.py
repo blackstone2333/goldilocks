@@ -440,7 +440,7 @@ def main() -> None:
         test_real_mismatch(data_dir)
         test_unplanned_sol_soft_return(data_dir)
 
-    print("Goldilocks v0.4.3 agent routing hook contract passed.")
+    print("Goldilocks v0.4.4 agent routing hook contract passed.")
 
 
 if __name__ == "__main__":

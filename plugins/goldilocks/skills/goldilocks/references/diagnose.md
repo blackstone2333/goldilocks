@@ -13,6 +13,8 @@ Find the root cause before changing behavior. Diagnosis requests authorize evide
 
 Prefer existing logs, tests, traces, debuggers, profilers, and read-only queries. Add temporary instrumentation only where a boundary is otherwise opaque, and remove it unless it has lasting operational value.
 
+A second user-confirmed recurrence after an attempted fix is a hard persistence boundary. Before another patch, read [continuity.md](continuity.md), create or update `.goldilocks/ACTIVE.md`, and preserve the symptom, evidence, disproven attempts, **Do not repeat** boundary, exact next test, and related commits in the project's existing debug or validation record. Do not rely on conversation history to carry this state.
+
 ## Fix the common cause
 
 Locate all callers and affected paths before patching. Repair the earliest shared incorrect assumption or contract that explains the evidence. Avoid per-caller guards, broad rewrites, longer sleeps, retry inflation, or dependency upgrades unless the root cause specifically requires them.
