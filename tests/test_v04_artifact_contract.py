@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.4.4"
+VERSION = "0.4.5"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 ENTRY = SKILLS / "goldilocks" / "SKILL.md"
@@ -207,9 +207,9 @@ for marker in [
 
 
 if failures:
-    print("Goldilocks v0.4.4 artifact contract failed:")
+    print("Goldilocks v0.4.5 artifact contract failed:")
     for failure in failures:
         print(f"- {failure}")
     sys.exit(1)
 
-print("Goldilocks v0.4.4 structured-artifact contract passed.")
+print("Goldilocks v0.4.5 structured-artifact contract passed.")

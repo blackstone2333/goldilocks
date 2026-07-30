@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.4-D4A72C" alt="Version 0.4.4">
+  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="Version 0.4.5">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -65,7 +65,7 @@ codex plugin add goldilocks@goldilocks-local
 The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
 
 - `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
-- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory.
+- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory. A stopped worker is not marked successful until Lead reruns acceptance and `record_routing_outcome.py` closes it as verified pass or fail; only an evidence hash is retained.
 - `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
 
 If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
@@ -169,11 +169,14 @@ Fast means low residual discretion after decomposition, not a small original tas
 
 ### Codex model routes
 
-**Coding → Spark · General → Luna**
+**Fast baseline → Luna · Code quota specialist → Spark · Standard → Terra**
 
-- Fast **coding** starts with `gpt-5.3-codex-spark`, especially when its separately metered Codex channel lowers opportunity cost.
-- Fast **general non-coding** starts with `gpt-5.6-luna` for bounded copy, summaries, content units, and similar work.
-- Standard and Lead use the best available model that clears the task-specific quality floor; local evidence overrides the seed registry.
+- Fast starts with `gpt-5.6-luna` for focused coding, tests, exploration, routing, extraction, automation, and bounded content production.
+- `gpt-5.3-codex-spark` remains the preferred text-only code specialist when its separate Pro allowance is available and a deterministic batch repays startup cost.
+- Standard starts with `gpt-5.6-terra` when bounded work still needs material domain judgment or local integration. Low-risk, objectively checkable Standard-boundary work may probe Luna once before upgrading to Terra.
+- Lead still owns architecture, Critical work, shared decisions, and final integration. Local evidence overrides the seed registry.
+
+The July 31, 2026 OpenAI price change makes Luna one tenth of Terra and four percent of Sol at standard short-context token rates; Codex plan estimates likewise allow roughly ten times as many Luna messages as Terra messages. Price never bypasses the quality, authority, modality, or tool gates. See the [dated routing update](docs/model-routing-update-2026-07-31.md).
 
 Goldilocks prefers a native, explicitly supported host model. When native Spark or Luna is unavailable but the local Codex CLI exposes it, `dispatch_codex_worker.py` uses `codex exec` with the chosen model and a complete contract. The default `project` profile preserves repository rules while isolating unrelated global plugins, Apps, MCP servers, Skills, and Hooks. Explicit `inherit` is available when a contract names a required user capability. Fast loses delegation authority, not ordinary execution tools.
 
@@ -185,12 +188,12 @@ The initial model seed is advisory, not a permanent leaderboard:
 
 | Role | Starting candidates | Boundary |
 |---|---|---|
-| Fast coding | GPT-5.3-Codex-Spark; Muse Spark; GLM; other verified low-cost coding models | Complete contract, deterministic acceptance, no shared decisions |
-| Fast general | GPT-5.6 Luna; other verified general-production models | Bounded content unit, no final editorial or visual judgment |
-| Standard | GPT-5.6 Terra; Grok; Claude Sonnet; Gemini Pro; GLM/Qwen candidates | Bounded domain judgment and local integration |
+| Fast baseline | GPT-5.6 Luna; other verified low-cost production models | Complete contract, low residual discretion, decisive acceptance |
+| Fast coding specialist | GPT-5.3-Codex-Spark; Muse Spark; other verified coding models | Text-only deterministic batch where the separate channel repays startup |
+| Standard | GPT-5.6 Terra; Luna for a low-risk first probe; Grok; Claude Sonnet; Gemini Pro; GLM/Qwen candidates | Bounded domain judgment and local integration |
 | Lead | Current host Lead model such as GPT-5.6 Sol; Claude Opus/Fable; other verified frontier models | Intent, architecture, critical decisions, combined acceptance |
 
-Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json) and [dated methodology](docs/model-routing-survey-2026-07-18.md).
+Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json), [current routing update](docs/model-routing-update-2026-07-31.md), and [original methodology](docs/model-routing-survey-2026-07-18.md).
 
 ## Evidence
 
@@ -224,6 +227,6 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 ## Status
 
-Goldilocks remains experimental at `v0.4.4`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks remains experimental at `v0.4.5`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.4-D4A72C" alt="版本 0.4.4">
+  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="版本 0.4.5">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
@@ -65,7 +65,7 @@ codex plugin add goldilocks@goldilocks-local
 Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
 
 - `recovery_reminder.py`：在专业 Skill 之前注入极小门禁，把重复失败升级为持久连续性，恢复压缩后的任务状态，并加入精简沟通约束。本地审计只保存哈希、有限的复发标志和时间，不保存提示词原文。
-- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。
+- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。Worker 停止后不会被直接记为成功；Lead 重跑验收并由 `record_routing_outcome.py` 记为 verified pass 或 fail 后才闭环，系统只保留证据哈希。
 - `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
 
 如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束和更新提醒不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
@@ -169,11 +169,14 @@ Fast 指拆解后剩余裁量低，不代表原任务很小。多个独立就绪
 
 ### Codex 模型路由
 
-**编程 → Spark · 通用非编程 → Luna**
+**Fast 基线 → Luna · 编程额度专才 → Spark · Standard → Terra**
 
-- Fast **编程** 默认先考虑 `gpt-5.3-codex-spark`，尤其适合利用 Codex 独立计量通道降低机会成本。
-- Fast **通用非编程** 默认先考虑 `gpt-5.6-luna`，用于边界明确的文案、摘要、内容单元等。
-- Standard 和 Lead 选择能越过任务质量底线的最佳可用模型；同类项目的本地证据优先于种子表。
+- Fast 默认先考虑 `gpt-5.6-luna`，覆盖 focused coding、测试、探索、路由、提取、自动化和边界明确的内容生产。
+- `gpt-5.3-codex-spark` 继续作为纯文本编程专才：仅在 Pro 独立额度池可用，且确定性代码批次足以抵消启动成本时优先。
+- Standard 在仍需实质领域判断或局部整合时默认使用 `gpt-5.6-terra`；低风险、可客观验收的 Standard 边界任务可以先试一次 Luna，未过质量门槛就升级 Terra。
+- Lead 继续负责架构、Critical 工作、共享决策和最终整合；同项目同任务形态的本地证据优先于种子表。
+
+OpenAI 2026 年 7 月 31 日调价后，标准短上下文 token 价格中 Luna 只有 Terra 的十分之一、Sol 的 4%；Codex 套餐估算的 Luna 消息数也约为 Terra 的十倍。价格不能绕过质量、权限、模态和工具门槛。参见[带日期的路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)。
 
 Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口没有 Spark 或 Luna、但本地 Codex CLI 可以调用时，`dispatch_codex_worker.py` 会通过 `codex exec` 使用指定模型和完整合同。默认 `project` 档位保留仓库规则，同时隔离无关的全局插件、App、MCP、Skill 和 Hook；合同明确需要用户能力时可以选择 `inherit`。Fast 被关闭的是继续分派权，不是普通执行工具。
 
@@ -185,12 +188,12 @@ Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口
 
 | 角色 | 起始候选 | 边界 |
 |---|---|---|
-| Fast 编程 | GPT-5.3-Codex-Spark、Muse Spark、GLM 及其他已验证低成本编程模型 | 完整合同、确定性验收、无共享决策 |
-| Fast 通用 | GPT-5.6 Luna 及其他已验证通用生产模型 | 边界明确的内容单元，不负责最终编辑或视觉判断 |
-| Standard | GPT-5.6 Terra、Grok、Claude Sonnet、Gemini Pro、GLM/Qwen 候选 | 有界领域判断和局部整合 |
+| Fast 基线 | GPT-5.6 Luna 及其他已验证低成本生产模型 | 完整合同、低剩余裁量、决定性验收 |
+| Fast 编程专才 | GPT-5.3-Codex-Spark、Muse Spark 及其他已验证编程模型 | 纯文本确定性批次，独立额度收益足以抵消启动成本 |
+| Standard | GPT-5.6 Terra；Luna 低风险首轮；Grok、Claude Sonnet、Gemini Pro、GLM/Qwen 候选 | 有界领域判断和局部整合 |
 | Lead | 当前宿主 Lead 模型，如 GPT-5.6 Sol、Claude Opus/Fable 及其他已验证前沿模型 | 意图、架构、关键决策和组合验收 |
 
-模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)和[带日期的方法说明](docs/model-routing-survey-2026-07-18.md)。
+模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)、[当前路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)和[原始方法说明](docs/model-routing-survey-2026-07-18.md)。
 
 ## 证据
 
@@ -224,6 +227,6 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 
 ## 当前状态
 
-Goldilocks 仍是实验版 `v0.4.4`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 仍是实验版 `v0.4.5`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
 
 Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。

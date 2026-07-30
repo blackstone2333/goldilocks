@@ -2,6 +2,21 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.4.5 — 2026-07-31
+
+### 更便宜、且真正闭环的 Fast / Standard 路由
+
+- 根据 7 月 31 日的价格和套餐额度变化，将 GPT-5.6 Luna 设为 Codex 通用 Fast 基线，覆盖 focused coding、测试、探索、提取、路由、自动化和边界明确的内容生产。
+- GPT-5.3-Codex-Spark 保留为独立计量的纯文本编程专才，用于确定性代码批次，不再把它当成所有编程任务的默认模型。
+- 将 GPT-5.6 Terra 设为 Standard 基线，用于有界领域判断和局部整合；低风险、可客观验收的 Standard 边界工作可以先试一次 Luna，再按需升级。
+- GPT-5.6 Sol 继续负责 Lead、架构、Critical 工作、共享决策、最终整合和组合验收。价格仍不能绕过能力、工具、模态、权限、隐私或质量门槛。
+- 加强零成本门禁：明显包含多个独立单元的实现任务，Lead 动手前必须做一次常数时间的 make-or-delegate 比较；交代和审核成本更高时仍可选择 Direct。
+- 审计近期本地项目会话后确认：根 Hook 一直正常触发，但最近开发任务没有真正派发 Luna、Terra 或 Spark；后续子智能体仍继承 Sol。历史记录证明三条路由都曾成功启动，但没有任何 worker 被回写为 Lead 验收通过。
+- 新增 `record_routing_outcome.py`：worker 停止只算观察，Lead 重跑组合验收并记录 `verified_pass` 或 `verified_fail` 后才闭环。记录器支持幂等，拒绝模型不匹配或相互矛盾的结果，只保存证据哈希。
+- 将 Fast 叶子限制扩展到 Luna 和所有已记录为 Fast 的原生 worker，同时保留普通工具能力和 Standard 的有界分派权限。
+- 适配器改用显式 `luna` 与 `spark-coding` 工作类型，旧的 `general` 和 `coding` 继续作为兼容别名。
+- 更新机器可读模型表、双语路由说明、安装文档和回归测试；旧基准测试的历史价格保持不变。
+
 ## 0.4.4 — 2026-07-29
 
 ### 重复失败才触发的必要留存

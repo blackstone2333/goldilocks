@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.4"
+POLICY_VERSION = "0.4.5"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -24,6 +24,8 @@ ROUTING_GATE = (
     "For executable work, silently apply the Goldilocks zero-cost gate before any specialist Skill. "
     "If material uncertainty, unknown cause, multi-stage continuity, or useful decomposition exists, "
     "read and use the goldilocks:goldilocks Skill; otherwise take its Direct exit. "
+    "Visible multi-unit implementation must run its make-or-delegate check before Lead edits; "
+    "Direct remains valid when briefing and review cost more. "
     "Skip the gate for pure conversation."
 )
 CONTINUITY_GATE = (

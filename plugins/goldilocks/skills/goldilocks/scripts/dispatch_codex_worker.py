@@ -19,7 +19,13 @@ from typing import Iterator
 
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
-FAST_MODELS = {"coding": SPARK_MODEL, "general": LUNA_MODEL}
+FAST_MODELS = {
+    "luna": LUNA_MODEL,
+    "spark-coding": SPARK_MODEL,
+    # Backward-compatible aliases from Goldilocks <= 0.4.4.
+    "general": LUNA_MODEL,
+    "coding": SPARK_MODEL,
+}
 TASK_NAME_PATTERN = re.compile(r"^fast__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
@@ -28,8 +34,8 @@ CAPABILITY_PROFILES = ("project", "minimal", "inherit")
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(
         description=(
-            "Run a complete Fast execution contract with Spark for coding work or Luna for "
-            "general non-coding production."
+            "Run a complete Fast execution contract with Luna by default, or use Spark's "
+            "separate coding route for deterministic code batches."
         )
     )
     value.add_argument("--workdir", required=True, type=Path, help="Assigned repository or worktree.")
@@ -38,8 +44,11 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument(
         "--work-type",
         choices=tuple(FAST_MODELS),
-        default="coding",
-        help="coding selects gpt-5.3-codex-spark; general selects gpt-5.6-luna.",
+        default="luna",
+        help=(
+            "luna selects the universal Fast default; spark-coding selects the separately "
+            "metered code specialist. general and coding remain compatibility aliases."
+        ),
     )
     value.add_argument(
         "--reasoning-effort",

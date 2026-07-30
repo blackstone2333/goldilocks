@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.4"
+VERSION = "0.4.5"
 
 
 def read(path: Path) -> str:
@@ -223,7 +223,7 @@ def main() -> None:
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.4 lean-routing contract passed.")
+    print("Goldilocks v0.4.5 lean-routing contract passed.")
 
 
 if __name__ == "__main__":

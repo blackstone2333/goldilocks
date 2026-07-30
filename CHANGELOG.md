@@ -2,6 +2,21 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.5 — 2026-07-31
+
+### Cheaper Fast and Standard Routing That Actually Closes
+
+- Made GPT-5.6 Luna the universal Codex Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content production after its July 31 price and allowance change.
+- Kept GPT-5.3-Codex-Spark as the separately metered text-code specialist for deterministic coding batches, rather than treating it as the default for every coding task.
+- Made GPT-5.6 Terra the Standard baseline for bounded domain judgment and local integration. Low-risk, objectively checkable Standard-boundary work may probe Luna once before upgrading.
+- Preserved GPT-5.6 Sol for Lead, architecture, Critical work, shared decisions, final integration, and combined acceptance. Price still cannot bypass capability, tool, modality, authority, privacy, or quality gates.
+- Strengthened the zero-cost gate: visibly multi-unit implementation now performs one constant-time make-or-delegate comparison before Lead edits. Direct remains valid when briefing and review cost more.
+- Audited recent local project sessions. The root Hook was active, but recent development work did not dispatch Luna, Terra, or Spark; later children still inherited Sol. Historical records proved all three routes had worked earlier, while no worker had a Lead-verified pass recorded.
+- Added `record_routing_outcome.py` so worker stops remain observations until Lead reruns combined acceptance and closes them as `verified_pass` or `verified_fail`. The recorder is idempotent, rejects mismatched or contradictory routes, and stores only an evidence hash.
+- Extended Fast leaf enforcement to Luna and any native worker recorded as Fast, while preserving normal tools and Standard's bounded delegation role.
+- Updated the adapter to use explicit `luna` and `spark-coding` work types, with `general` and `coding` retained as compatibility aliases.
+- Refreshed the machine-readable model registry, bilingual routing note, installation guidance, and regression coverage. Older benchmark prices remain historically unchanged.
+
 ## 0.4.4 — 2026-07-29
 
 ### Earned Continuity for Repeated Failures

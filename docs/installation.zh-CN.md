@@ -88,9 +88,9 @@ codex plugin add goldilocks@goldilocks-local
 
 ### Codex 连续性恢复
 
-原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。它还为 `PreToolUse`、`SubagentStart` 和 `SubagentStop` 附带路由守卫。守卫只在子智能体活动时运行：阻止未分级派发，要求 Fast 与 Standard 显式选择宿主支持的模型，禁止 Fast 继续创建子智能体，并且只允许明确的 Lead 交接继承完整历史。并发路由观察写入本地 SQLite；宿主关联不唯一时只记录歧义，不会误停子任务。它不会修改用户级 `config.toml`，也不会给 Direct 任务增加流程。
+原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。它还为 `PreToolUse`、`SubagentStart` 和 `SubagentStop` 附带路由守卫。守卫只在子智能体活动时运行：阻止未分级派发，要求 Fast 与 Standard 显式选择宿主支持的模型，禁止 Fast 继续创建子智能体，并且只允许明确的 Lead 交接继承完整历史。并发路由观察写入本地 SQLite；宿主关联不唯一时只记录歧义，不会误停子任务。子任务停止仍只是观察，Lead 重跑组合验收并记录 `verified_pass` 或 `verified_fail` 后才算闭环；验收证据只保存哈希，不保留原文。它不会修改用户级 `config.toml`，也不会给 Direct 任务增加流程。
 
-当所选 Fast 模型可由 `codex exec` 使用、但原生子智能体通道没有提供时，打包的适配器会把 `coding` 交给 GPT-5.3-Codex-Spark，把 `general` 非编程工作交给 GPT-5.6 Luna。默认 `project` 能力档位会隔离无关的全局插件、App、MCP、Skill 和 Hook，同时保留项目规则及运行所需的认证/供应商信息；只有完整合同明确需要已安装的用户能力时才使用 `inherit`。
+当所选 Fast 模型可由 `codex exec` 使用、但原生子智能体通道没有提供时，打包的适配器会把 `luna` 交给通用 Fast 默认模型，把 `spark-coding` 交给独立计量的确定性编程专才；旧的 `general` 和 `coding` 名称继续兼容。默认 `project` 能力档位会隔离无关的全局插件、App、MCP、Skill 和 Hook，同时保留项目规则及运行所需的认证/供应商信息；只有完整合同明确需要已安装的用户能力时才使用 `inherit`。
 
 Codex 会要求用户审核非托管插件 Hook；安装后可用 `/hooks` 查看并信任 Goldilocks 定义，插件更新导致 Hook 哈希变化时需要重新审核。恢复 Hook 被禁用时，连续性账本仍是唯一事实源；路由 Hook 未获信任或平台只安装了跨平台 Skill 时，模型路由只保留指导作用，无法强制执行。
 

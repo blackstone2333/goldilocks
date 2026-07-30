@@ -35,21 +35,21 @@ def require(path: Path, markers: list[str]) -> str:
 require(
     README,
     [
-        "Coding → Spark · General → Luna",
+        "Fast baseline → Luna · Code quota specialist → Spark · Standard → Terra",
         "`project` profile",
         "unit boundaries keep rework local",
-        "Fast **coding**",
-        "Fast **general non-coding**",
+        "Fast starts with `gpt-5.6-luna`",
+        "`gpt-5.3-codex-spark` remains",
     ],
 )
 require(
     README_ZH,
     [
-        "编程 → Spark · 通用非编程 → Luna",
+        "Fast 基线 → Luna · 编程额度专才 → Spark · Standard → Terra",
         "默认 `project` 档位",
         "单元边界让返工保持局部",
-        "Fast **编程**",
-        "Fast **通用非编程**",
+        "Fast 默认先考虑 `gpt-5.6-luna`",
+        "`gpt-5.3-codex-spark` 继续作为",
     ],
 )
 require(
@@ -64,8 +64,8 @@ require(
         "start with one Fast session",
         "gpt-5.3-codex-spark",
         "gpt-5.6-luna",
-        "coding",
-        "general",
+        "spark-coding",
+        "luna",
     ],
 )
 require(
@@ -82,7 +82,7 @@ require(
         "12-slide",
         "one worker session",
         "session boundary",
-        "--work-type general",
+        "--work-type luna",
     ],
 )
 require(
@@ -103,11 +103,11 @@ registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
 models = {model["id"]: model for model in registry["models"]}
 spark_roles = models["gpt-5.3-codex-spark"]["recommended_roles"]
 luna_roles = models["gpt-5.6-luna"]["recommended_roles"]
-if "fast-coding" not in spark_roles or "fast-general" in spark_roles:
+if "fast-coding-specialist" not in spark_roles or "fast-default" in spark_roles:
     failures.append("Spark seed must prefer coding Fast work, not general content production")
-for role in ("fast-general", "presentation-content", "document-sections", "report-drafting"):
+for role in ("fast-default", "focused-coding", "bounded-content", "high-volume"):
     if role not in luna_roles:
-        failures.append(f"Luna seed lacks non-coding role: {role}")
+        failures.append(f"Luna seed lacks universal Fast role: {role}")
 
 if failures:
     print("Goldilocks context-lean worker contract failed:")

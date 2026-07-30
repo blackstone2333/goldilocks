@@ -113,7 +113,8 @@ def write_source_home(path: Path) -> None:
     (path / ".cache" / "codex-runtimes").mkdir(parents=True)
     (codex_home / "auth.json").write_text('{"token":"fake"}\n', encoding="utf-8")
     (codex_home / "models_cache.json").write_text(
-        '{"models":[{"slug":"gpt-5.3-codex-spark"}]}\n', encoding="utf-8"
+        '{"models":[{"slug":"gpt-5.3-codex-spark"},{"slug":"gpt-5.6-luna"}]}\n',
+        encoding="utf-8",
     )
     (codex_home / "config.toml").write_text(
         '''model_provider = "custom"
@@ -167,7 +168,7 @@ Implement the bounded parser change.
         invocation = json.loads(probe.read_text(encoding="utf-8"))
         argv = invocation["argv"]
         assert argv[0] == "exec"
-        assert ["-m", SPARK_MODEL] == argv[argv.index("-m") : argv.index("-m") + 2]
+        assert ["-m", LUNA_MODEL] == argv[argv.index("-m") : argv.index("-m") + 2]
         assert ["--sandbox", "workspace-write"] == argv[
             argv.index("--sandbox") : argv.index("--sandbox") + 2
         ]
@@ -186,6 +187,7 @@ Implement the bounded parser change.
         assert invocation["goldilocks_worker"] == "1"
         assert invocation["auth"] == '{"token":"fake"}\n'
         assert "gpt-5.3-codex-spark" in invocation["models"]
+        assert "gpt-5.6-luna" in invocation["models"]
         assert invocation["runtime_cache_exists"] is True
         minimal_config = invocation["config"]
         assert 'model_provider = "custom"' in minimal_config
@@ -223,7 +225,7 @@ Implement the bounded parser change.
         assert captured.returncode == 0, captured.stderr
         assert "FAKE_SPARK_OK" not in captured.stdout
         summary = json.loads(captured.stdout.strip())
-        assert summary["model"] == SPARK_MODEL
+        assert summary["model"] == LUNA_MODEL
         event_path = Path(summary["events"])
         assert event_path.parent.samefile(events_dir)
         assert event_path.read_text(encoding="utf-8").strip() == "FAKE_SPARK_OK"
@@ -244,6 +246,38 @@ Implement the bounded parser change.
         general_argv = json.loads(probe.read_text(encoding="utf-8"))["argv"]
         assert ["-m", LUNA_MODEL] == general_argv[
             general_argv.index("-m") : general_argv.index("-m") + 2
+        ]
+
+        probe.unlink()
+        spark_coding = run_dispatcher(
+            worktree,
+            contract,
+            fake_codex,
+            probe,
+            source_home,
+            "--work-type",
+            "spark-coding",
+        )
+        assert spark_coding.returncode == 0, spark_coding.stderr
+        spark_argv = json.loads(probe.read_text(encoding="utf-8"))["argv"]
+        assert ["-m", SPARK_MODEL] == spark_argv[
+            spark_argv.index("-m") : spark_argv.index("-m") + 2
+        ]
+
+        probe.unlink()
+        legacy_coding = run_dispatcher(
+            worktree,
+            contract,
+            fake_codex,
+            probe,
+            source_home,
+            "--work-type",
+            "coding",
+        )
+        assert legacy_coding.returncode == 0, legacy_coding.stderr
+        legacy_coding_argv = json.loads(probe.read_text(encoding="utf-8"))["argv"]
+        assert ["-m", SPARK_MODEL] == legacy_coding_argv[
+            legacy_coding_argv.index("-m") : legacy_coding_argv.index("-m") + 2
         ]
 
         probe.unlink()

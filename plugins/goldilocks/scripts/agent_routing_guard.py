@@ -16,9 +16,11 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.4.4"
+POLICY_VERSION = "0.4.5"
 SPARK_MODEL = "gpt-5.3-codex-spark"
+LUNA_MODEL = "gpt-5.6-luna"
 LEAD_MODEL = "gpt-5.6-sol"
+FAST_LEAF_MODELS = {SPARK_MODEL, LUNA_MODEL}
 MAX_FORK_TURNS = 4
 ROUTE_PREFIXES = {
     "fast__": "fast",
@@ -215,13 +217,37 @@ def record_plan(
     connection.close()
 
 
+def is_recorded_fast_agent(payload: dict[str, Any]) -> bool:
+    agent_id = str(payload.get("agent_id") or "")
+    if not agent_id:
+        return False
+    connection = connect_state()
+    if connection is None:
+        return False
+    row = connection.execute(
+        """
+        SELECT 1
+        FROM executions AS execution
+        JOIN decisions AS decision ON decision.decision_id = execution.decision_id
+        WHERE execution.agent_id = ? AND decision.tier = 'fast'
+        LIMIT 1
+        """,
+        (agent_id,),
+    ).fetchone()
+    connection.close()
+    return row is not None
+
+
 def handle_pre_tool_use(payload: dict[str, Any]) -> None:
     tool_name = str(payload.get("tool_name") or "")
     normalized_tool_name = tool_name.rsplit(".", 1)[-1]
     if normalized_tool_name not in {"spawn_agent", "Agent"}:
         return
 
-    if str(payload.get("model") or "") == SPARK_MODEL:
+    if (
+        str(payload.get("model") or "") in FAST_LEAF_MODELS
+        or is_recorded_fast_agent(payload)
+    ):
         deny("Goldilocks Fast workers are leaf executors and cannot spawn more subagents. Return to the owner.")
         return
 
@@ -250,8 +276,8 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         if not requested_model:
             deny(
                 "Goldilocks requires an explicit model for native Fast subagents so they cannot "
-                "silently inherit Lead. Choose a model advertised by the host; when native Spark "
-                "is unavailable, use the packaged dispatch_codex_worker.py adapter."
+                "silently inherit Lead. Choose a model advertised by the host; when native Luna "
+                "or Spark is unavailable, use the packaged dispatch_codex_worker.py adapter."
             )
             return
         record_plan(payload, tool_input, tier, requested_model)
