@@ -100,12 +100,14 @@ def main() -> None:
         assert "goldilocks:goldilocks" in style_context
         assert "otherwise take its Direct exit" in style_context
         assert "pure conversation" in style_context
+        assert "Likely multi-unit work detected" not in style_context
 
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 "SELECT session_id, turn_id, cwd_hash, prompt_fingerprint, ledger_present, "
-                "repeat_failure_signal, continuity_required "
+                "repeat_failure_signal, continuity_required, routing_rationale_candidate, "
+                "routing_experiment_id "
                 "FROM gate_injections"
             ).fetchall()
         assert len(rows) == 1
@@ -116,6 +118,8 @@ def main() -> None:
         assert rows[0]["ledger_present"] == 0
         assert rows[0]["repeat_failure_signal"] == 0
         assert rows[0]["continuity_required"] == 0
+        assert rows[0]["routing_rationale_candidate"] == 0
+        assert rows[0]["routing_experiment_id"] is None
         assert b"Build and test the full-stack feature" not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "audit storage must not retain prompt text"
@@ -125,6 +129,63 @@ def main() -> None:
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
         assert count == 1, "the same prompt turn must produce one audit record"
+
+        multi_unit_prompt = (
+            "请完成以下开发任务：\n"
+            "1、修复画布上下文记忆。\n"
+            "2、实现 Agent 连接。\n"
+            "3、补齐测试、文档和发布检查。"
+        )
+        rationale = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt=multi_unit_prompt,
+            turn_id="rationale-turn",
+        )
+        assert rationale.returncode == 0, rationale.stderr
+        rationale_context = json.loads(rationale.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        for phrase in (
+            "Likely multi-unit work detected",
+            "read orchestrate.md",
+            "compact ROUTE line",
+            "fixed reason code",
+            "one-sentence DETAIL",
+            "not default to doing worker-ready work",
+            "advisory; do not force delegation",
+        ):
+            assert phrase in rationale_context, phrase
+        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+            connection.row_factory = sqlite3.Row
+            rationale_row = connection.execute(
+                "SELECT routing_rationale_candidate, routing_experiment_id "
+                "FROM gate_injections WHERE turn_id = 'rationale-turn'"
+            ).fetchone()
+        assert rationale_row["routing_rationale_candidate"] == 1
+        assert rationale_row["routing_experiment_id"] == "routing-rationale-v1"
+        assert multi_unit_prompt.encode() not in (
+            data_dir / "orchestration.db"
+        ).read_bytes(), "routing audit must not retain candidate prompt text"
+
+        simple_change = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="把按钮颜色改成蓝色。",
+            turn_id="simple-change",
+        )
+        simple_context = json.loads(simple_change.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "Likely multi-unit work detected" not in simple_context
+        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+            simple_candidate = connection.execute(
+                "SELECT routing_rationale_candidate FROM gate_injections "
+                "WHERE turn_id = 'simple-change'"
+            ).fetchone()[0]
+        assert simple_candidate == 0
 
         first_recurrence_without_history = run_hook(
             nested,
@@ -232,7 +293,7 @@ def main() -> None:
 
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 4, "Fast workers must not inject or audit the root gate"
+        assert count == 6, "Fast workers must not inject or audit the root gate"
 
         session = run_hook(nested, "SessionStart")
         assert session.returncode == 0, session.stderr

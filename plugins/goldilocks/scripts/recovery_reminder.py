@@ -15,6 +15,7 @@ from pathlib import Path
 
 
 POLICY_VERSION = "0.4.5"
+ROUTING_EXPERIMENT_ID = "routing-rationale-v1"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -27,6 +28,12 @@ ROUTING_GATE = (
     "Visible multi-unit implementation must run its make-or-delegate check before Lead edits; "
     "Direct remains valid when briefing and review cost more. "
     "Skip the gate for pure conversation."
+)
+ROUTING_RATIONALE_GATE = (
+    "Likely multi-unit work detected. Before implementation, read orchestrate.md and emit one "
+    "compact ROUTE line with route, ready-unit count, Lead-owned key nodes, a fixed reason code, "
+    "and one-sentence DETAIL. Lead capability should protect intent, interfaces, integration, "
+    "and acceptance—not default to doing worker-ready work. This is advisory; do not force delegation."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
@@ -59,6 +66,43 @@ REPEAT_FAILURE_PATTERNS = (
         re.IGNORECASE,
     ),
 )
+NUMBERED_UNIT_PATTERN = re.compile(
+    r"(?m)^\s*(?:\d{1,2}[、.)）]|[-*]\s+(?:修复|修改|实现|完成|增加|添加|测试|"
+    r"发布|部署|fix|change|implement|add|test|deploy|release)\b)",
+    re.IGNORECASE,
+)
+MULTI_UNIT_PHRASE_PATTERN = re.compile(
+    r"(?:以下|这些|多个|多项|逐项|一并|全部|所有).{0,12}"
+    r"(?:问题|缺陷|任务|功能|改动|修复|完成)|"
+    r"\b(?:multiple|several|all|each).{0,24}(?:bugs?|issues?|tasks?|features?|changes?)\b",
+    re.IGNORECASE,
+)
+EXECUTION_PATTERN = re.compile(
+    r"(?:修复|修改|实现|开发|完成|增加|添加|测试|构建|发布|部署)|"
+    r"\b(?:fix|change|implement|develop|complete|add|test|build|release|deploy)\b",
+    re.IGNORECASE,
+)
+DELIVERY_STAGE_PATTERNS = (
+    re.compile(
+        r"(?:代码|实现|开发|前端|后端|客户端|服务端)|"
+        r"\b(?:code|implement|frontend|backend|client|server)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:测试|验收|回归|构建)|"
+        r"\b(?:test|verify|acceptance|regression|build)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:文档|教程|说明)|\b(?:docs?|documentation|guide)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"(?:发布|部署|上线|TestFlight)|"
+        r"\b(?:release|deploy|publish|testflight)\b",
+        re.IGNORECASE,
+    ),
+)
 
 
 def stable_hash(value: str) -> str:
@@ -79,6 +123,15 @@ def repeat_failure_signal(prompt: str) -> bool:
     return any(pattern.search(candidate) is not None for pattern in REPEAT_FAILURE_PATTERNS)
 
 
+def routing_rationale_signal(prompt: str) -> bool:
+    if len(NUMBERED_UNIT_PATTERN.findall(prompt)) >= 2:
+        return True
+    if EXECUTION_PATTERN.search(prompt) and MULTI_UNIT_PHRASE_PATTERN.search(prompt):
+        return True
+    stages = sum(pattern.search(prompt) is not None for pattern in DELIVERY_STAGE_PATTERNS)
+    return bool(EXECUTION_PATTERN.search(prompt) and stages >= 3)
+
+
 def ensure_gate_schema(connection: sqlite3.Connection) -> None:
     connection.execute(
         """
@@ -91,6 +144,8 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
             ledger_present INTEGER NOT NULL,
             repeat_failure_signal INTEGER NOT NULL DEFAULT 0,
             continuity_required INTEGER NOT NULL DEFAULT 0,
+            routing_rationale_candidate INTEGER NOT NULL DEFAULT 0,
+            routing_experiment_id TEXT,
             injected_at TEXT NOT NULL,
             policy_version TEXT NOT NULL
         )
@@ -109,6 +164,15 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
             "ALTER TABLE gate_injections ADD COLUMN "
             "continuity_required INTEGER NOT NULL DEFAULT 0"
         )
+    if "routing_rationale_candidate" not in columns:
+        connection.execute(
+            "ALTER TABLE gate_injections ADD COLUMN "
+            "routing_rationale_candidate INTEGER NOT NULL DEFAULT 0"
+        )
+    if "routing_experiment_id" not in columns:
+        connection.execute(
+            "ALTER TABLE gate_injections ADD COLUMN routing_experiment_id TEXT"
+        )
 
 
 def record_gate(
@@ -118,9 +182,11 @@ def record_gate(
 
     prompt = str(payload.get("prompt") or "")
     repeat_signal = repeat_failure_signal(prompt)
+    rationale_candidate = routing_rationale_signal(prompt)
     state = {
         "repeat_failure_signal": repeat_signal,
         "continuity_required": False,
+        "routing_rationale_candidate": rationale_candidate,
     }
     try:
         configured = os.environ.get("PLUGIN_DATA")
@@ -139,7 +205,8 @@ def record_gate(
             connection.execute("PRAGMA journal_mode = WAL")
             ensure_gate_schema(connection)
             existing = connection.execute(
-                "SELECT repeat_failure_signal, continuity_required "
+                "SELECT repeat_failure_signal, continuity_required, "
+                "routing_rationale_candidate "
                 "FROM gate_injections WHERE injection_id = ?",
                 (injection_id,),
             ).fetchone()
@@ -147,6 +214,9 @@ def record_gate(
                 return {
                     "repeat_failure_signal": bool(existing["repeat_failure_signal"]),
                     "continuity_required": bool(existing["continuity_required"]),
+                    "routing_rationale_candidate": bool(
+                        existing["routing_rationale_candidate"]
+                    ),
                 }
             prior_prompts = int(
                 connection.execute(
@@ -163,8 +233,9 @@ def record_gate(
                 INSERT OR IGNORE INTO gate_injections (
                     injection_id, session_id, turn_id, cwd_hash, prompt_fingerprint,
                     ledger_present, repeat_failure_signal, continuity_required,
+                    routing_rationale_candidate, routing_experiment_id,
                     injected_at, policy_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     injection_id,
@@ -175,6 +246,8 @@ def record_gate(
                     int(ledger is not None),
                     int(repeat_signal),
                     int(continuity_required),
+                    int(rationale_candidate),
+                    ROUTING_EXPERIMENT_ID if rationale_candidate else None,
                     datetime.now(timezone.utc).isoformat(),
                     POLICY_VERSION,
                 ),
@@ -182,6 +255,7 @@ def record_gate(
             return {
                 "repeat_failure_signal": repeat_signal,
                 "continuity_required": continuity_required,
+                "routing_rationale_candidate": rationale_candidate,
             }
     except (OSError, sqlite3.Error, TypeError, ValueError):
         # Auditability must never block or suppress the routing instruction.
@@ -257,6 +331,8 @@ def main() -> None:
         elif event == "UserPromptSubmit":
             gate_state = record_gate(payload, cwd, ledger)
             message = f"{MICRO_STYLE} {ROUTING_GATE}"
+            if gate_state["routing_rationale_candidate"]:
+                message += f" {ROUTING_RATIONALE_GATE}"
             if ledger is not None:
                 message += (
                     f" An active Goldilocks task ledger exists at {ledger}. Interpret this prompt "

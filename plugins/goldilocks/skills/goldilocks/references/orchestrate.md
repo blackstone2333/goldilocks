@@ -17,6 +17,16 @@ Reuse a verified project pattern after checking invalidators. Read [execution-me
 
 This check is constant-time for clear work. Do not write a plan merely to decide that a two-minute task is Direct.
 
+## Explain the route briefly
+
+For work that entered this engine because decomposition may help, emit one decision line before implementation:
+
+`ROUTE=<direct|fast|standard|mixed> | READY=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
+
+Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain` as the reason code. `DETAIL` may explain the concrete tradeoff in normal language but stays to one sentence; do not expose chain-of-thought or write a routing essay.
+
+This is an observation experiment, not a delegation quota. Direct remains valid. Judge the route by whether worker execution plus Lead review can reach the same acceptance floor with less scarce quota or a shorter critical path—not by whether Lead could personally produce the strongest first draft. Lead capability is most valuable at intent, interfaces, Critical decisions, escalation, integration, and acceptance; it should not automatically expand into worker-ready implementation.
+
 ## Require a ready route before delegation
 
 Route readiness is a prerequisite. Reuse cached route evidence only when executable, model, provider, sandbox, authentication, and tools still match. Otherwise run one minimal probe before writing a full contract and count its cost.

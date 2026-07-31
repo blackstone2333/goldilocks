@@ -50,6 +50,20 @@ def main() -> None:
         if marker not in routing:
             failures.append(f"model routing lacks: {marker}")
 
+    orchestrate = read(SKILL / "references" / "orchestrate.md")
+    for marker in (
+        "Explain the route briefly",
+        "ROUTE=<direct|fast|standard|mixed>",
+        "DETAIL=<one concise sentence>",
+        "lead_faster",
+        "parallel_gain",
+        "quota_gain",
+        "not a delegation quota",
+        "worker-ready implementation",
+    ):
+        if marker not in orchestrate:
+            failures.append(f"routing-rationale experiment lacks: {marker}")
+
     dispatcher = read(SKILL / "scripts" / "dispatch_codex_worker.py")
     for marker in (
         '"luna": LUNA_MODEL',
