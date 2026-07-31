@@ -151,7 +151,14 @@ def main() -> None:
             "Likely multi-unit work detected",
             "read orchestrate.md",
             "compact ROUTE line",
-            "fixed reason code",
+            "WRITE_READY",
+            "READ_READY",
+            "project-level organization",
+            "active threads",
+            "shared write surface",
+            "read-only diagnosis",
+            "Existing parallel ownership means mixed",
+            "route_unavailable must name",
             "one-sentence DETAIL",
             "not default to doing worker-ready work",
             "advisory; do not force delegation",
@@ -164,7 +171,7 @@ def main() -> None:
                 "FROM gate_injections WHERE turn_id = 'rationale-turn'"
             ).fetchone()
         assert rationale_row["routing_rationale_candidate"] == 1
-        assert rationale_row["routing_experiment_id"] == "routing-rationale-v1"
+        assert rationale_row["routing_experiment_id"] == "routing-rationale-v2"
         assert multi_unit_prompt.encode() not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "routing audit must not retain candidate prompt text"

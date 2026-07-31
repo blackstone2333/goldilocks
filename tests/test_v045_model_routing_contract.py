@@ -54,12 +54,19 @@ def main() -> None:
     for marker in (
         "Explain the route briefly",
         "ROUTE=<direct|fast|standard|mixed>",
+        "WRITE_READY=<count>",
+        "READ_READY=<count>",
         "DETAIL=<one concise sentence>",
         "lead_faster",
         "parallel_gain",
         "quota_gain",
         "not a delegation quota",
         "worker-ready implementation",
+        "project-level organization",
+        "shared mutable surface",
+        "blocks concurrent writers only",
+        "ROUTE=mixed",
+        "failed minimal probe",
     ):
         if marker not in orchestrate:
             failures.append(f"routing-rationale experiment lacks: {marker}")

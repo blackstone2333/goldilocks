@@ -21,11 +21,24 @@ This check is constant-time for clear work. Do not write a plan merely to decide
 
 For work that entered this engine because decomposition may help, emit one decision line before implementation:
 
-`ROUTE=<direct|fast|standard|mixed> | READY=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
+`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
 
 Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain` as the reason code. `DETAIL` may explain the concrete tradeoff in normal language but stays to one sentence; do not expose chain-of-thought or write a routing essay.
 
 This is an observation experiment, not a delegation quota. Direct remains valid. Judge the route by whether worker execution plus Lead review can reach the same acceptance floor with less scarce quota or a shorter critical path—not by whether Lead could personally produce the strongest first draft. Lead capability is most valuable at intent, interfaces, Critical decisions, escalation, integration, and acceptance; it should not automatically expand into worker-ready implementation.
+
+Judge the project-level organization, not only the file Lead is about to edit:
+
+- `WRITE_READY` counts unowned units that another agent could safely implement now with an isolated surface and a complete contract.
+- `READ_READY` counts unowned read-only units that could run now, including diagnosis, research, focused test execution, documentation analysis, and independent review.
+- A shared mutable surface may make `WRITE_READY=0`; it does not imply `READ_READY=0`. `shared_surface` blocks concurrent writers only.
+- If another thread, agent, or worktree already owns part of the same outcome while Lead continues another part, report `ROUTE=mixed`, even when this turn launches nobody new.
+- If `ROUTE=direct` while either ready count is above zero, `DETAIL` states the concrete briefing, review, integration, latency, or quota reason for declining that ready class.
+- `route_unavailable` is credible only when `DETAIL` names the missing model, tool, authority, or failed minimal probe. A vague policy or preference is not route unavailability.
+
+The counts describe work available to dispatch now, excluding units already owned elsewhere. They are routing observations, not targets. Do not manufacture low-value review or split a coherent implementation from its focused tests merely to raise them.
+
+Use the reason codes narrowly. `lead_faster` compares end-to-end Lead time with briefing plus execution, review, and integration. `critical_judgment` protects a decision or authority boundary, not all work surrounding it. `review_cost` names the concrete verification burden. `contract_not_ready` identifies the unresolved interface or acceptance decision and may justify Lead making that decision before a second routing pass. `parallel_gain` and `quota_gain` are positive reasons to delegate or mix routes, not slogans.
 
 ## Require a ready route before delegation
 

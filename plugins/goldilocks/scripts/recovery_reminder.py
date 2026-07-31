@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 POLICY_VERSION = "0.4.5"
-ROUTING_EXPERIMENT_ID = "routing-rationale-v1"
+ROUTING_EXPERIMENT_ID = "routing-rationale-v2"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -31,9 +31,14 @@ ROUTING_GATE = (
 )
 ROUTING_RATIONALE_GATE = (
     "Likely multi-unit work detected. Before implementation, read orchestrate.md and emit one "
-    "compact ROUTE line with route, ready-unit count, Lead-owned key nodes, a fixed reason code, "
-    "and one-sentence DETAIL. Lead capability should protect intent, interfaces, integration, "
-    "and acceptance—not default to doing worker-ready work. This is advisory; do not force delegation."
+    "compact ROUTE line with ROUTE, WRITE_READY, READ_READY, LEAD, a fixed REASON code, and "
+    "one-sentence DETAIL. Judge the project-level organization, including active threads and "
+    "worktrees. A shared write surface may block another writer, but not independent read-only "
+    "diagnosis, tests, docs, or review. Existing parallel ownership means mixed. If Direct leaves "
+    "either ready count above zero, DETAIL must explain the concrete delegation loss; "
+    "route_unavailable must name the missing route or failed probe. Lead capability should protect "
+    "intent, interfaces, integration, and acceptance—not default to doing worker-ready work. "
+    "This is advisory; do not force delegation."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
