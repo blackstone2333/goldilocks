@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5"
-ROUTING_EXPERIMENT_ID = "routing-rationale-v2"
+POLICY_VERSION = "0.4.5-exp3"
+ROUTING_EXPERIMENT_ID = "routing-rationale-v3"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -30,15 +30,17 @@ ROUTING_GATE = (
     "Skip the gate for pure conversation."
 )
 ROUTING_RATIONALE_GATE = (
-    "Likely multi-unit work detected. Before implementation, read orchestrate.md and emit one "
-    "compact ROUTE line with ROUTE, WRITE_READY, READ_READY, LEAD, a fixed REASON code, and "
-    "one-sentence DETAIL. Judge the project-level organization, including active threads and "
-    "worktrees. A shared write surface may block another writer, but not independent read-only "
-    "diagnosis, tests, docs, or review. Existing parallel ownership means mixed. If Direct leaves "
-    "either ready count above zero, DETAIL must explain the concrete delegation loss; "
-    "route_unavailable must name the missing route or failed probe. Lead capability should protect "
-    "intent, interfaces, integration, and acceptance—not default to doing worker-ready work. "
-    "This is advisory; do not force delegation."
+    "Likely multi-unit work detected. Before implementation, read route-card.md and emit its one "
+    "ROUTE line with WRITE_READY, READ_READY, EXISTING, NEW_DISPATCH, LEAD, REASON, and DETAIL. "
+    "EXISTING is user/other-workflow parallelism; NEW_DISPATCH counts workers Goldilocks actually "
+    "starts now. Shared writes do not block independent read-only work. Direct with ready work must "
+    "name the concrete briefing, review, latency, authority, shared-surface, or failed-route cost. "
+    "Protect intent, interfaces, integration, and acceptance—not worker-ready typing."
+)
+AUTHORIZED_DISPATCH_GATE = (
+    "This project has an explicit bounded-delegation grant. If a ready verified route has positive "
+    "gain, normally dispatch the highest-value unit now; this is a default, not a quota. The grant "
+    "does not authorize deletion, release, deployment, payment, or external communication."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
@@ -151,6 +153,7 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
             continuity_required INTEGER NOT NULL DEFAULT 0,
             routing_rationale_candidate INTEGER NOT NULL DEFAULT 0,
             routing_experiment_id TEXT,
+            delegation_grant_active INTEGER NOT NULL DEFAULT 0,
             injected_at TEXT NOT NULL,
             policy_version TEXT NOT NULL
         )
@@ -178,6 +181,23 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
         connection.execute(
             "ALTER TABLE gate_injections ADD COLUMN routing_experiment_id TEXT"
         )
+    if "delegation_grant_active" not in columns:
+        connection.execute(
+            "ALTER TABLE gate_injections ADD COLUMN "
+            "delegation_grant_active INTEGER NOT NULL DEFAULT 0"
+        )
+
+
+def project_grant_active(connection: sqlite3.Connection, cwd_hash: str) -> bool:
+    table = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'project_grants'"
+    ).fetchone()
+    if table is None:
+        return False
+    row = connection.execute(
+        "SELECT active FROM project_grants WHERE cwd_hash = ?", (cwd_hash,)
+    ).fetchone()
+    return bool(row and row[0])
 
 
 def record_gate(
@@ -192,6 +212,7 @@ def record_gate(
         "repeat_failure_signal": repeat_signal,
         "continuity_required": False,
         "routing_rationale_candidate": rationale_candidate,
+        "delegation_grant_active": False,
     }
     try:
         configured = os.environ.get("PLUGIN_DATA")
@@ -211,7 +232,7 @@ def record_gate(
             ensure_gate_schema(connection)
             existing = connection.execute(
                 "SELECT repeat_failure_signal, continuity_required, "
-                "routing_rationale_candidate "
+                "routing_rationale_candidate, delegation_grant_active "
                 "FROM gate_injections WHERE injection_id = ?",
                 (injection_id,),
             ).fetchone()
@@ -222,6 +243,7 @@ def record_gate(
                     "routing_rationale_candidate": bool(
                         existing["routing_rationale_candidate"]
                     ),
+                    "delegation_grant_active": bool(existing["delegation_grant_active"]),
                 }
             prior_prompts = int(
                 connection.execute(
@@ -233,14 +255,15 @@ def record_gate(
             continuity_required = bool(
                 ledger is None and repeat_signal and prior_prompts >= 1
             )
+            grant_active = project_grant_active(connection, cwd_hash)
             connection.execute(
                 """
                 INSERT OR IGNORE INTO gate_injections (
                     injection_id, session_id, turn_id, cwd_hash, prompt_fingerprint,
                     ledger_present, repeat_failure_signal, continuity_required,
                     routing_rationale_candidate, routing_experiment_id,
-                    injected_at, policy_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    delegation_grant_active, injected_at, policy_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     injection_id,
@@ -253,6 +276,7 @@ def record_gate(
                     int(continuity_required),
                     int(rationale_candidate),
                     ROUTING_EXPERIMENT_ID if rationale_candidate else None,
+                    int(grant_active),
                     datetime.now(timezone.utc).isoformat(),
                     POLICY_VERSION,
                 ),
@@ -261,6 +285,7 @@ def record_gate(
                 "repeat_failure_signal": repeat_signal,
                 "continuity_required": continuity_required,
                 "routing_rationale_candidate": rationale_candidate,
+                "delegation_grant_active": grant_active,
             }
     except (OSError, sqlite3.Error, TypeError, ValueError):
         # Auditability must never block or suppress the routing instruction.
@@ -338,6 +363,8 @@ def main() -> None:
             message = f"{MICRO_STYLE} {ROUTING_GATE}"
             if gate_state["routing_rationale_candidate"]:
                 message += f" {ROUTING_RATIONALE_GATE}"
+                if gate_state["delegation_grant_active"]:
+                    message += f" {AUTHORIZED_DISPATCH_GATE}"
             if ledger is not None:
                 message += (
                     f" An active Goldilocks task ledger exists at {ledger}. Interpret this prompt "

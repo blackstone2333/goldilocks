@@ -16,9 +16,10 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.4.5"
+POLICY_VERSION = "0.4.5-exp3"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
+TERRA_MODEL = "gpt-5.6-terra"
 LEAD_MODEL = "gpt-5.6-sol"
 FAST_LEAF_MODELS = {SPARK_MODEL, LUNA_MODEL}
 MAX_FORK_TURNS = 4
@@ -27,6 +28,28 @@ ROUTE_PREFIXES = {
     "standard__": "standard",
     "lead__": "lead",
 }
+ROUTE_PROFILES_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "skills"
+    / "goldilocks"
+    / "assets"
+    / "codex-route-profiles.json"
+)
+
+
+def load_native_profiles() -> dict[str, dict[str, Any]]:
+    try:
+        payload = json.loads(ROUTE_PROFILES_FILE.read_text(encoding="utf-8"))
+        return {
+            name: profile
+            for name, profile in payload["profiles"].items()
+            if profile.get("transport") == "native"
+        }
+    except (OSError, KeyError, TypeError, ValueError):
+        return {}
+
+
+NATIVE_PROFILES = load_native_profiles()
 
 
 def now() -> str:
@@ -114,6 +137,10 @@ def connect_state() -> sqlite3.Connection | None:
             tier TEXT NOT NULL,
             parent_model TEXT NOT NULL,
             expected_model TEXT NOT NULL,
+            expected_agent_type TEXT,
+            expected_effort TEXT,
+            expected_sandbox TEXT,
+            transport TEXT NOT NULL DEFAULT 'native',
             fork_turns TEXT NOT NULL,
             status TEXT NOT NULL,
             prior_observations INTEGER NOT NULL DEFAULT 0,
@@ -134,9 +161,21 @@ def connect_state() -> sqlite3.Connection | None:
             decision_id TEXT,
             expected_model TEXT,
             actual_model TEXT NOT NULL,
+            expected_agent_type TEXT,
+            actual_agent_type TEXT,
+            expected_effort TEXT,
+            actual_effort TEXT,
+            expected_sandbox TEXT,
+            sandbox_policy_type TEXT,
+            permission_profile_type TEXT,
             correlation_confidence TEXT NOT NULL,
             started_at TEXT NOT NULL,
             stopped_at TEXT,
+            elapsed_ms INTEGER,
+            input_tokens INTEGER,
+            cached_input_tokens INTEGER,
+            output_tokens INTEGER,
+            rework_count INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY(decision_id) REFERENCES decisions(decision_id)
         );
 
@@ -154,6 +193,36 @@ def connect_state() -> sqlite3.Connection | None:
         );
         """
     )
+    decision_columns = {
+        str(row[1]) for row in connection.execute("PRAGMA table_info(decisions)")
+    }
+    execution_columns = {
+        str(row[1]) for row in connection.execute("PRAGMA table_info(executions)")
+    }
+    for name, definition in {
+        "expected_agent_type": "TEXT",
+        "expected_effort": "TEXT",
+        "expected_sandbox": "TEXT",
+        "transport": "TEXT NOT NULL DEFAULT 'native'",
+    }.items():
+        if name not in decision_columns:
+            connection.execute(f"ALTER TABLE decisions ADD COLUMN {name} {definition}")
+    for name, definition in {
+        "expected_agent_type": "TEXT",
+        "actual_agent_type": "TEXT",
+        "expected_effort": "TEXT",
+        "actual_effort": "TEXT",
+        "expected_sandbox": "TEXT",
+        "sandbox_policy_type": "TEXT",
+        "permission_profile_type": "TEXT",
+        "elapsed_ms": "INTEGER",
+        "input_tokens": "INTEGER",
+        "cached_input_tokens": "INTEGER",
+        "output_tokens": "INTEGER",
+        "rework_count": "INTEGER NOT NULL DEFAULT 0",
+    }.items():
+        if name not in execution_columns:
+            connection.execute(f"ALTER TABLE executions ADD COLUMN {name} {definition}")
     return connection
 
 
@@ -175,6 +244,11 @@ def record_plan(
     tool_input: dict[str, Any],
     tier: str,
     expected_model: str,
+    *,
+    expected_agent_type: str | None = None,
+    expected_effort: str | None = None,
+    expected_sandbox: str | None = None,
+    transport: str = "native",
 ) -> None:
     connection = connect_state()
     if connection is None:
@@ -192,9 +266,10 @@ def record_plan(
         """
         INSERT OR REPLACE INTO decisions (
             decision_id, session_id, turn_id, tool_use_id, cwd_hash, task_fingerprint,
-            task_name, tier, parent_model, expected_model, fork_turns, status,
+            task_name, tier, parent_model, expected_model, expected_agent_type,
+            expected_effort, expected_sandbox, transport, fork_turns, status,
             prior_observations, planned_at, policy_version
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?)
         """,
         (
             str(uuid.uuid4()),
@@ -207,6 +282,10 @@ def record_plan(
             tier,
             str(payload.get("model") or ""),
             expected_model,
+            expected_agent_type,
+            expected_effort,
+            expected_sandbox,
+            transport,
             str(tool_input.get("fork_turns") or ""),
             int(prior),
             now(),
@@ -271,6 +350,62 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         return
 
     fork_value = str(tool_input.get("fork_turns") or "").strip().lower()
+    requested_agent_type = str(tool_input.get("agent_type") or "").strip()
+    profile = NATIVE_PROFILES.get(requested_agent_type)
+    if profile is not None:
+        expected_tier = str(profile["tier"])
+        expected_model = str(profile["model"])
+        expected_effort = str(profile["reasoning_effort"])
+        if tier != expected_tier:
+            deny(
+                f"Goldilocks role {requested_agent_type} is {expected_tier}, but task_name "
+                f"declares {tier}. Use the matching routing prefix."
+            )
+            return
+        if requested_agent_type == "goldilocks_sol_reviewer" and fork_value != "none":
+            deny("Goldilocks fresh Sol review requires fork_turns=none.")
+            return
+        requested_model = str(tool_input.get("model") or "").strip()
+        requested_effort = str(tool_input.get("reasoning_effort") or "").strip()
+        if requested_model and requested_model != expected_model:
+            deny(
+                f"Goldilocks role {requested_agent_type} pins {expected_model}; "
+                f"remove the conflicting {requested_model} override."
+            )
+            return
+        if requested_effort and requested_effort != expected_effort:
+            deny(
+                f"Goldilocks role {requested_agent_type} pins {expected_effort} reasoning; "
+                f"remove the conflicting {requested_effort} override."
+            )
+            return
+        rewritten = dict(tool_input)
+        rewritten.pop("model", None)
+        rewritten.pop("reasoning_effort", None)
+        rewritten.pop("service_tier", None)
+        record_plan(
+            payload,
+            rewritten,
+            tier,
+            expected_model,
+            expected_agent_type=requested_agent_type,
+            expected_effort=expected_effort,
+            expected_sandbox=(
+                str(profile.get("sandbox")) if profile.get("sandbox") else None
+            ),
+        )
+        if rewritten != tool_input:
+            emit(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "allow",
+                        "updatedInput": rewritten,
+                    }
+                }
+            )
+        return
+
     if tier == "fast":
         requested_model = str(tool_input.get("model") or "").strip()
         if not requested_model:
@@ -280,7 +415,13 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 "or Spark is unavailable, use the packaged dispatch_codex_worker.py adapter."
             )
             return
-        record_plan(payload, tool_input, tier, requested_model)
+        record_plan(
+            payload,
+            tool_input,
+            tier,
+            requested_model,
+            expected_effort=str(tool_input.get("reasoning_effort") or "") or None,
+        )
         return
 
     if tier == "lead" and fork_value == "all":
@@ -313,7 +454,13 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         )
         return
 
-    record_plan(payload, tool_input, tier, requested_model)
+    record_plan(
+        payload,
+        tool_input,
+        tier,
+        requested_model,
+        expected_effort=str(tool_input.get("reasoning_effort") or "") or None,
+    )
 
 
 def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
@@ -322,6 +469,18 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
         return None, "unavailable"
     session_id = payload.get("session_id")
     actual_model = str(payload.get("model") or "")
+    actual_agent_type = str(payload.get("agent_type") or "") or None
+    actual_effort = str(payload.get("reasoning_effort") or payload.get("effort") or "") or None
+    sandbox = payload.get("sandbox_policy")
+    permission = payload.get("permission_profile")
+    sandbox_type = (
+        str(sandbox.get("type") or "") or None if isinstance(sandbox, dict) else None
+    )
+    permission_type = (
+        str(permission.get("type") or "") or None
+        if isinstance(permission, dict)
+        else None
+    )
     agent_id = str(payload.get("agent_id") or "")
     started_at = now()
     connection.execute("BEGIN IMMEDIATE")
@@ -333,7 +492,16 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
         """,
         (session_id,),
     ).fetchall()
-    matching = [row for row in candidates if row["expected_model"] == actual_model]
+    matching = [
+        row
+        for row in candidates
+        if row["expected_model"] == actual_model
+        and (
+            not row["expected_agent_type"]
+            or not actual_agent_type
+            or row["expected_agent_type"] == actual_agent_type
+        )
+    ]
 
     selected: sqlite3.Row | None = None
     if len(candidates) == 1:
@@ -341,9 +509,50 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
         confidence = "single"
     elif len(matching) == 1:
         selected = matching[0]
-        confidence = "model_unique"
+        confidence = "route_unique"
     elif candidates:
         confidence = "ambiguous"
+    elif actual_agent_type in NATIVE_PROFILES:
+        profile = NATIVE_PROFILES[actual_agent_type]
+        task_name = str(payload.get("agent_path") or actual_agent_type).rsplit("/", 1)[-1]
+        cwd_hash = stable_hash(str(payload.get("cwd") or ""))
+        fingerprint = stable_hash(re.sub(r"\s+", " ", task_name.lower()).strip())
+        decision_id = str(uuid.uuid4())
+        connection.execute(
+            """
+            INSERT INTO decisions (
+                decision_id, session_id, turn_id, tool_use_id, cwd_hash,
+                task_fingerprint, task_name, tier, parent_model, expected_model,
+                expected_agent_type, expected_effort, expected_sandbox, transport,
+                fork_turns, status, prior_observations, planned_at, started_at,
+                actual_model, agent_id, correlation_confidence, policy_version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, 'native', 'none',
+                'started', 0, ?, ?, ?, ?, 'role_observed', ?)
+            """,
+            (
+                decision_id,
+                session_id,
+                payload.get("turn_id"),
+                f"observed:{agent_id}",
+                cwd_hash,
+                fingerprint,
+                task_name,
+                str(profile["tier"]),
+                str(profile["model"]),
+                actual_agent_type,
+                str(profile["reasoning_effort"]),
+                str(profile.get("sandbox")) if profile.get("sandbox") else None,
+                started_at,
+                started_at,
+                actual_model,
+                agent_id,
+                POLICY_VERSION,
+            ),
+        )
+        selected = connection.execute(
+            "SELECT * FROM decisions WHERE decision_id = ?", (decision_id,)
+        ).fetchone()
+        confidence = "role_observed"
     else:
         confidence = "unplanned"
 
@@ -352,8 +561,10 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
         """
         INSERT OR REPLACE INTO executions (
             agent_id, session_id, decision_id, expected_model, actual_model,
+            expected_agent_type, actual_agent_type, expected_effort, actual_effort,
+            expected_sandbox, sandbox_policy_type, permission_profile_type,
             correlation_confidence, started_at, stopped_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
         """,
         (
             agent_id,
@@ -361,6 +572,13 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
             decision_id,
             selected["expected_model"] if selected is not None else None,
             actual_model,
+            selected["expected_agent_type"] if selected is not None else None,
+            actual_agent_type,
+            selected["expected_effort"] if selected is not None else None,
+            actual_effort,
+            selected["expected_sandbox"] if selected is not None else None,
+            sandbox_type,
+            permission_type,
             confidence,
             started_at,
         ),
@@ -404,12 +622,27 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
 
     expected_model = str(decision["expected_model"] or "")
     actual_model = str(payload.get("model") or "")
-    if expected_model and actual_model == expected_model:
+    expected_agent_type = str(decision["expected_agent_type"] or "")
+    actual_agent_type = str(payload.get("agent_type") or "")
+    expected_effort = str(decision["expected_effort"] or "")
+    actual_effort = str(payload.get("reasoning_effort") or payload.get("effort") or "")
+    mismatches: list[str] = []
+    if expected_model and actual_model != expected_model:
+        mismatches.append(f"model expected {expected_model}, observed {actual_model or 'unknown'}")
+    if expected_agent_type and actual_agent_type and actual_agent_type != expected_agent_type:
+        mismatches.append(
+            f"agent type expected {expected_agent_type}, observed {actual_agent_type}"
+        )
+    if expected_effort and actual_effort and actual_effort != expected_effort:
+        mismatches.append(
+            f"reasoning expected {expected_effort}, observed {actual_effort}"
+        )
+    if not mismatches:
         return
 
     message = (
         "Goldilocks routing mismatch: "
-        f"{decision['task_name']} expected {expected_model}, but Codex started {actual_model or 'an unknown model'}."
+        f"{decision['task_name']} " + "; ".join(mismatches) + "."
     )
     emit(
         {
@@ -425,6 +658,25 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
     )
 
 
+def usage_values(payload: dict[str, Any]) -> tuple[int | None, int | None, int | None]:
+    usage = payload.get("usage") or payload.get("token_usage")
+    if not isinstance(usage, dict):
+        return None, None, None
+
+    def value(*keys: str) -> int | None:
+        for key in keys:
+            raw = usage.get(key)
+            if isinstance(raw, int) and raw >= 0:
+                return raw
+        return None
+
+    return (
+        value("input_tokens", "input"),
+        value("cached_input_tokens", "cached_input"),
+        value("output_tokens", "output"),
+    )
+
+
 def handle_subagent_stop(payload: dict[str, Any]) -> None:
     connection = connect_state()
     if connection is None:
@@ -436,9 +688,28 @@ def handle_subagent_stop(payload: dict[str, Any]) -> None:
         "SELECT * FROM executions WHERE agent_id = ?",
         (agent_id,),
     ).fetchone()
+    input_tokens, cached_input_tokens, output_tokens = usage_values(payload)
+    elapsed_ms: int | None = None
+    if execution is not None:
+        try:
+            started = datetime.fromisoformat(str(execution["started_at"]))
+            stopped = datetime.fromisoformat(stopped_at)
+            elapsed_ms = max(0, int((stopped - started).total_seconds() * 1000))
+        except (TypeError, ValueError):
+            elapsed_ms = None
     connection.execute(
-        "UPDATE executions SET stopped_at = ? WHERE agent_id = ?",
-        (stopped_at, agent_id),
+        """
+        UPDATE executions SET stopped_at = ?, elapsed_ms = ?, input_tokens = ?,
+            cached_input_tokens = ?, output_tokens = ? WHERE agent_id = ?
+        """,
+        (
+            stopped_at,
+            elapsed_ms,
+            input_tokens,
+            cached_input_tokens,
+            output_tokens,
+            agent_id,
+        ),
     )
     if execution is not None and execution["decision_id"]:
         decision = connection.execute(

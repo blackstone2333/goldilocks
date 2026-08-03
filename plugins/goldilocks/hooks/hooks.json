@@ -7,8 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
             "timeout": 10,
             "statusMessage": "Checking Goldilocks agent routing"
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
             "timeout": 10
           }
         ]
@@ -32,8 +32,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/agent_routing_guard.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\agent_routing_guard.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" agent_routing_guard.py",
             "timeout": 10
           }
         ]
@@ -45,15 +45,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
             "timeout": 10,
             "statusMessage": "Checking Goldilocks continuity"
           },
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/update_checker.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\update_checker.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" update_checker.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" update_checker.py",
             "timeout": 4
           }
         ]
@@ -65,8 +65,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
             "timeout": 10,
             "statusMessage": "Checking Goldilocks recovery state"
           }
@@ -78,8 +78,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$PLUGIN_ROOT/scripts/recovery_reminder.py\"",
-            "commandWindows": "py -3 \"%PLUGIN_ROOT%\\scripts\\recovery_reminder.py\"",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
             "timeout": 10
           }
         ]

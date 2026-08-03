@@ -407,7 +407,7 @@ if WORKER_SCRIPT.is_file():
     ]:
         if required_text not in worker_text:
             fail(f"external Codex worker lacks required contract: {required_text}")
-    for forbidden_text in ["mcp_servers={}", '"plugins"', '"apps"']:
+    for forbidden_text in ["mcp_servers={}", "plugins={}", "apps={}"]:
         if forbidden_text in worker_text:
             fail(f"external Codex worker unnecessarily disables a capability: {forbidden_text}")
     if "agents.enabled=false" in worker_text:

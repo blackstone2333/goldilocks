@@ -31,6 +31,10 @@ def run_hook(
     session_id: str = "test-session",
     turn_id: str = "test-turn",
     tool_use_id: str | None = None,
+    reasoning_effort: str | None = None,
+    agent_type: str = "default",
+    sandbox_policy_type: str = "danger-full-access",
+    permission_profile_type: str = "disabled",
 ) -> subprocess.CompletedProcess[str]:
     payload = {
         "session_id": session_id,
@@ -50,7 +54,16 @@ def run_hook(
             }
         )
     elif event in {"SubagentStart", "SubagentStop"}:
-        payload.update({"agent_id": agent_id, "agent_type": "default"})
+        payload.update(
+            {
+                "agent_id": agent_id,
+                "agent_type": agent_type,
+                "sandbox_policy": {"type": sandbox_policy_type},
+                "permission_profile": {"type": permission_profile_type},
+            }
+        )
+        if reasoning_effort is not None:
+            payload["reasoning_effort"] = reasoning_effort
 
     env = os.environ.copy()
     env["PLUGIN_DATA"] = str(data_dir)
@@ -389,6 +402,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         session_id=session,
         agent_id="stopped-agent",
         model=TERRA_MODEL,
+        reasoning_effort="high",
     )
     assert_silent(started, "matching start should stay silent")
     recursive_recorded_fast = run_hook(
@@ -419,6 +433,57 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
     assert experience["observed_completions"] == 1
     assert experience["verified_passes"] == 0
     assert experience["verified_failures"] == 0
+
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute(
+            "UPDATE executions SET actual_model = '' WHERE agent_id = 'stopped-agent'"
+        )
+    missing_model = record_outcome(
+        data_dir, "stopped-agent", "pass", "must fail without observed model"
+    )
+    assert missing_model.returncode == 2
+    assert "observed model" in missing_model.stderr
+
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute(
+            "UPDATE executions SET actual_model = ?, actual_effort = NULL "
+            "WHERE agent_id = 'stopped-agent'",
+            (TERRA_MODEL,),
+        )
+    missing_effort = record_outcome(
+        data_dir, "stopped-agent", "pass", "must fail without observed effort"
+    )
+    assert missing_effort.returncode == 2
+    assert "reasoning effort" in missing_effort.stderr
+
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute(
+            "UPDATE executions SET actual_effort = 'high', sandbox_policy_type = NULL "
+            "WHERE agent_id = 'stopped-agent'"
+        )
+    missing_sandbox = record_outcome(
+        data_dir, "stopped-agent", "pass", "must fail without observed sandbox"
+    )
+    assert missing_sandbox.returncode == 2
+    assert "sandbox policy" in missing_sandbox.stderr
+
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute(
+            "UPDATE executions SET sandbox_policy_type = 'danger-full-access', "
+            "permission_profile_type = NULL "
+            "WHERE agent_id = 'stopped-agent'"
+        )
+    missing_permission = record_outcome(
+        data_dir, "stopped-agent", "pass", "must fail without observed permission"
+    )
+    assert missing_permission.returncode == 2
+    assert "permission profile" in missing_permission.stderr
+
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute(
+            "UPDATE executions SET permission_profile_type = 'disabled' "
+            "WHERE agent_id = 'stopped-agent'"
+        )
 
     verified = record_outcome(
         data_dir,

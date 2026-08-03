@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
 VERSION = "0.4.5"
+EXPERIMENT_POLICY = "0.4.5-exp3"
 
 
 def read(path: Path) -> str:
@@ -30,7 +31,7 @@ def main() -> None:
 
     recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")
     for marker in (
-        f'POLICY_VERSION = "{VERSION}"',
+        f'POLICY_VERSION = "{EXPERIMENT_POLICY}"',
         "Visible multi-unit implementation",
         "make-or-delegate check before Lead edits",
         "Direct remains valid",
@@ -56,6 +57,8 @@ def main() -> None:
         "ROUTE=<direct|fast|standard|mixed>",
         "WRITE_READY=<count>",
         "READ_READY=<count>",
+        "EXISTING=<count>",
+        "NEW_DISPATCH=<count>",
         "DETAIL=<one concise sentence>",
         "lead_faster",
         "parallel_gain",
@@ -67,6 +70,7 @@ def main() -> None:
         "blocks concurrent writers only",
         "ROUTE=mixed",
         "failed minimal probe",
+        "default to actually dispatching",
     ):
         if marker not in orchestrate:
             failures.append(f"routing-rationale experiment lacks: {marker}")
@@ -88,7 +92,7 @@ def main() -> None:
         if marker not in guard:
             failures.append(f"Fast leaf guard lacks: {marker}")
     for marker in (
-        f'POLICY_VERSION = "{VERSION}"',
+        f'POLICY_VERSION = "{EXPERIMENT_POLICY}"',
         "verified_passes",
         "verified_failures",
         "evidence_hash",

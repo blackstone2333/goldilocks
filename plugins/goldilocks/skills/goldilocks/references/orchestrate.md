@@ -21,24 +21,15 @@ This check is constant-time for clear work. Do not write a plan merely to decide
 
 For work that entered this engine because decomposition may help, emit one decision line before implementation:
 
-`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
+`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | NEW_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
 
 Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain` as the reason code. `DETAIL` may explain the concrete tradeoff in normal language but stays to one sentence; do not expose chain-of-thought or write a routing essay.
 
-This is an observation experiment, not a delegation quota. Direct remains valid. Judge the route by whether worker execution plus Lead review can reach the same acceptance floor with less scarce quota or a shorter critical path—not by whether Lead could personally produce the strongest first draft. Lead capability is most valuable at intent, interfaces, Critical decisions, escalation, integration, and acceptance; it should not automatically expand into worker-ready implementation.
+This is not a delegation quota. Direct remains valid. With an active project grant, a verified route, and positive gain, default to actually dispatching the highest-value ready unit. The grant covers bounded Fast/Standard dispatch only and adds no external authority. Judge equal acceptance with less scarce quota or a shorter critical path, not who writes the strongest first draft; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
-Judge the project-level organization, not only the file Lead is about to edit:
+Judge the project-level organization. `WRITE_READY` and `READ_READY` count unowned executable and read-only units; `EXISTING` is user/other-workflow ownership, while `NEW_DISPATCH` is a worker started now. A shared mutable surface blocks concurrent writers only, not independent diagnosis or review. Existing ownership with Lead work is `ROUTE=mixed`. Direct with ready work names its concrete transfer loss. `route_unavailable` names the missing route or failed minimal probe.
 
-- `WRITE_READY` counts unowned units that another agent could safely implement now with an isolated surface and a complete contract.
-- `READ_READY` counts unowned read-only units that could run now, including diagnosis, research, focused test execution, documentation analysis, and independent review.
-- A shared mutable surface may make `WRITE_READY=0`; it does not imply `READ_READY=0`. `shared_surface` blocks concurrent writers only.
-- If another thread, agent, or worktree already owns part of the same outcome while Lead continues another part, report `ROUTE=mixed`, even when this turn launches nobody new.
-- If `ROUTE=direct` while either ready count is above zero, `DETAIL` states the concrete briefing, review, integration, latency, or quota reason for declining that ready class.
-- `route_unavailable` is credible only when `DETAIL` names the missing model, tool, authority, or failed minimal probe. A vague policy or preference is not route unavailability.
-
-The counts describe work available to dispatch now, excluding units already owned elsewhere. They are routing observations, not targets. Do not manufacture low-value review or split a coherent implementation from its focused tests merely to raise them.
-
-Use the reason codes narrowly. `lead_faster` compares end-to-end Lead time with briefing plus execution, review, and integration. `critical_judgment` protects a decision or authority boundary, not all work surrounding it. `review_cost` names the concrete verification burden. `contract_not_ready` identifies the unresolved interface or acceptance decision and may justify Lead making that decision before a second routing pass. `parallel_gain` and `quota_gain` are positive reasons to delegate or mix routes, not slogans.
+Use codes narrowly: `lead_faster` compares end-to-end time; `critical_judgment` protects a real decision boundary; `review_cost` names verification burden; `contract_not_ready` identifies the missing interface or acceptance decision; `parallel_gain` and `quota_gain` justify delegation. Never manufacture work to improve counts.
 
 ## Require a ready route before delegation
 
@@ -65,6 +56,8 @@ Lead implements only for faster Direct delivery, inseparable Critical core, shar
 Classify after decomposition, not before it. A large cross-file unit can be Fast when its remaining discretion is low; a ten-line security decision can remain Lead.
 
 Every delegated contract states objective, non-goals, allowed files or domain, stable interfaces, dependencies, acceptance checks, expected evidence, and forbidden external or destructive actions. Give task-local repository paths and decisions instead of copying the conversation. If a competent worker still has to infer product intent or architecture, the contract is not Fast-ready.
+
+Every worker returns five compact sections: `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`. This replaces transcript replay; the owner inspects the real diff and evidence.
 
 Prefer one worker implementing a coherent unit and its focused checks. Do not split implementation and tests when that duplicates the same context. Workers escalate ambiguity instead of guessing. After one failed repair or requirement mismatch, reconsider the contract or capability; after a second, stop the worker loop and upgrade or keep the work local.
 

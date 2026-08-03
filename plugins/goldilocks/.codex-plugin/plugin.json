@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.4.5+codex.local-rationale-v2-20260731140608",
+  "version": "0.4.5+codex.20260803032605",
   "description": "A Direct-first adaptive workflow and quality-control layer for any executable work.",
   "author": {
     "name": "Charles Roc"

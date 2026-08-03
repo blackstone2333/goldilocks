@@ -15,14 +15,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5"
+POLICY_VERSION = "0.4.5-exp3"
 
 
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(
         description="Close a stopped native worker route after Lead verification."
     )
-    value.add_argument("--agent-id", required=True)
+    route = value.add_mutually_exclusive_group(required=True)
+    route.add_argument("--agent-id")
+    route.add_argument("--route-id", help="External codex-exec route id.")
     value.add_argument("--result", required=True, choices=("pass", "fail"))
     value.add_argument(
         "--evidence",
@@ -30,7 +32,126 @@ def parser() -> argparse.ArgumentParser:
         help="Concise acceptance command/result; only its SHA-256 hash is stored.",
     )
     value.add_argument("--data-dir", type=Path)
+    value.add_argument(
+        "--rework-count",
+        type=int,
+        default=0,
+        help="Number of worker correction rounds required before Lead acceptance.",
+    )
     return value
+
+
+def require_observed(route: sqlite3.Row, column: str, route_name: str, label: str) -> None:
+    if not route[column]:
+        raise ValueError(f"{route_name} lacks an observed {label}.")
+
+
+def validate_external_pass(route: sqlite3.Row, route_id: str) -> None:
+    route_name = f"External route {route_id}"
+    if route["status"] != "succeeded" or not route["stopped_at"]:
+        raise ValueError(f"{route_name} did not complete successfully.")
+    require_observed(route, "actual_model", route_name, "model")
+    require_observed(route, "actual_effort", route_name, "reasoning effort")
+    require_observed(route, "sandbox_policy_type", route_name, "sandbox policy")
+    require_observed(route, "permission_profile_type", route_name, "permission profile")
+    if route["expected_model"] and route["actual_model"] != route["expected_model"]:
+        raise ValueError(
+            f"{route_name} observed {route['actual_model']}, expected "
+            f"{route['expected_model']}."
+        )
+    if route["expected_effort"] and route["actual_effort"] != route["expected_effort"]:
+        raise ValueError(
+            f"{route_name} observed effort {route['actual_effort']}, expected "
+            f"{route['expected_effort']}."
+        )
+    if route["requested_sandbox"] and (
+        route["sandbox_policy_type"] != route["requested_sandbox"]
+    ):
+        raise ValueError(
+            f"{route_name} observed sandbox {route['sandbox_policy_type']}, expected "
+            f"{route['requested_sandbox']}."
+        )
+
+
+def validate_native_pass(route: sqlite3.Row, agent_id: str) -> None:
+    route_name = f"Agent {agent_id}"
+    require_observed(route, "actual_model", route_name, "model")
+    require_observed(route, "actual_effort", route_name, "reasoning effort")
+    require_observed(route, "sandbox_policy_type", route_name, "sandbox policy")
+    require_observed(route, "permission_profile_type", route_name, "permission profile")
+    if route["expected_model"] and route["actual_model"] != route["expected_model"]:
+        raise ValueError(
+            f"{route_name} ran {route['actual_model']}, expected {route['expected_model']}; "
+            "mismatched routes cannot become verified passes."
+        )
+    if route["expected_agent_type"] and (
+        route["expected_agent_type"] != route["actual_agent_type"]
+    ):
+        raise ValueError(
+            f"{route_name} ran role {route['actual_agent_type'] or 'unknown'}, expected "
+            f"{route['expected_agent_type']}."
+        )
+    if route["expected_effort"] and route["actual_effort"] != route["expected_effort"]:
+        raise ValueError(
+            f"{route_name} ran effort {route['actual_effort']}, expected "
+            f"{route['expected_effort']}."
+        )
+    if route["expected_sandbox"] and (
+        route["sandbox_policy_type"] != route["expected_sandbox"]
+    ):
+        raise ValueError(
+            f"{route_name} ran sandbox {route['sandbox_policy_type']}, expected "
+            f"{route['expected_sandbox']}."
+        )
+
+
+def record_external(
+    connection: sqlite3.Connection,
+    args: argparse.Namespace,
+    evidence_hash: str,
+    verified_at: str,
+) -> dict[str, object]:
+    route = connection.execute(
+        "SELECT * FROM external_routes WHERE route_id = ?", (args.route_id,)
+    ).fetchone()
+    if route is None:
+        raise ValueError(f"No Goldilocks external route {args.route_id}.")
+    if route["lead_result"] is not None:
+        if route["lead_result"] != args.result:
+            raise ValueError(
+                f"External route {args.route_id} is already verified as "
+                f"{route['lead_result']}."
+            )
+        if args.result == "pass":
+            validate_external_pass(route, args.route_id)
+        return {
+            "route_id": args.route_id,
+            "result": args.result,
+            "status": "already-recorded",
+            "evidence_sha256": route["evidence_hash"],
+            "rework_count": route["rework_count"],
+        }
+    if route["status"] not in {"succeeded", "failed"} or not route["stopped_at"]:
+        raise ValueError(
+            f"External route {args.route_id} has status {route['status']}; "
+            "only completed routes can be verified."
+        )
+    if args.result == "pass":
+        validate_external_pass(route, args.route_id)
+    connection.execute(
+        """
+        UPDATE external_routes SET lead_result = ?, evidence_hash = ?, verified_at = ?,
+            rework_count = ? WHERE route_id = ?
+        """,
+        (args.result, evidence_hash, verified_at, args.rework_count, args.route_id),
+    )
+    return {
+        "route_id": args.route_id,
+        "result": args.result,
+        "status": "recorded",
+        "evidence_sha256": evidence_hash,
+        "rework_count": args.rework_count,
+    }
 
 
 def resolve_data_dir(explicit: Path | None) -> Path:
@@ -52,10 +173,33 @@ def resolve_data_dir(explicit: Path | None) -> Path:
     )
 
 
+def ensure_experiment_columns(connection: sqlite3.Connection) -> None:
+    tables = {
+        str(row[0])
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+    }
+    if "decisions" in tables:
+        columns = {
+            str(row[1]) for row in connection.execute("PRAGMA table_info(decisions)")
+        }
+        if "expected_sandbox" not in columns:
+            connection.execute("ALTER TABLE decisions ADD COLUMN expected_sandbox TEXT")
+    if "executions" in tables:
+        columns = {
+            str(row[1]) for row in connection.execute("PRAGMA table_info(executions)")
+        }
+        if "expected_sandbox" not in columns:
+            connection.execute("ALTER TABLE executions ADD COLUMN expected_sandbox TEXT")
+
+
 def main() -> None:
     args = parser().parse_args()
     if not args.evidence.strip():
         raise ValueError("--evidence must name the fresh acceptance evidence.")
+    if args.rework_count < 0:
+        raise ValueError("--rework-count cannot be negative.")
     root = resolve_data_dir(args.data_dir)
     database = root / "orchestration.db"
     if not database.is_file():
@@ -68,6 +212,11 @@ def main() -> None:
         connection.execute("PRAGMA busy_timeout = 10000")
         connection.execute("PRAGMA journal_mode = WAL")
         connection.execute("BEGIN IMMEDIATE")
+        ensure_experiment_columns(connection)
+        if args.route_id:
+            result = record_external(connection, args, evidence_hash, verified_at)
+            print(json.dumps(result))
+            return
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS verifications (
@@ -84,23 +233,11 @@ def main() -> None:
         prior = connection.execute(
             "SELECT * FROM verifications WHERE agent_id = ?", (args.agent_id,)
         ).fetchone()
-        if prior is not None:
-            if prior["result"] != args.result:
-                raise ValueError(
-                    f"Agent {args.agent_id} is already verified as {prior['result']}; "
-                    "do not overwrite routing evidence."
-                )
-            print(
-                json.dumps(
-                    {
-                        "agent_id": args.agent_id,
-                        "result": args.result,
-                        "status": "already-recorded",
-                        "evidence_sha256": prior["evidence_hash"],
-                    }
-                )
+        if prior is not None and prior["result"] != args.result:
+            raise ValueError(
+                f"Agent {args.agent_id} is already verified as {prior['result']}; "
+                "do not overwrite routing evidence."
             )
-            return
 
         route = connection.execute(
             """
@@ -116,11 +253,21 @@ def main() -> None:
             raise ValueError(f"No uniquely correlated Goldilocks route for agent {args.agent_id}.")
         if route["stopped_at"] is None:
             raise ValueError(f"Agent {args.agent_id} has not stopped; verify only completed work.")
-        if route["expected_model"] != route["actual_model"]:
-            raise ValueError(
-                f"Agent {args.agent_id} ran {route['actual_model']}, expected "
-                f"{route['expected_model']}; mismatched routes cannot become verified passes."
+        if args.result == "pass":
+            validate_native_pass(route, args.agent_id)
+
+        if prior is not None:
+            print(
+                json.dumps(
+                    {
+                        "agent_id": args.agent_id,
+                        "result": args.result,
+                        "status": "already-recorded",
+                        "evidence_sha256": prior["evidence_hash"],
+                    }
+                )
             )
+            return
 
         connection.execute(
             """
@@ -164,6 +311,10 @@ def main() -> None:
             "UPDATE decisions SET status = ? WHERE decision_id = ?",
             (f"verified_{args.result}", route["decision_id"]),
         )
+        connection.execute(
+            "UPDATE executions SET rework_count = ? WHERE agent_id = ?",
+            (args.rework_count, args.agent_id),
+        )
 
     print(
         json.dumps(
@@ -172,6 +323,7 @@ def main() -> None:
                 "result": args.result,
                 "status": "recorded",
                 "evidence_sha256": evidence_hash,
+                "rework_count": args.rework_count,
             }
         )
     )

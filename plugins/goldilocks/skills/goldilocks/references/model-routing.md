@@ -37,6 +37,19 @@ Use local execution memory to improve estimates, never to bypass a hard gate. Re
 
 Fast is a leaf. Standard delegates only within its domain and escalates shared decisions. Cheaper workers receive clearer contracts and checks, not a lower quality target.
 
+## Codex route profiles
+
+Resolve `../assets/codex-route-profiles.json`; it is the source of truth for expected role, model, effort, transport, capability profile, and delegation depth:
+
+- `goldilocks_spark_coder`: external Spark Fast for deterministic coding and tests.
+- `goldilocks_luna_worker`: external Luna Fast for low-discretion general work.
+- `goldilocks_terra_engineer`: native Terra / High Standard; it may contract a Fast leaf.
+- `goldilocks_sol_reviewer`: fresh native Sol / High requested-read-only review for earned high-risk integration.
+
+Install the native templates with `../../../scripts/install_agents.py`, then start a new task. It never edits `config.toml` or overwrites a differing file. Check exact templates and exposed agent types; use `../../../scripts/inspect_agent_runtime.py --record` when metadata omits model or effort. Requested read-only is not proof of OS isolation, so report observed sandbox and permission.
+
+Cache visibility is not route readiness. Use the external adapter for Luna/Spark unless the native tool exposes the exact model.
+
 ## Codex adapter
 
 Use `gpt-5.6-luna` as the universal Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content production. Its July 31, 2026 pricing and Codex allowance make it the first probe when the contract is low-discretion and objectively checkable. Use `gpt-5.3-codex-spark` instead for text-only deterministic coding batches when its separate Pro usage pool is available and the batch repays external startup cost. Spark is quota arbitrage plus coding specialization, not the universal Fast default.
@@ -77,7 +90,7 @@ The adapter offers three explicit capability profiles:
 
 Clean profiles preserve authentication, provider, `models_cache.json`, and bundled runtime. Every profile sets `GOLDILOCKS_WORKER=1`, silencing inherited continuity/update Hooks without weakening leaf enforcement. The adapter fixes the model (`luna` → Luna, `spark-coding` → Spark), sends the contract over stdin, forbids danger-full-access, and propagates failure without silent fallback. Startup failure invalidates the route; repair it separately rather than inside product work.
 
-For measured or long-running work, set `GOLDILOCKS_WORKER_EVENTS_DIR` to a persistent directory. The adapter writes child JSONL there and returns only its path, exit code, and short final result to Lead, preventing raw worker transcripts from re-entering expensive context while keeping usage auditable. Without the variable, output behavior remains unchanged.
+For measured or long-running work, set `GOLDILOCKS_WORKER_EVENTS_DIR` to a persistent directory. The adapter writes child JSONL there and returns only its path, exit code, and short final result to Lead, preventing raw worker transcripts from re-entering expensive context while keeping usage auditable. Otherwise temporary capture is deleted after the summary and final result return.
 
 Native `SubagentStop` records only an observed completion. After Lead inspects the actual diff and reruns the relevant combined acceptance, resolve the plugin's `scripts/record_routing_outcome.py` and close the route explicitly:
 
@@ -88,7 +101,7 @@ python3 <resolved-script> \
   --evidence "<fresh command and concise result>"
 ```
 
-Use `--result fail` when integration or acceptance rejects the worker result; the status becomes `verified_fail`. The recorder stores only an evidence hash, is idempotent, and refuses unstopped, uncorrelated, model-mismatched, or contradictory outcomes. Only `verified_pass` routes may become reusable execution memory.
+External workers return `route_id`; record it with `--route-id`. A failed route may record `fail` (`verified_fail`), never `pass`. The recorder stores an evidence hash and rejects incomplete, uncorrelated, mismatched, or contradictory passes. Only `verified_pass` becomes reusable memory.
 
 ## Refresh discipline
 

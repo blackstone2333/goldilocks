@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sqlite3
 import subprocess
@@ -12,6 +13,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PLUGIN = ROOT / "plugins" / "goldilocks"
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "recovery_reminder.py"
 
 
@@ -107,7 +109,7 @@ def main() -> None:
             rows = connection.execute(
                 "SELECT session_id, turn_id, cwd_hash, prompt_fingerprint, ledger_present, "
                 "repeat_failure_signal, continuity_required, routing_rationale_candidate, "
-                "routing_experiment_id "
+                "routing_experiment_id, delegation_grant_active "
                 "FROM gate_injections"
             ).fetchall()
         assert len(rows) == 1
@@ -120,6 +122,7 @@ def main() -> None:
         assert rows[0]["continuity_required"] == 0
         assert rows[0]["routing_rationale_candidate"] == 0
         assert rows[0]["routing_experiment_id"] is None
+        assert rows[0]["delegation_grant_active"] == 0
         assert b"Build and test the full-stack feature" not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "audit storage must not retain prompt text"
@@ -136,6 +139,16 @@ def main() -> None:
             "2、实现 Agent 连接。\n"
             "3、补齐测试、文档和发布检查。"
         )
+        project_hash = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()
+        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+            connection.execute(
+                "CREATE TABLE project_grants (cwd_hash TEXT PRIMARY KEY, active INTEGER, "
+                "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
+            )
+            connection.execute(
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3')",
+                (project_hash,),
+            )
         rationale = run_hook(
             nested,
             "UserPromptSubmit",
@@ -149,21 +162,20 @@ def main() -> None:
         ]
         for phrase in (
             "Likely multi-unit work detected",
-            "read orchestrate.md",
-            "compact ROUTE line",
+            "read route-card.md",
+            "ROUTE line",
             "WRITE_READY",
             "READ_READY",
-            "project-level organization",
-            "active threads",
-            "shared write surface",
-            "read-only diagnosis",
-            "Existing parallel ownership means mixed",
-            "route_unavailable must name",
-            "one-sentence DETAIL",
-            "not default to doing worker-ready work",
-            "advisory; do not force delegation",
+            "EXISTING",
+            "NEW_DISPATCH",
+            "user/other-workflow parallelism",
+            "Shared writes",
+            "explicit bounded-delegation grant",
+            "normally dispatch the highest-value unit now",
+            "does not authorize deletion",
         ):
             assert phrase in rationale_context, phrase
+        assert len(rationale_context.split()) <= 230
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rationale_row = connection.execute(
@@ -171,7 +183,7 @@ def main() -> None:
                 "FROM gate_injections WHERE turn_id = 'rationale-turn'"
             ).fetchone()
         assert rationale_row["routing_rationale_candidate"] == 1
-        assert rationale_row["routing_experiment_id"] == "routing-rationale-v2"
+        assert rationale_row["routing_experiment_id"] == "routing-rationale-v3"
         assert multi_unit_prompt.encode() not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "routing audit must not retain candidate prompt text"
@@ -322,6 +334,50 @@ def main() -> None:
         compact_output = json.loads(compact.stdout)
         assert "systemMessage" in compact_output
         assert str(ledger) in compact_output["systemMessage"]
+
+        hooks = json.loads((PLUGIN / "hooks" / "hooks.json").read_text(encoding="utf-8"))
+        stable_command = hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+        fake_bin = parent / "fake-bin"
+        fake_bin.mkdir()
+        fake_codex = fake_bin / "codex"
+        fake_codex.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json\n"
+            f"print(json.dumps({{'installed':[{{'pluginId':'goldilocks@goldilocks-local',"
+            f"'source':{{'path':{str(PLUGIN)!r}}}}}]}}))\n",
+            encoding="utf-8",
+        )
+        fake_codex.chmod(0o755)
+        fallback_env = os.environ.copy()
+        fallback_env.update(
+            {
+                "PATH": f"{fake_bin}{os.pathsep}{fallback_env.get('PATH', '')}",
+                "PLUGIN_ROOT": str(parent / "deleted-versioned-cache"),
+                "PLUGIN_DATA": str(parent / "stable-hook-data"),
+            }
+        )
+        stable = subprocess.run(
+            stable_command,
+            input=json.dumps(
+                {
+                    "session_id": "stable-session",
+                    "turn_id": "stable-turn",
+                    "cwd": str(repo),
+                    "hook_event_name": "UserPromptSubmit",
+                    "prompt": "把按钮颜色改成蓝色。",
+                }
+            ),
+            text=True,
+            capture_output=True,
+            check=False,
+            shell=True,
+            env=fallback_env,
+        )
+        assert stable.returncode == 0, stable.stderr
+        stable_context = json.loads(stable.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "Goldilocks zero-cost gate" in stable_context
 
     print("Goldilocks recovery hook contract passed.")
 
