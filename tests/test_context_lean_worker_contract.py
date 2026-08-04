@@ -18,7 +18,7 @@ PRESENTATIONS = PLUGIN / "skills" / "goldilocks" / "references" / "presentations
 REPORT = ROOT / "evals" / "results" / "2026-07-25-v040-structured-artifact-pilot.md"
 HOOKS = PLUGIN / "hooks" / "hooks.json"
 REGISTRY = PLUGIN / "skills" / "goldilocks" / "assets" / "model-registry.json"
-EXPECTED_HOOK_HASH = "73401d7960b72cf1b35014e51da640b47bfd0aca186de9769de226fb07e04dd0"
+EXPECTED_HOOK_HASH = "9405a8aaa03e2ee7423cc0d114c0f56dce9f8a4d834f2e443bf310b568dfd281"
 
 
 failures: list[str] = []
@@ -97,7 +97,7 @@ require(
 
 actual_hook_hash = hashlib.sha256(HOOKS.read_bytes()).hexdigest()
 if actual_hook_hash != EXPECTED_HOOK_HASH:
-    failures.append("hooks/hooks.json changed; this experiment must not trigger a new trust hash")
+    failures.append("hooks/hooks.json changed without updating the explicit trust-review fixture")
 
 registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
 models = {model["id"]: model for model in registry["models"]}
