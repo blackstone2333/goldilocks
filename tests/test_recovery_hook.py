@@ -146,7 +146,7 @@ def main() -> None:
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
             )
             connection.execute(
-                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3')",
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3.1')",
                 (project_hash,),
             )
         rationale = run_hook(
@@ -171,8 +171,8 @@ def main() -> None:
             "user/other-workflow parallelism",
             "Shared writes",
             "explicit bounded-delegation grant",
-            "normally dispatch the highest-value unit now",
-            "does not authorize deletion",
+            "current official input/cached/output rates",
+            "persistent explicit-user authorization",
         ):
             assert phrase in rationale_context, phrase
         assert len(rationale_context.split()) <= 230
@@ -183,7 +183,7 @@ def main() -> None:
                 "FROM gate_injections WHERE turn_id = 'rationale-turn'"
             ).fetchone()
         assert rationale_row["routing_rationale_candidate"] == 1
-        assert rationale_row["routing_experiment_id"] == "routing-rationale-v3"
+        assert rationale_row["routing_experiment_id"] == "routing-rationale-v3.1"
         assert multi_unit_prompt.encode() not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "routing audit must not retain candidate prompt text"
@@ -205,6 +205,42 @@ def main() -> None:
                 "WHERE turn_id = 'simple-change'"
             ).fetchone()[0]
         assert simple_candidate == 0
+
+        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+            connection.execute(
+                "CREATE TABLE decisions (decision_id TEXT, session_id TEXT, tier TEXT, status TEXT)"
+            )
+            connection.execute(
+                "CREATE TABLE executions (session_id TEXT, decision_id TEXT, "
+                "started_at TEXT, stopped_at TEXT)"
+            )
+            connection.execute(
+                "CREATE TABLE external_routes (parent_session_id TEXT, status TEXT, "
+                "lead_result TEXT)"
+            )
+            connection.executemany(
+                "INSERT INTO decisions VALUES (?, 'test-session', ?, ?)",
+                [("stopped-native", "fast", "stopped"), ("stale-fast", "fast", "started")],
+            )
+            connection.execute(
+                "INSERT INTO executions VALUES "
+                "('test-session', 'stale-fast', '2020-01-01T00:00:00+00:00', NULL)"
+            )
+            connection.execute(
+                "INSERT INTO external_routes VALUES ('test-session', 'succeeded', NULL)"
+            )
+        debt_prompt = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="继续完成当前实现。",
+            turn_id="routing-debt-turn",
+        )
+        debt_context = json.loads(debt_prompt.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "2 completed worker outcome(s) remain unverified" in debt_context
+        assert "1 worker(s) exceed the lifecycle warning" in debt_context
 
         first_recurrence_without_history = run_hook(
             nested,
@@ -312,7 +348,7 @@ def main() -> None:
 
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 6, "Fast workers must not inject or audit the root gate"
+        assert count == 7, "Fast workers must not inject or audit the root gate"
 
         session = run_hook(nested, "SessionStart")
         assert session.returncode == 0, session.stderr

@@ -6,11 +6,11 @@ Orchestration assigns decisions, implementation, and review to the cheapest capa
 
 Before an expensive model starts implementation, make one quick comparison:
 
-`delegation gain = Lead work avoided + parallel time saved + quota-channel benefit - briefing - review - integration - retry risk`
+`delegation gain = Lead spend/budget share avoided + parallel time saved - worker spend/budget share - briefing - review - integration - failure × retry`
 
 Reuse a verified project pattern after checking invalidators. Read [execution-memory.md](execution-memory.md) only for recurring or reusable routes.
 
-- Keep Direct when Lead finishes before worker briefing and review.
+- Keep Direct when its weighted quota and time cost wins; Lead finishing a little faster is not enough.
 - Use Fast for a complete objective, scope, interfaces, acceptance, and prohibitions.
 - Use Standard when bounded domain judgment remains; it may contract Fast.
 - Keep Critical judgment, cross-domain interfaces, authority, and final integration with Lead.
@@ -25,7 +25,7 @@ For work that entered this engine because decomposition may help, emit one decis
 
 Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain` as the reason code. `DETAIL` may explain the concrete tradeoff in normal language but stays to one sentence; do not expose chain-of-thought or write a routing essay.
 
-This is not a delegation quota. Direct remains valid. With an active project grant, a verified route, and positive gain, default to actually dispatching the highest-value ready unit. The grant covers bounded Fast/Standard dispatch only and adds no external authority. Judge equal acceptance with less scarce quota or a shorter critical path, not who writes the strongest first draft; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
+This is not a delegation quota. Direct remains valid. With an active project grant, a verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when it is slightly slower. Keep raw tokens and elapsed time proportionate. The grant covers bounded Fast/Standard dispatch only and adds no external authority; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
 Judge the project-level organization. `WRITE_READY` and `READ_READY` count unowned executable and read-only units; `EXISTING` is user/other-workflow ownership, while `NEW_DISPATCH` is a worker started now. A shared mutable surface blocks concurrent writers only, not independent diagnosis or review. Existing ownership with Lead work is `ROUTE=mixed`. Direct with ready work names its concrete transfer loss. `route_unavailable` names the missing route or failed minimal probe.
 

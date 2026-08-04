@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5-exp3"
+POLICY_VERSION = "0.4.5-exp3.1"
 
 
 def parser() -> argparse.ArgumentParser:
@@ -145,6 +145,30 @@ def record_external(
         """,
         (args.result, evidence_hash, verified_at, args.rework_count, args.route_id),
     )
+    if route["task_fingerprint"]:
+        model = str(route["actual_model"] or route["expected_model"] or "")
+        if model:
+            column = "verified_passes" if args.result == "pass" else "verified_failures"
+            connection.execute(
+                f"""
+                INSERT INTO experiences (
+                    cwd_hash, task_fingerprint, tier, model, observed_completions,
+                    verified_passes, verified_failures, last_seen_at, policy_version
+                ) VALUES (?, ?, 'fast', ?, 0, ?, ?, ?, ?)
+                ON CONFLICT(cwd_hash, task_fingerprint, tier, model, policy_version)
+                DO UPDATE SET {column} = {column} + 1,
+                    last_seen_at = excluded.last_seen_at
+                """,
+                (
+                    route["cwd_hash"],
+                    route["task_fingerprint"],
+                    model,
+                    int(args.result == "pass"),
+                    int(args.result == "fail"),
+                    verified_at,
+                    route["policy_version"],
+                ),
+            )
     return {
         "route_id": args.route_id,
         "result": args.result,
@@ -192,6 +216,28 @@ def ensure_experiment_columns(connection: sqlite3.Connection) -> None:
         }
         if "expected_sandbox" not in columns:
             connection.execute("ALTER TABLE executions ADD COLUMN expected_sandbox TEXT")
+    if "external_routes" in tables:
+        columns = {
+            str(row[1]) for row in connection.execute("PRAGMA table_info(external_routes)")
+        }
+        if "task_fingerprint" not in columns:
+            connection.execute("ALTER TABLE external_routes ADD COLUMN task_fingerprint TEXT")
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS experiences (
+            cwd_hash TEXT NOT NULL,
+            task_fingerprint TEXT NOT NULL,
+            tier TEXT NOT NULL,
+            model TEXT NOT NULL,
+            observed_completions INTEGER NOT NULL DEFAULT 0,
+            verified_passes INTEGER NOT NULL DEFAULT 0,
+            verified_failures INTEGER NOT NULL DEFAULT 0,
+            last_seen_at TEXT NOT NULL,
+            policy_version TEXT NOT NULL,
+            PRIMARY KEY(cwd_hash, task_fingerprint, tier, model, policy_version)
+        )
+        """
+    )
 
 
 def main() -> None:

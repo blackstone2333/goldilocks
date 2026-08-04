@@ -1,76 +1,69 @@
 # Model Routing
 
-Choose the cheapest capability and billing channel that clears the unit's quality, safety, authority, tool, context, language, and modality gates. Optimize after decomposition: a large implementation can become Fast when Lead or Standard has externalized its decisions into a complete contract.
+Choose the cheapest capability and billing channel that clears the unit's quality, safety, authority, tool, context, language, and modality gates. Classify after decomposition: a large unit can become Fast when its residual discretion has been externalized into a complete contract.
 
-## Gate quality before economics
+## Apply the quality gate before economics
 
-Critical judgment, architecture, shared interfaces, destructive actions, permissions, external authority, and final integration remain Lead regardless of price. Fast is ineligible when it must infer product intent, change architecture, or decide a trust boundary.
+Architecture, shared interfaces, destructive actions, permissions, external authority, trust boundaries, Critical judgment, and final integration remain Lead regardless of price. Fast is ineligible when it must infer product intent or architecture.
 
-Set a task-specific quality floor. Prefer verified local evidence for the same repository and task shape, then comparable independent agent results, adjacent coding evidence, broad indices, and provider claims. Discount stale versions, mismatched harnesses, small samples, missing domain evidence, unavailable tools, low confidence, and weak recency. Score implementation, test authoring, exploration, review/security, and multimodal work separately; never average unrelated benchmarks into a universal ranking.
+Set a task-specific quality floor. Prefer verified local evidence for the same repository and task shape, then comparable agent results, adjacent coding evidence, broad indices, and provider claims. Treat implementation, test authoring, exploration, review/security, and multimodal work separately. Penalize missing domain evidence, mismatched tools, small samples, low confidence, stale versions, and weak recency; never average unrelated benchmarks into one universal score.
 
-## Optimize quota-weighted delivery
+## Optimize cost-weighted delivery
 
-Raw tokens are a guardrail, not the primary subscription objective:
+Resolve `../assets/model-economics.json`. It stores dated official input, cached-input, and output rates separately by model, billing channel, currency, service tier, region, and cache condition. Unknown stays unknown.
 
-`QuotaBurn = sum(usage × account coefficient × channel scarcity) + retries + review + integration`
+For the same token mix on ChatGPT Standard credits, Terra costs 40% and Luna 4% of Sol; current OpenAI Standard API prices have the same ratios. Spark uses a separate Pro usage pool with no public numeric rate, so it is never assigned a fake zero cost.
 
-Account coefficient is the host's observed multiplier; channel scarcity reflects allowance, reset horizon, separate pools, and user preference. Unknown data stays unknown. Compare wall-clock critical path and a raw-token envelope against Direct or a verified similar route. Slightly more cheap worker tokens are acceptable only when they materially reduce expensive Lead usage or elapsed time without retry or review debt.
+After equal quality and authority:
 
-After the quality gate:
+`DeliveryCost = token spend + scarce-budget share + time + briefing/review/integration + P(failure) × retry cost`
 
-1. Remove routes outside the raw-token envelope or quality floor.
-2. Keep the quality/quota/latency Pareto frontier.
-3. Prefer the lowest expensive-token share and shortest useful critical path.
-4. Choose the shallower organization when effectively tied.
+Within one pool, compute the official token charge. Across currencies or allowance pools, compare `estimated spend / remaining budget`; if budgets are unknown, preserve a cost/time/raw-token Pareto frontier instead of adding dollars, yuan, credits, and separate allowances. `QuotaBurn` is the spend-to-remaining-budget fraction for a known quota pool, not a universal cross-provider scalar.
 
-For portable comparisons, expected cost per successful delivery remains useful:
+Use elapsed critical path and a raw-token envelope as guardrails. A slightly slower cheap worker may win when expensive-token share falls materially without excessive review or retry. Remove routes below the quality floor or outside the guardrails, choose the useful Pareto frontier, then prefer the shallower organization when effectively tied.
+
+Portable fallback:
 
 `expected cost per successful delivery = (direct + retries + review + integration) / max(P(success), floor)`
 
-Use local execution memory to improve estimates, never to bypass a hard gate. Record raw tokens, quota share, elapsed time, retries, and integrated defects when available.
+Execution memory may refine time, failure, review, and retry estimates but never bypass a hard gate. Record uncached input, cached input, output, billing pool, price snapshot, elapsed time, retries, and integrated defects when available.
 
-## Assign organizational roles
+## Assign roles
 
-- Fast: low residual discretion and deterministic acceptance; file count and original size are irrelevant.
-- Standard: bounded domain ownership with local judgment; it may design and review Fast contracts.
-- Lead: intent, architecture, Critical work, cross-domain interfaces, conflicts, combined verification, and final judgment.
+- Fast: fixed decisions, low residual discretion, deterministic acceptance; it remains a leaf.
+- Standard: bounded domain judgment; it may contract Fast inside that domain.
+- Lead: intent, architecture, Critical work, shared interfaces, conflicts, combined verification, and final judgment.
 
-Fast is a leaf. Standard delegates only within its domain and escalates shared decisions. Cheaper workers receive clearer contracts and checks, not a lower quality target.
+Cheaper workers receive clearer contracts and checks, not a lower quality target. Standard escalates shared decisions.
 
-## Codex route profiles
+## Fixed Codex employees
 
-Resolve `../assets/codex-route-profiles.json`; it is the source of truth for expected role, model, effort, transport, capability profile, and delegation depth:
+Resolve `../assets/codex-route-profiles.json`:
 
-- `goldilocks_spark_coder`: external Spark Fast for deterministic coding and tests.
+- `goldilocks_spark_coder`: external Spark Fast for deterministic coding/tests.
 - `goldilocks_luna_worker`: external Luna Fast for low-discretion general work.
-- `goldilocks_terra_engineer`: native Terra / High Standard; it may contract a Fast leaf.
-- `goldilocks_sol_reviewer`: fresh native Sol / High requested-read-only review for earned high-risk integration.
+- `goldilocks_terra_engineer`: native Terra/High Standard; it may contract Fast.
+- `goldilocks_sol_reviewer`: fresh native Sol/High requested-read-only review.
 
-Install the native templates with `../../../scripts/install_agents.py`, then start a new task. It never edits `config.toml` or overwrites a differing file. Check exact templates and exposed agent types; use `../../../scripts/inspect_agent_runtime.py --record` when metadata omits model or effort. Requested read-only is not proof of OS isolation, so report observed sandbox and permission.
+Install native templates with `../../../scripts/install_agents.py`, then start a new task. The installer never edits `config.toml` or overwrites a differing file. Requested read-only is not proof of OS isolation; use `../../../scripts/inspect_agent_runtime.py --record` when runtime evidence is incomplete.
 
-Cache visibility is not route readiness. Use the external adapter for Luna/Spark unless the native tool exposes the exact model.
+Cache visibility is not route readiness. Confirm the model on the actual native host. Every native spawn uses `fast__<name>`, `standard__<name>`, or `lead__<name>` and an explicit `fork_turns`:
 
-## Codex adapter
+- Fast: normally `none` plus a task-local contract.
+- Standard: `none` or at most four relevant turns.
+- Only a justified full-history Lead handoff may use `all`; it inherits Lead model and reasoning.
 
-Use `gpt-5.6-luna` as the universal Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content production. Its July 31, 2026 pricing and Codex allowance make it the first probe when the contract is low-discretion and objectively checkable. Use `gpt-5.3-codex-spark` instead for text-only deterministic coding batches when its separate Pro usage pool is available and the batch repays external startup cost. Spark is quota arbitrage plus coding specialization, not the universal Fast default.
+Native Fast/Standard require explicit host-supported models and cannot silently inherit Lead. Fast cannot delegate. The Hook accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; an unplanned Sol child is told to return immediately because `SubagentStart` cannot cancel it. Ambiguous concurrent or nested starts remain unverifiable rather than false mismatches.
 
-Use `gpt-5.6-terra` as the OpenAI Standard baseline when bounded work still needs material domain judgment, cross-file coordination, or local integration. Luna may cross the Standard boundary only for low-risk work with stable interfaces and decisive acceptance; one quality miss or unresolved judgment upgrades the unit to Terra instead of starting a cheap retry loop. Exclude architecture, ambiguous repository-wide change, Critical work, trust boundaries, final visual judgment, and final integration from both Fast models. Classify by the work actually produced, not the file extension: formula or code automation is coding, while a focused code edit may still be Luna-eligible.
+## External Fast adapter
 
-Codex has two worker routes: native subagents for models advertised by the native host, and the packaged external route when the selected Fast model is available to `codex exec` but absent natively. Host evidence belongs in the public design document, not a permanent rule here.
+Use `gpt-5.6-luna` as the universal Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content. Use `gpt-5.3-codex-spark` instead for text-only deterministic coding batches when its separate pool is available and startup cost is repaid. Use `gpt-5.6-terra` as the OpenAI Standard baseline when domain judgment or cross-file coordination remains. Exclude architecture, Critical work, trust boundaries, final visual judgment, and final integration from Fast.
 
-Every native Codex spawn encodes the route in `task_name`: `fast__<name>`, `standard__<name>`, or `lead__<name>`.
-
-- Fast normally uses `fork_turns="none"` and a complete task-local contract.
-- Standard uses a contract plus `none` or at most four relevant recent turns.
-- Lead may use `all` only for a justified complex handoff that truly needs conversation history; it then inherits the parent Lead model and reasoning setting. Full history is not a cheaper-worker route.
-
-Native Fast and Standard require explicit host-supported models. Fast normally uses `fork_turns="none"`; Standard uses none or at most four relevant turns. Only a justified full-history Lead handoff may use `all` and inherit Lead. Fast cannot delegate. The hook accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; if a specialized path bypasses `PreToolUse`, an unplanned Lead child gets a soft return check. Ambiguous concurrent or nested starts remain unverifiable rather than becoming false mismatches.
-
-For an eligible external Fast contract, resolve `../scripts/dispatch_codex_worker.py` relative to this reference. Luna is the default:
+For an eligible external contract, resolve `../scripts/dispatch_codex_worker.py`:
 
 ```bash
-python3 <resolved-script> \
-  --workdir <assigned-repository-or-worktree> \
+python3 <dispatch-script> \
+  --workdir <repository-or-worktree> \
   --task-name fast__<name> \
   --task-file <complete-contract.md> \
   --work-type luna \
@@ -78,33 +71,20 @@ python3 <resolved-script> \
   --reasoning-effort medium
 ```
 
-Use `--work-type spark-coding` only for a qualifying Spark batch. The legacy `general` and `coding` names remain compatibility aliases for Luna and Spark respectively.
+Use `--work-type spark-coding` only for a qualifying batch; `general` and `coding` remain compatibility aliases. The adapter calls `codex exec`, pins model/effort/sandbox, forbids danger-full-access, sends the contract on stdin, disables further delegation, and propagates failure without silent fallback.
 
-External startup/context is fixed overhead; require Lead or parallel savings. When no verified route memory exists, **start with one Fast session** and give it **one coherent batch** whose units remain separately checkable. Increase the session count only when measured useful work or critical-path savings repay another startup. Do not split implementation from its focused checks or turn every replaceable unit into a session.
+`project` isolates global plugins, Apps, MCP, Skills, and Hooks while preserving repository rules. `minimal` also ignores execpolicy rules. `inherit` keeps the full environment only when the contract names a required installed capability. Clean profiles preserve authentication, provider, `models_cache.json`, and runtime.
 
-The adapter offers three explicit capability profiles:
+Startup/context is fixed overhead. Always start with one Fast session and one coherent batch; add sessions only for measured parallel savings. Keep implementation and focused checks together. Do not debug transport inside product work.
 
-- `project` is the default: isolate global plugins, Apps, MCP, Skills, and Hooks while preserving repository instructions and rules.
-- `minimal` uses the same clean worker home and also ignores user/project execpolicy rules for contracts that need only built-in execution tools.
-- `inherit` keeps the user's full environment only when the contract names an installed external capability it actually needs.
+If `GOLDILOCKS_WORKER_EVENTS_DIR` is set, the adapter retains child JSONL and returns its path; otherwise temporary events are deleted. Lead receives only the short result while usage remains auditable.
 
-Clean profiles preserve authentication, provider, `models_cache.json`, and bundled runtime. Every profile sets `GOLDILOCKS_WORKER=1`, silencing inherited continuity/update Hooks without weakening leaf enforcement. The adapter fixes the model (`luna` → Luna, `spark-coding` → Spark), sends the contract over stdin, forbids danger-full-access, and propagates failure without silent fallback. Startup failure invalidates the route; repair it separately rather than inside product work.
+## Dynamic employee fallback
 
-For measured or long-running work, set `GOLDILOCKS_WORKER_EVENTS_DIR` to a persistent directory. The adapter writes child JSONL there and returns only its path, exit code, and short final result to Lead, preventing raw worker transcripts from re-entering expensive context while keeping usage auditable. Otherwise temporary capture is deleted after the summary and final result return.
+When no fixed employee fits but the host advertises a potentially cheaper model, read [agent-factory.md](agent-factory.md). Discovery is read-only. First preflight/create/use requires explicit user authorization for that model and billing channel; authorization is global until revoked. Visibility never proves sufficient allowance.
 
-Native `SubagentStop` records only an observed completion. After Lead inspects the actual diff and reruns the relevant combined acceptance, resolve the plugin's `scripts/record_routing_outcome.py` and close the route explicitly:
+## Close and reuse routes
 
-```bash
-python3 <resolved-script> \
-  --agent-id <completed-agent-id> \
-  --result pass \
-  --evidence "<fresh command and concise result>"
-```
+Native stop or external exit is only an observation. After Lead inspects the diff and reruns combined acceptance, resolve `../../../scripts/record_routing_outcome.py` and record `--agent-id` or `--route-id`, `--result pass|fail`, and fresh evidence. The recorder hashes evidence and rejects incomplete, mismatched, contradictory, or failed passes. Only `verified_pass` is reusable; failed acceptance is `verified_fail`.
 
-External workers return `route_id`; record it with `--route-id`. A failed route may record `fail` (`verified_fail`), never `pass`. The recorder stores an evidence hash and rejects incomplete, uncorrelated, mismatched, or contradictory passes. Only `verified_pass` becomes reusable memory.
-
-## Refresh discipline
-
-Refresh consequential model, quota, and price assumptions. Record date, provider, harness, reasoning, billing channel, task profile, sample size, and uncertainty. The [model registry](../assets/model-registry.json) is a seed, not truth.
-
-If a recurring route succeeds after combined verification, read [execution-memory.md](execution-memory.md) and preserve only the reusable pattern.
+Refresh consequential model, quota, price, and capability evidence. Record date, provider, model, reasoning, billing channel, task profile, sample size, and uncertainty. The [model registry](../assets/model-registry.json) is a seed, not truth. For recurring verified routes, read [execution-memory.md](execution-memory.md).

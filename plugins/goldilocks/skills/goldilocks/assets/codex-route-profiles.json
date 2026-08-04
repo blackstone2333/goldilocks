@@ -1,6 +1,28 @@
 {
   "schema_version": 1,
-  "experiment": "routing-rationale-v3",
+  "experiment": "routing-rationale-v3.1",
+  "economics": {
+    "registry": "model-economics.json",
+    "decision": "quality gate, then billing-pool cost, elapsed-time and raw-token Pareto comparison",
+    "chatgpt_standard_same_mix_ratios_to_sol": {
+      "gpt-5.6-sol": 1.0,
+      "gpt-5.6-terra": 0.4,
+      "gpt-5.6-luna": 0.04,
+      "gpt-5.3-codex-spark": null
+    },
+    "notes": {
+      "gpt-5.6-terra": "Official Standard credit and API rates are 40% of Sol for the same token mix.",
+      "gpt-5.6-luna": "Official Standard credit and API rates are 4% of Sol for the same token mix.",
+      "gpt-5.3-codex-spark": "Separate research-preview usage pool; no public numeric credit rate."
+    }
+  },
+  "guardrails": {
+    "target_max_sol_share": 0.5,
+    "max_unplanned_sol_workers": 0,
+    "max_unverified_route_share": 0.1,
+    "fast_warning_minutes": 30,
+    "standard_warning_minutes": 90
+  },
   "profiles": {
     "goldilocks_spark_coder": {
       "tier": "fast",

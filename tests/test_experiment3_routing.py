@@ -19,7 +19,9 @@ INSPECTOR = PLUGIN / "scripts" / "inspect_agent_runtime.py"
 GUARD = PLUGIN / "scripts" / "agent_routing_guard.py"
 RECORDER = PLUGIN / "scripts" / "record_routing_outcome.py"
 DISPATCHER = PLUGIN / "skills" / "goldilocks" / "scripts" / "dispatch_codex_worker.py"
+FACTORY = PLUGIN / "skills" / "goldilocks" / "scripts" / "create_agent_profile.py"
 PROFILES = PLUGIN / "skills" / "goldilocks" / "assets" / "codex-route-profiles.json"
+ECONOMICS = PLUGIN / "skills" / "goldilocks" / "assets" / "model-economics.json"
 TERRA = "gpt-5.6-terra"
 
 
@@ -47,13 +49,43 @@ def hook(data_dir: Path, payload: dict[str, object]) -> subprocess.CompletedProc
 
 
 def test_profiles_and_installer(root: Path) -> None:
-    profiles = json.loads(PROFILES.read_text(encoding="utf-8"))["profiles"]
+    route_registry = json.loads(PROFILES.read_text(encoding="utf-8"))
+    profiles = route_registry["profiles"]
     assert profiles["goldilocks_spark_coder"]["transport"] == "codex-exec"
     assert profiles["goldilocks_spark_coder"]["model"] == "gpt-5.3-codex-spark"
     assert profiles["goldilocks_luna_worker"]["transport"] == "codex-exec"
     assert profiles["goldilocks_terra_engineer"]["transport"] == "native"
     assert profiles["goldilocks_terra_engineer"]["may_delegate"] is True
     assert profiles["goldilocks_sol_reviewer"]["sandbox"] == "read-only"
+    ratios = route_registry["economics"]["chatgpt_standard_same_mix_ratios_to_sol"]
+    assert ratios["gpt-5.6-terra"] == 0.4
+    assert ratios["gpt-5.6-luna"] == 0.04
+    assert ratios["gpt-5.3-codex-spark"] is None
+
+    model_economics = json.loads(ECONOMICS.read_text(encoding="utf-8"))
+    sol_rate = next(
+        row
+        for row in model_economics["models"]["gpt-5.6-sol"]["rates"]
+        if row["billing_channel"] == "openai-chatgpt-credits-standard"
+    )
+    luna_rate = next(
+        row
+        for row in model_economics["models"]["gpt-5.6-luna"]["rates"]
+        if row["billing_channel"] == "openai-chatgpt-credits-standard"
+    )
+    assert sol_rate == {
+        "billing_channel": "openai-chatgpt-credits-standard",
+        "currency": "CHATGPT_CREDIT",
+        "unit": "per_1m_tokens",
+        "input": 125.0,
+        "cached_input": 12.5,
+        "output": 750.0,
+        "source_id": "openai-codex-pricing",
+        "conditions": {"service_tier": "standard"},
+    }
+    assert luna_rate["input"] / sol_rate["input"] == 0.04
+    assert luna_rate["cached_input"] / sol_rate["cached_input"] == 0.04
+    assert luna_rate["output"] / sol_rate["output"] == 0.04
 
     target = root / "agents"
     missing = command(str(INSTALLER), "--target-dir", str(target), "--check")
@@ -415,7 +447,19 @@ def test_external_route_audit(root: Path) -> None:
     codex_home = source_home / ".codex"
     codex_home.mkdir(parents=True)
     (codex_home / "auth.json").write_text("{}\n", encoding="utf-8")
-    (codex_home / "models_cache.json").write_text('{"models":[]}\n', encoding="utf-8")
+    (codex_home / "models_cache.json").write_text(
+        json.dumps(
+            {
+                "models": [
+                    {"slug": "gpt-5.3-codex-spark"},
+                    {"slug": "gpt-5.6-luna"},
+                    {"slug": "kimi-k2.7-code"},
+                ]
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     (codex_home / "config.toml").write_text("", encoding="utf-8")
     fake = root / "fake-codex"
     fake.write_text(
@@ -423,6 +467,7 @@ def test_external_route_audit(root: Path) -> None:
 import json, os, sys
 from pathlib import Path
 args = sys.argv[1:]
+prompt = sys.stdin.read()
 model = args[args.index('-m') + 1]
 effort_arg = next(value for value in args if value.startswith('model_reasoning_effort='))
 effort = effort_arg.split('=', 1)[1].strip('\\"')
@@ -439,7 +484,8 @@ rollout.write_text('\\n'.join(json.dumps(item) for item in records) + '\\n')
 decoy = root / 'rollout-newer-33333333-4444-4555-8666-777777777777.jsonl'
 decoy.write_text(json.dumps({'type':'turn_context','payload':{'model':'wrong-model','effort':'low','cwd':os.getcwd()}}) + '\\n')
 print(json.dumps({'type':'thread.started','thread_id':thread}))
-print(json.dumps({'type':'item.completed','item':{'type':'agent_message','text':'ROUTE_OK_SPARK'}}))
+message = 'GOLDILOCKS_PREFLIGHT_OK' if 'Goldilocks read-only route preflight' in prompt else 'ROUTE_OK_SPARK'
+print(json.dumps({'type':'item.completed','item':{'type':'agent_message','text':message}}))
 print(json.dumps({'type':'turn.completed','usage':{'input_tokens':30,'output_tokens':5}}))
 raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
 """,
@@ -501,6 +547,16 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
     assert route["parent_session_id"] == "parent-experiment-thread"
     assert route["input_tokens"] == 30 and route["output_tokens"] == 5
     with sqlite3.connect(data / "orchestration.db") as connection:
+        observed_experience = connection.execute(
+            """
+            SELECT observed_completions, verified_passes, verified_failures
+            FROM experiences
+            WHERE task_fingerprint = ? AND model = ?
+            """,
+            (route["task_fingerprint"], route["actual_model"]),
+        ).fetchone()
+    assert observed_experience == (1, 0, 0)
+    with sqlite3.connect(data / "orchestration.db") as connection:
         connection.execute(
             "UPDATE external_routes SET actual_effort = NULL WHERE route_id = ?",
             (route["route_id"],),
@@ -554,6 +610,16 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
     )
     assert verified.returncode == 0, verified.stderr
     assert json.loads(verified.stdout)["status"] == "recorded"
+    with sqlite3.connect(data / "orchestration.db") as connection:
+        verified_experience = connection.execute(
+            """
+            SELECT observed_completions, verified_passes, verified_failures
+            FROM experiences
+            WHERE task_fingerprint = ? AND model = ?
+            """,
+            (route["task_fingerprint"], route["actual_model"]),
+        ).fetchone()
+    assert verified_experience == (1, 1, 0)
 
     failed_env = {
         **env,
@@ -614,6 +680,250 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
     )
     assert recorded_failure.returncode == 0, recorded_failure.stderr
     assert json.loads(recorded_failure.stdout)["status"] == "recorded"
+    with sqlite3.connect(data / "orchestration.db") as connection:
+        failed_experience = connection.execute(
+            """
+            SELECT observed_completions, verified_passes, verified_failures
+            FROM experiences
+            WHERE task_fingerprint = ? AND model = ?
+            """,
+            (failed_route["task_fingerprint"], failed_route["actual_model"]),
+        ).fetchone()
+    assert failed_experience == (1, 0, 1)
+
+    discovered = command(
+        str(FACTORY),
+        "discover",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        "--require-capability",
+        "coding",
+        env=env,
+    )
+    assert discovered.returncode == 0, discovered.stderr
+    discovery = json.loads(discovered.stdout)
+    assert discovery["consumed_model_quota"] is False
+    assert any(
+        row["model"] == "kimi-k2.7-code"
+        and row["billing_channel"] == "kimi-api-standard"
+        and row["rankable"] is True
+        for row in discovery["candidates"]
+    )
+
+    unauthorized = command(
+        str(FACTORY),
+        "create",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        "--sandbox",
+        "read-only",
+        env=env,
+    )
+    assert unauthorized.returncode != 0
+    assert "ask the user" in unauthorized.stderr
+
+    invisible = command(
+        str(FACTORY),
+        "authorize",
+        "--model",
+        "deepseek-v4-flash",
+        "--billing-channel",
+        "deepseek-api-standard",
+        "--authority",
+        "explicit-user",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        env=env,
+    )
+    assert invisible.returncode != 0 and "not advertised" in invisible.stderr
+
+    authorized = command(
+        str(FACTORY),
+        "authorize",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--authority",
+        "explicit-user",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        env=env,
+    )
+    assert authorized.returncode == 0, authorized.stderr
+    authorization = json.loads(authorized.stdout)
+    assert authorization["scope"] == "global-model-and-billing-channel-until-revoked"
+
+    stale_registry = root / "stale-economics.json"
+    stale_payload = json.loads(ECONOMICS.read_text(encoding="utf-8"))
+    stale_payload["sources"]["kimi-k27-code-pricing"]["expires_at"] = (
+        "2020-01-01T00:00:00+00:00"
+    )
+    stale_registry.write_text(json.dumps(stale_payload), encoding="utf-8")
+    stale_create = command(
+        str(FACTORY),
+        "create",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--name",
+        "stale_kimi",
+        "--economics",
+        str(stale_registry),
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        "--sandbox",
+        "read-only",
+        env=env,
+    )
+    assert stale_create.returncode != 0 and "expired" in stale_create.stderr
+
+    unofficial_registry = root / "unofficial-economics.json"
+    unofficial_payload = json.loads(ECONOMICS.read_text(encoding="utf-8"))
+    unofficial_payload["sources"]["kimi-k27-code-pricing"]["kind"] = "aggregator"
+    unofficial_registry.write_text(json.dumps(unofficial_payload), encoding="utf-8")
+    unofficial_authorize = command(
+        str(FACTORY),
+        "authorize",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--authority",
+        "explicit-user",
+        "--economics",
+        str(unofficial_registry),
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(root / "unofficial-data"),
+        env=env,
+    )
+    assert unofficial_authorize.returncode != 0
+    assert "official source" in unofficial_authorize.stderr
+
+    created = command(
+        str(FACTORY),
+        "create",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        "--require-capability",
+        "coding",
+        "--sandbox",
+        "read-only",
+        env=env,
+    )
+    assert created.returncode == 0, created.stderr
+    created_result = json.loads(created.stdout)
+    profile_path = Path(created_result["profile"])
+    profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    assert profile["model"] == "kimi-k2.7-code"
+    assert profile["may_delegate"] is False
+    assert profile["authorization"]["scope"] == (
+        "global-model-and-billing-channel-until-revoked"
+    )
+    assert profile["preflight"]["status"] == "passed"
+    assert profile["integrity_sha256"]
+
+    repeated_profile = command(
+        str(FACTORY),
+        "create",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--models-cache",
+        str(codex_home / "models_cache.json"),
+        "--data-dir",
+        str(data),
+        "--sandbox",
+        "read-only",
+        env=env,
+    )
+    assert repeated_profile.returncode != 0
+    assert "refusing to overwrite" in repeated_profile.stderr
+
+    another_project = root / "another-project"
+    another_project.mkdir()
+    dynamic_dispatch = command(
+        str(DISPATCHER),
+        "--workdir",
+        str(another_project),
+        "--task-name",
+        "fast__authorized_kimi",
+        "--task-file",
+        str(contract),
+        "--agent-profile",
+        str(profile_path),
+        "--data-dir",
+        str(data),
+        env=env,
+    )
+    assert dynamic_dispatch.returncode == 0, dynamic_dispatch.stderr
+    dynamic_summary = json.loads(dynamic_dispatch.stdout.strip().splitlines()[0])
+    assert dynamic_summary["model"] == "kimi-k2.7-code"
+    assert dynamic_summary["billing_channel"] == "kimi-api-standard"
+    with sqlite3.connect(data / "orchestration.db") as connection:
+        connection.row_factory = sqlite3.Row
+        dynamic_route = connection.execute(
+            "SELECT * FROM external_routes WHERE route_id = ?",
+            (dynamic_summary["route_id"],),
+        ).fetchone()
+    assert dynamic_route["expected_agent_type"] == profile["name"]
+    assert dynamic_route["agent_profile"] == str(profile_path)
+    assert json.loads(dynamic_route["pricing_snapshot"])["currency"] == "CNY"
+
+    revoked = command(
+        str(FACTORY),
+        "revoke",
+        "--model",
+        "kimi-k2.7-code",
+        "--billing-channel",
+        "kimi-api-standard",
+        "--authority",
+        "explicit-user",
+        "--data-dir",
+        str(data),
+        env=env,
+    )
+    assert revoked.returncode == 0, revoked.stderr
+    denied_after_revoke = command(
+        str(DISPATCHER),
+        "--workdir",
+        str(another_project),
+        "--task-name",
+        "fast__revoked_kimi",
+        "--task-file",
+        str(contract),
+        "--agent-profile",
+        str(profile_path),
+        "--data-dir",
+        str(data),
+        env=env,
+    )
+    assert denied_after_revoke.returncode != 0
+    assert "absent or revoked" in denied_after_revoke.stderr
 
 
 def main() -> None:

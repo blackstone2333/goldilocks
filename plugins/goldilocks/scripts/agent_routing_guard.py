@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.4.5-exp3"
+POLICY_VERSION = "0.4.5-exp3.1"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
@@ -140,6 +140,7 @@ def connect_state() -> sqlite3.Connection | None:
             expected_agent_type TEXT,
             expected_effort TEXT,
             expected_sandbox TEXT,
+            billing_channel TEXT,
             transport TEXT NOT NULL DEFAULT 'native',
             fork_turns TEXT NOT NULL,
             status TEXT NOT NULL,
@@ -203,6 +204,7 @@ def connect_state() -> sqlite3.Connection | None:
         "expected_agent_type": "TEXT",
         "expected_effort": "TEXT",
         "expected_sandbox": "TEXT",
+        "billing_channel": "TEXT",
         "transport": "TEXT NOT NULL DEFAULT 'native'",
     }.items():
         if name not in decision_columns:
@@ -267,9 +269,9 @@ def record_plan(
         INSERT OR REPLACE INTO decisions (
             decision_id, session_id, turn_id, tool_use_id, cwd_hash, task_fingerprint,
             task_name, tier, parent_model, expected_model, expected_agent_type,
-            expected_effort, expected_sandbox, transport, fork_turns, status,
+            expected_effort, expected_sandbox, billing_channel, transport, fork_turns, status,
             prior_observations, planned_at, policy_version
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?)
         """,
         (
             str(uuid.uuid4()),
@@ -285,6 +287,7 @@ def record_plan(
             expected_agent_type,
             expected_effort,
             expected_sandbox,
+            os.environ.get("GOLDILOCKS_BILLING_CHANNEL"),
             transport,
             str(tool_input.get("fork_turns") or ""),
             int(prior),
@@ -524,9 +527,9 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
                 decision_id, session_id, turn_id, tool_use_id, cwd_hash,
                 task_fingerprint, task_name, tier, parent_model, expected_model,
                 expected_agent_type, expected_effort, expected_sandbox, transport,
-                fork_turns, status, prior_observations, planned_at, started_at,
+                billing_channel, fork_turns, status, prior_observations, planned_at, started_at,
                 actual_model, agent_id, correlation_confidence, policy_version
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, 'native', 'none',
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, 'native', ?, 'none',
                 'started', 0, ?, ?, ?, ?, 'role_observed', ?)
             """,
             (
@@ -542,6 +545,7 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
                 actual_agent_type,
                 str(profile["reasoning_effort"]),
                 str(profile.get("sandbox")) if profile.get("sandbox") else None,
+                os.environ.get("GOLDILOCKS_BILLING_CHANNEL"),
                 started_at,
                 started_at,
                 actual_model,
@@ -603,16 +607,22 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
     if decision is None and confidence == "unplanned":
         actual_model = str(payload.get("model") or "")
         if actual_model == LEAD_MODEL:
+            observed_name = str(payload.get("agent_path") or "").rsplit("/", 1)[-1]
+            explicit_lead = observed_name.lower().startswith("lead__")
+            if explicit_lead:
+                return
+            warning = (
+                "Goldilocks quota violation: an unplanned Lead-model subagent inherited Sol. "
+                "SubagentStart cannot cancel a child after launch, so return immediately without "
+                "reading files, calling tools, or implementing. Ask the parent to retry with a "
+                "fixed Fast/Standard employee or an explicit lead__ contract."
+            )
             emit(
                 {
+                    "systemMessage": warning,
                     "hookSpecificOutput": {
                         "hookEventName": "SubagentStart",
-                        "additionalContext": (
-                            "You started as an unplanned Lead-model subagent. Before implementing, "
-                            "check whether the task is ready for Fast/Standard. If it is, return to "
-                            "the parent for explicit lower-cost dispatch. Continue only when this "
-                            "subtask genuinely needs Lead judgment or owns an inseparable critical boundary."
-                        ),
+                        "additionalContext": warning,
                     }
                 }
             )

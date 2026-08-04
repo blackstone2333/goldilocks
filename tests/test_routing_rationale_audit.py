@@ -41,7 +41,7 @@ def main() -> None:
             )
             connection.executemany(
                 "INSERT INTO gate_injections VALUES "
-                "(?, ?, 1, 'routing-rationale-v3', ?, 'cwd-a', ?)",
+                "(?, ?, 1, 'routing-rationale-v3.1', ?, 'cwd-a', ?)",
                 [
                     ("session-a", "turn-a", 1, "2026-08-03T00:00:00+00:00"),
                     ("session-a", "turn-b", 1, "2026-08-03T00:01:00+00:00"),
@@ -60,29 +60,45 @@ def main() -> None:
             connection.execute(
                 "CREATE TABLE external_routes (parent_session_id TEXT, started_at TEXT, "
                 "route_id TEXT, status TEXT, expected_model TEXT, actual_model TEXT, "
-                "child_thread_id TEXT)"
+                "child_thread_id TEXT, input_tokens INTEGER, cached_input_tokens INTEGER, "
+                "output_tokens INTEGER, elapsed_ms INTEGER, lead_result TEXT, "
+                "billing_channel TEXT, pricing_snapshot TEXT)"
             )
             connection.executemany(
                 "INSERT INTO external_routes VALUES "
-                "(?, ?, ?, ?, ?, ?, ?)",
+                "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     (
                         "session-a",
                         "2026-08-03T00:01:40+00:00",
                         "external-worker-b",
-                        "failed",
-                        "external-model",
-                        "external-model",
+                        "succeeded",
+                        "gpt-5.6-luna",
+                        "gpt-5.6-luna",
                         "child-thread-b",
+                        100,
+                        50,
+                        10,
+                        1000,
+                        "pass",
+                        "openai-chatgpt-credits-standard",
+                        None,
                     ),
                     (
                         "session-a",
                         "2026-08-03T00:02:10+00:00",
                         "next-prompt-decoy",
                         "succeeded",
-                        "external-model",
-                        "external-model",
+                        "gpt-5.6-sol",
+                        "gpt-5.6-sol",
                         "child-thread-c",
+                        200,
+                        100,
+                        20,
+                        2000,
+                        None,
+                        "openai-chatgpt-credits-standard",
+                        None,
                     ),
                 ],
             )
@@ -143,6 +159,18 @@ def main() -> None:
         assert report["active_dispatch_turns"] == 1
         assert report["authorized_ready_count"] == 2
         assert report["authorized_active_dispatch_rate"] == 0.5
+        usage = report["usage_economics"]
+        assert usage["raw"]["routes"] == 2
+        assert usage["raw"]["verified_routes"] == 1
+        assert usage["raw"]["unverified_routes"] == 1
+        assert usage["raw"]["processing_tokens"] == 330
+        assert usage["sol_share"]["processing_tokens"] == 0.666667
+        assert usage["unknown_cost_routes"] == 0
+        credit_cost = usage["cost_by_billing_channel"][
+            "openai-chatgpt-credits-standard"
+        ]
+        assert credit_cost["currency"] == "CHATGPT_CREDIT"
+        assert credit_cost["estimated_amount"] == 0.029325
         assert report["review_flags"]["turn-a"] == [
             "direct_declined_ready_work",
             "authorized_ready_without_new_dispatch",

@@ -35,6 +35,7 @@ def run_hook(
     agent_type: str = "default",
     sandbox_policy_type: str = "danger-full-access",
     permission_profile_type: str = "disabled",
+    agent_path: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     payload = {
         "session_id": session_id,
@@ -64,6 +65,8 @@ def run_hook(
         )
         if reasoning_effort is not None:
             payload["reasoning_effort"] = reasoning_effort
+        if agent_path is not None:
+            payload["agent_path"] = agent_path
 
     env = os.environ.copy()
     env["PLUGIN_DATA"] = str(data_dir)
@@ -543,7 +546,7 @@ def test_real_mismatch(data_dir: Path) -> None:
     assert LEAD_MODEL in context
 
 
-def test_unplanned_sol_soft_return(data_dir: Path) -> None:
+def test_unplanned_sol_immediate_return(data_dir: Path) -> None:
     unplanned_sol = run_hook(
         data_dir,
         "SubagentStart",
@@ -552,11 +555,22 @@ def test_unplanned_sol_soft_return(data_dir: Path) -> None:
         agent_id="unplanned-sol-agent",
     )
     output = output_json(unplanned_sol)
-    assert "systemMessage" not in output
+    assert "quota violation" in output["systemMessage"].lower()
     context = output["hookSpecificOutput"]["additionalContext"]
-    assert "Lead" in context
+    assert "without reading files" in context
+    assert "calling tools" in context
     assert "Fast/Standard" in context
-    assert "return" in context.lower()
+    assert "return immediately" in context.lower()
+
+    explicit_lead = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="explicit-lead-session",
+        model=LEAD_MODEL,
+        agent_id="explicit-lead-agent",
+        agent_path="/root/lead__critical_review",
+    )
+    assert_silent(explicit_lead, "explicit lead__ starts remain allowed")
 
     unplanned_terra = run_hook(
         data_dir,
@@ -577,7 +591,7 @@ def main() -> None:
         test_ambiguous_same_model_correlation(data_dir)
         test_stop_reconnects_by_agent_id(data_dir)
         test_real_mismatch(data_dir)
-        test_unplanned_sol_soft_return(data_dir)
+        test_unplanned_sol_immediate_return(data_dir)
 
     print("Goldilocks v0.4.5 agent routing hook contract passed.")
 

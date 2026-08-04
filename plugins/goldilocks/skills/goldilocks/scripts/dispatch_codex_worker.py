@@ -18,7 +18,13 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
+
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
+
+import model_economics as economics  # noqa: E402
 
 
 SPARK_MODEL = "gpt-5.3-codex-spark"
@@ -33,7 +39,7 @@ FAST_MODELS = {
 TASK_NAME_PATTERN = re.compile(r"^fast__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
-POLICY_VERSION = "0.4.5-exp3"
+POLICY_VERSION = "0.4.5-exp3.1"
 
 
 def parser() -> argparse.ArgumentParser:
@@ -49,7 +55,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument(
         "--work-type",
         choices=tuple(FAST_MODELS),
-        default="luna",
+        default=None,
         help=(
             "luna selects the universal Fast default; spark-coding selects the separately "
             "metered code specialist. general and coding remain compatibility aliases."
@@ -58,19 +64,19 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument(
         "--reasoning-effort",
         choices=("low", "medium", "high", "xhigh"),
-        default="medium",
+        default=None,
         help="Use low for mechanical work; raise only when the contract needs it.",
     )
     value.add_argument(
         "--sandbox",
         choices=("read-only", "workspace-write"),
-        default="workspace-write",
+        default=None,
         help="Fast never receives danger-full-access through this adapter.",
     )
     value.add_argument(
         "--capabilities",
         choices=CAPABILITY_PROFILES,
-        default="project",
+        default=None,
         help=(
             "project uses an isolated global context while preserving repository rules; "
             "minimal also ignores user/project execpolicy rules; inherit keeps all user "
@@ -86,6 +92,21 @@ def parser() -> argparse.ArgumentParser:
         "--data-dir",
         type=Path,
         help="Optional Goldilocks audit directory; auto-detected when exactly one is installed.",
+    )
+    value.add_argument(
+        "--agent-profile",
+        type=Path,
+        help=(
+            "Consent-gated profile created by create_agent_profile.py. Profile values are "
+            "pinned and cannot be silently overridden."
+        ),
+    )
+    value.add_argument(
+        "--billing-channel",
+        help=(
+            "Explicit active billing pool for official cost accounting. A dynamic profile "
+            "already pins this value."
+        ),
     )
     return value
 
@@ -265,14 +286,144 @@ def resolve_audit_dir(explicit: Path | None) -> Path | None:
             "goldilocks-*/orchestration.db"
         )
     )
-    return candidates[0] if len(candidates) == 1 else None
+    if len(candidates) == 1:
+        return candidates[0]
+    data_root = Path.home() / ".codex" / "plugins" / "data"
+    directories = sorted(path for path in data_root.glob("goldilocks-*") if path.is_dir())
+    if len(directories) == 1:
+        return directories[0]
+    codex = shutil.which("codex")
+    if codex:
+        try:
+            installed = json.loads(
+                subprocess.check_output(
+                    [codex, "plugin", "list", "--json"],
+                    text=True,
+                    timeout=5,
+                )
+            ).get("installed", [])
+            matches = [
+                item
+                for item in installed
+                if item.get("name") == "goldilocks" and item.get("installed") is True
+            ]
+            if len(matches) == 1 and matches[0].get("marketplaceName"):
+                return data_root / f"goldilocks-{matches[0]['marketplaceName']}"
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, AttributeError):
+            pass
+    return None
 
 
-def route_role(work_type: str) -> str:
+def route_role(work_type: str, profile_name: str | None = None) -> str:
+    if profile_name:
+        return profile_name
     return (
         "goldilocks_spark_coder"
         if work_type in {"spark-coding", "coding"}
         else "goldilocks_luna_worker"
+    )
+
+
+def authorization_active(root: Path | None, model: str, billing_channel: str) -> bool:
+    if root is None or not (root / "orchestration.db").is_file():
+        return False
+    try:
+        with sqlite3.connect(root / "orchestration.db", timeout=3) as connection:
+            tables = {
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
+            if "agent_authorizations" not in tables:
+                return False
+            row = connection.execute(
+                """
+                SELECT status FROM agent_authorizations
+                WHERE model = ? AND billing_channel = ?
+                """,
+                (model, billing_channel),
+            ).fetchone()
+            return row is not None and row[0] == "active"
+    except sqlite3.Error:
+        return False
+
+
+def load_agent_profile(
+    arguments: argparse.ArgumentParser,
+    path: Path,
+    audit_dir: Path | None,
+) -> dict[str, Any]:
+    resolved = path.expanduser().resolve()
+    try:
+        profile = economics.load_json(resolved)
+        economics.verify_profile(profile)
+    except economics.EconomicsError as error:
+        fail(arguments, str(error))
+    if profile.get("tier") != "fast":
+        fail(arguments, "dynamic codex-exec profiles must remain Fast leaves")
+    model = str(profile.get("model") or "")
+    billing_channel = str(profile.get("billing_channel") or "")
+    if not model or not billing_channel:
+        fail(arguments, "dynamic agent profile lacks model or billing channel")
+    try:
+        visible = economics.model_ids_from_cache(source_codex_home() / "models_cache.json")
+    except economics.EconomicsError as error:
+        fail(arguments, str(error))
+    if model not in visible:
+        fail(arguments, f"profile model {model} is no longer advertised by the current host")
+    authorization_root = audit_dir
+    if authorization_root is None and resolved.parent.name == "agent-profiles":
+        authorization_root = resolved.parent.parent
+    if not authorization_active(authorization_root, model, billing_channel):
+        fail(
+            arguments,
+            f"authorization for {model}/{billing_channel} is absent or revoked",
+        )
+    return profile
+
+
+def fixed_pricing_snapshot(
+    model: str, billing_channel: str | None = None
+) -> dict[str, Any] | None:
+    billing_channel = billing_channel or os.environ.get("GOLDILOCKS_BILLING_CHANNEL")
+    if not billing_channel:
+        return None
+    try:
+        registry = economics.load_economics()
+        return economics.pricing_snapshot(
+            registry,
+            model,
+            billing_channel,
+            require_current=False,
+            require_rankable=False,
+        )
+    except economics.EconomicsError:
+        return None
+
+
+def contract_fingerprint(task_name: str, contract: str) -> str:
+    normalized = re.sub(r"\d+", "#", f"{task_name}\n{contract}".lower())
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return hashlib.sha256(normalized.encode()).hexdigest()
+
+
+def ensure_experiences_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS experiences (
+            cwd_hash TEXT NOT NULL,
+            task_fingerprint TEXT NOT NULL,
+            tier TEXT NOT NULL,
+            model TEXT NOT NULL,
+            observed_completions INTEGER NOT NULL DEFAULT 0,
+            verified_passes INTEGER NOT NULL DEFAULT 0,
+            verified_failures INTEGER NOT NULL DEFAULT 0,
+            last_seen_at TEXT NOT NULL,
+            policy_version TEXT NOT NULL,
+            PRIMARY KEY(cwd_hash, task_fingerprint, tier, model, policy_version)
+        )
+        """
     )
 
 
@@ -286,6 +437,11 @@ def start_external_audit(
     effort: str,
     sandbox: str,
     parent_session_id: str | None,
+    task_fingerprint: str,
+    agent_role: str,
+    agent_profile: str | None,
+    billing_channel: str | None,
+    pricing_snapshot: dict[str, Any] | None,
 ) -> str | None:
     if root is None:
         return None
@@ -300,6 +456,7 @@ def start_external_audit(
                 route_id TEXT PRIMARY KEY,
                 task_name TEXT NOT NULL,
                 cwd_hash TEXT NOT NULL,
+                task_fingerprint TEXT,
                 expected_agent_type TEXT NOT NULL,
                 expected_model TEXT NOT NULL,
                 expected_effort TEXT NOT NULL,
@@ -322,6 +479,9 @@ def start_external_audit(
                 lead_result TEXT,
                 evidence_hash TEXT,
                 verified_at TEXT,
+                agent_profile TEXT,
+                billing_channel TEXT,
+                pricing_snapshot TEXT,
                 policy_version TEXT NOT NULL
             )
             """
@@ -338,24 +498,42 @@ def start_external_audit(
             connection.execute(
                 "ALTER TABLE external_routes ADD COLUMN child_thread_id TEXT"
             )
+        if "task_fingerprint" not in columns:
+            connection.execute(
+                "ALTER TABLE external_routes ADD COLUMN task_fingerprint TEXT"
+            )
+        for name in ("agent_profile", "billing_channel", "pricing_snapshot"):
+            if name not in columns:
+                connection.execute(f"ALTER TABLE external_routes ADD COLUMN {name} TEXT")
+        ensure_experiences_schema(connection)
         connection.execute(
             """
             INSERT INTO external_routes (
-                route_id, task_name, cwd_hash, expected_agent_type, expected_model,
+                route_id, task_name, cwd_hash, task_fingerprint,
+                expected_agent_type, expected_model,
                 expected_effort, transport, requested_sandbox, status, started_at,
-                parent_session_id, policy_version
-            ) VALUES (?, ?, ?, ?, ?, ?, 'codex-exec', ?, 'started', ?, ?, ?)
+                parent_session_id, agent_profile, billing_channel, pricing_snapshot,
+                policy_version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'codex-exec', ?, 'started', ?, ?, ?, ?, ?, ?)
             """,
             (
                 route_id,
                 task_name,
                 hashlib.sha256(str(workdir).encode()).hexdigest(),
-                route_role(work_type),
+                task_fingerprint,
+                agent_role,
                 model,
                 effort,
                 sandbox,
                 datetime.now(timezone.utc).isoformat(),
                 parent_session_id,
+                agent_profile,
+                billing_channel,
+                (
+                    json.dumps(pricing_snapshot, ensure_ascii=False, sort_keys=True)
+                    if pricing_snapshot is not None
+                    else None
+                ),
                 POLICY_VERSION,
             ),
         )
@@ -453,7 +631,7 @@ def finish_external_audit(
     with sqlite3.connect(root / "orchestration.db", timeout=10) as connection:
         connection.row_factory = sqlite3.Row
         row = connection.execute(
-            "SELECT started_at FROM external_routes WHERE route_id = ?", (route_id,)
+            "SELECT * FROM external_routes WHERE route_id = ?", (route_id,)
         ).fetchone()
         elapsed_ms = None
         if row is not None:
@@ -485,6 +663,34 @@ def finish_external_audit(
                 route_id,
             ),
         )
+        actual_model = str(observed.get("actual_model") or "")
+        if (
+            row is not None
+            and thread_id
+            and actual_model
+            and actual_model == row["expected_model"]
+            and row["task_fingerprint"]
+        ):
+            ensure_experiences_schema(connection)
+            connection.execute(
+                """
+                INSERT INTO experiences (
+                    cwd_hash, task_fingerprint, tier, model, observed_completions,
+                    verified_passes, verified_failures, last_seen_at, policy_version
+                ) VALUES (?, ?, 'fast', ?, 1, 0, 0, ?, ?)
+                ON CONFLICT(cwd_hash, task_fingerprint, tier, model, policy_version)
+                DO UPDATE SET
+                    observed_completions = observed_completions + 1,
+                    last_seen_at = excluded.last_seen_at
+                """,
+                (
+                    row["cwd_hash"],
+                    row["task_fingerprint"],
+                    actual_model,
+                    stopped.isoformat(),
+                    row["policy_version"],
+                ),
+            )
 
 
 def main() -> int:
@@ -509,18 +715,57 @@ def main() -> int:
     if not contract.strip():
         fail(arguments, "task-file is empty")
 
-    codex_binary = find_codex(arguments)
-    selected_model = FAST_MODELS[args.work_type]
     audit_dir = resolve_audit_dir(args.data_dir)
+    profile: dict[str, Any] | None = None
+    if args.agent_profile is not None:
+        profile = load_agent_profile(arguments, args.agent_profile, audit_dir)
+        selected_model = str(profile["model"])
+        selected_work_type = f"profile:{profile['name']}"
+        selected_effort = str(profile["reasoning_effort"])
+        selected_sandbox = str(profile["sandbox"])
+        selected_capabilities = str(profile["capabilities_profile"])
+        for label, explicit, pinned in (
+            ("work-type", args.work_type, None),
+            ("reasoning-effort", args.reasoning_effort, selected_effort),
+            ("sandbox", args.sandbox, selected_sandbox),
+            ("capabilities", args.capabilities, selected_capabilities),
+        ):
+            if explicit is not None and (pinned is None or explicit != pinned):
+                fail(arguments, f"--{label} conflicts with the consent-gated agent profile")
+        selected_role = str(profile["name"])
+        profile_path = str(args.agent_profile.expanduser().resolve())
+        billing_channel = str(profile["billing_channel"])
+        if args.billing_channel is not None and args.billing_channel != billing_channel:
+            fail(arguments, "--billing-channel conflicts with the consent-gated agent profile")
+        pricing = profile.get("pricing_snapshot")
+    else:
+        selected_work_type = args.work_type or "luna"
+        selected_model = FAST_MODELS[selected_work_type]
+        selected_effort = args.reasoning_effort or "medium"
+        selected_sandbox = args.sandbox or "workspace-write"
+        selected_capabilities = args.capabilities or "project"
+        selected_role = route_role(selected_work_type)
+        profile_path = None
+        requested_channel = args.billing_channel or os.environ.get(
+            "GOLDILOCKS_BILLING_CHANNEL"
+        )
+        pricing = fixed_pricing_snapshot(selected_model, requested_channel)
+        billing_channel = requested_channel
+    codex_binary = find_codex(arguments)
     route_id = start_external_audit(
         audit_dir,
         task_name=task_name,
         workdir=workdir,
-        work_type=args.work_type,
+        work_type=selected_work_type,
         model=selected_model,
-        effort=args.reasoning_effort,
-        sandbox=args.sandbox,
+        effort=selected_effort,
+        sandbox=selected_sandbox,
         parent_session_id=os.environ.get("CODEX_THREAD_ID"),
+        task_fingerprint=contract_fingerprint(task_name, contract),
+        agent_role=selected_role,
+        agent_profile=profile_path,
+        billing_channel=billing_channel,
+        pricing_snapshot=pricing if isinstance(pricing, dict) else None,
     )
     command = [
         codex_binary,
@@ -528,9 +773,9 @@ def main() -> int:
         "--disable",
         "multi_agent",
         "-c",
-        f'model_reasoning_effort="{args.reasoning_effort}"',
+        f'model_reasoning_effort="{selected_effort}"',
         "--sandbox",
-        args.sandbox,
+        selected_sandbox,
         "--color",
         "never",
         "-m",
@@ -538,7 +783,7 @@ def main() -> int:
         "-C",
         str(workdir),
     ]
-    if args.capabilities == "minimal":
+    if selected_capabilities == "minimal":
         command.append("--ignore-rules")
     if args.result_file is not None:
         command.extend(["--output-last-message", str(args.result_file.expanduser().resolve())])
@@ -552,9 +797,9 @@ def main() -> int:
         command.append("--json")
     command.append("-")
 
-    prompt = build_prompt(task_name, args.work_type, workdir, contract)
+    prompt = build_prompt(task_name, selected_work_type, workdir, contract)
     try:
-        with worker_environment(args.capabilities) as environment:
+        with worker_environment(selected_capabilities) as environment:
             thread_id: str | None = None
             if events_path is None:
                 completed = subprocess.run(
@@ -582,7 +827,9 @@ def main() -> int:
                     json.dumps(
                         {
                             "task_name": task_name,
-                            "model": FAST_MODELS[args.work_type],
+                            "model": selected_model,
+                            "agent_profile": profile_path,
+                            "billing_channel": billing_channel,
                             "returncode": completed.returncode,
                             "events": str(events_path) if persistent_events else None,
                             "thread_id": thread_id,

@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5-exp3"
-ROUTING_EXPERIMENT_ID = "routing-rationale-v3"
+POLICY_VERSION = "0.4.5-exp3.1"
+ROUTING_EXPERIMENT_ID = "routing-rationale-v3.1"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -38,9 +38,12 @@ ROUTING_RATIONALE_GATE = (
     "Protect intent, interfaces, integration, and acceptance—not worker-ready typing."
 )
 AUTHORIZED_DISPATCH_GATE = (
-    "This project has an explicit bounded-delegation grant. If a ready verified route has positive "
-    "gain, normally dispatch the highest-value unit now; this is a default, not a quota. The grant "
-    "does not authorize deletion, release, deployment, payment, or external communication."
+    "This project has an explicit bounded-delegation grant. Compare cost, not speed alone: use "
+    "current official input/cached/output rates on the active billing channel. A materially cheaper "
+    "employee may win when slightly slower if acceptance is equal and time/raw tokens stay "
+    "proportionate. Keep currencies or allowance pools separate unless remaining budgets are known. "
+    "This is not a delegation quota. New-model discovery is read-only; preflight/create/use requires "
+    "persistent explicit-user authorization for that model and billing channel."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
@@ -256,6 +259,8 @@ def record_gate(
                 ledger is None and repeat_signal and prior_prompts >= 1
             )
             grant_active = project_grant_active(connection, cwd_hash)
+            if grant_active and ledger is not None and EXECUTION_PATTERN.search(prompt):
+                rationale_candidate = True
             connection.execute(
                 """
                 INSERT OR IGNORE INTO gate_injections (
@@ -290,6 +295,74 @@ def record_gate(
     except (OSError, sqlite3.Error, TypeError, ValueError):
         # Auditability must never block or suppress the routing instruction.
         return state
+
+
+def routing_debt_context(payload: dict[str, object]) -> str:
+    """Return one compact close-or-renew reminder without retaining task content."""
+
+    try:
+        configured = os.environ.get("PLUGIN_DATA")
+        if not configured:
+            return ""
+        database = Path(configured).expanduser() / "orchestration.db"
+        if not database.is_file():
+            return ""
+        session_id = str(payload.get("session_id") or "unknown-session")
+        with sqlite3.connect(database, timeout=3) as connection:
+            tables = {
+                str(row[0])
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
+            native_debt = 0
+            external_debt = 0
+            stale = 0
+            if "decisions" in tables:
+                native_debt = int(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM decisions WHERE session_id = ? "
+                        "AND status = 'stopped'",
+                        (session_id,),
+                    ).fetchone()[0]
+                )
+            if "external_routes" in tables:
+                external_debt = int(
+                    connection.execute(
+                        "SELECT COUNT(*) FROM external_routes WHERE parent_session_id = ? "
+                        "AND status IN ('succeeded', 'failed') AND lead_result IS NULL",
+                        (session_id,),
+                    ).fetchone()[0]
+                )
+            if "executions" in tables:
+                stale = int(
+                    connection.execute(
+                        """
+                        SELECT COUNT(*) FROM executions AS execution
+                        LEFT JOIN decisions AS decision
+                            ON decision.decision_id = execution.decision_id
+                        WHERE execution.session_id = ? AND execution.stopped_at IS NULL
+                          AND (julianday('now') - julianday(execution.started_at)) * 1440
+                              > CASE WHEN decision.tier = 'fast' THEN 30 ELSE 90 END
+                        """,
+                        (session_id,),
+                    ).fetchone()[0]
+                )
+        parts: list[str] = []
+        unverified = native_debt + external_debt
+        if unverified:
+            parts.append(f"{unverified} completed worker outcome(s) remain unverified")
+        if stale:
+            parts.append(f"{stale} worker(s) exceed the lifecycle warning")
+        if not parts:
+            return ""
+        return (
+            "Goldilocks routing debt: "
+            + "; ".join(parts)
+            + ". Close outcomes and stop or explicitly renew stale workers before reuse."
+        )
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return ""
 
 
 def has_continuity_debt(payload: dict[str, object], cwd: Path) -> bool:
@@ -373,6 +446,9 @@ def main() -> None:
                 )
             elif gate_state["continuity_required"]:
                 message += f" {CONTINUITY_GATE}"
+            debt = routing_debt_context(payload)
+            if debt:
+                message += f" {debt}"
             output = {
                 "hookSpecificOutput": {
                     "hookEventName": "UserPromptSubmit",

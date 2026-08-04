@@ -199,7 +199,7 @@ def main() -> None:
         failures.append("Codex default prompt still biases every task toward workflow")
 
     guard = read(PLUGIN / "scripts" / "agent_routing_guard.py")
-    if f'POLICY_VERSION = "{VERSION}-exp3"' not in guard:
+    if f'POLICY_VERSION = "{VERSION}-exp3.1"' not in guard:
         failures.append("routing guard policy version was not advanced")
 
     recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")

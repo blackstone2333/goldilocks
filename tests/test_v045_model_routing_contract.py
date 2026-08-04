@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
 VERSION = "0.4.5"
-EXPERIMENT_POLICY = "0.4.5-exp3"
+EXPERIMENT_POLICY = "0.4.5-exp3.1"
 
 
 def read(path: Path) -> str:
@@ -79,7 +79,7 @@ def main() -> None:
     for marker in (
         '"luna": LUNA_MODEL',
         '"spark-coding": SPARK_MODEL',
-        'default="luna"',
+        'selected_work_type = args.work_type or "luna"',
         '"general": LUNA_MODEL',
         '"coding": SPARK_MODEL',
     ):

@@ -1,6 +1,6 @@
 ---
 name: goldilocks
-description: Adaptive workflow and quality-control router for any executable work, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. Invoke implicitly or explicitly to choose Direct work, alignment, diagnosis, planning, delegation, continuity, or verification; clear tasks immediately take the Direct exit without loading another workflow reference.
+description: Adaptive workflow and quality-control router for any executable work across software, research, documents, presentations, spreadsheets, and other structured deliverables. Invoke implicitly or explicitly for Direct work, alignment, diagnosis, planning, delegation, continuity, or verification; clear tasks immediately take Direct.
 ---
 
 # Goldilocks
@@ -15,25 +15,27 @@ Check once:
 - Must work survive compaction, stages, waiting, delegation, or handoff?
 - Are two units ready, or can one complete worker contract avoid substantial Lead work on a verified route?
 
-Visible multi-unit implementation reads [route-card.md](references/route-card.md) before Lead edits. Load `orchestrate.md` only for actual delegation or worktrees; Direct remains valid after its constant-time comparison.
+Visible multi-unit implementation reads [route-card.md](references/route-card.md) before Lead edits. Load `orchestrate.md` only for delegation or worktrees; Direct remains valid after constant-time comparison.
 
-If all are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow documents or continuity state. Do not announce the route. Inspect local facts, make the smallest coherent change, and run the smallest decisive check.
+At equal acceptance, compare official active-channel cost and time; slightly faster Lead does not beat a materially cheaper worker within proportionate elapsed and raw-token bounds.
 
-Direct creates no workflow continuity documents by default; normal deliverable or correctness docs remain allowed. Only compaction, multi-stage, steering, waiting, delegation, or handoff may let [continuity.md](references/continuity.md) create `.goldilocks/ACTIVE.md`.
+If all are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow state. Do not announce the route. Make the smallest coherent change and run the smallest decisive check.
+
+Direct creates no workflow continuity documents by default; normal deliverable or correctness docs remain allowed. Only compaction, stages, steering, waiting, delegation, or handoff may let [continuity.md](references/continuity.md) create `.goldilocks/ACTIVE.md`.
 
 ## Escalate one internal engine
 
-- Material ambiguity or end-state design: read [align.md](references/align.md).
-- Bug, failure, or unclear causality: read [diagnose.md](references/diagnose.md).
-- Reuse, durable planning, execution, or deliberate TDD: read [build.md](references/build.md).
-- Worktrees, actual delegation, parallel execution, or multi-layer model routing: read [orchestrate.md](references/orchestrate.md).
-- Review, release, safety, integration, or multi-claim acceptance: read [prove.md](references/prove.md).
-- Ideas, Skill authoring, or workflow experiments: read [evolve.md](references/evolve.md).
-- Explicit multi-unit artifact production: read [artifacts.md](references/artifacts.md).
+- Ambiguity or end-state design: [align.md](references/align.md).
+- Failure or unclear causality: [diagnose.md](references/diagnose.md).
+- Reuse, durable planning, execution, or TDD: [build.md](references/build.md).
+- Worktrees, delegation, parallelism, or model routing: [orchestrate.md](references/orchestrate.md).
+- Review, release, safety, integration, or acceptance: [prove.md](references/prove.md).
+- Ideas, Skill authoring, or workflow experiments: [evolve.md](references/evolve.md).
+- Explicit multi-unit artifact production: [artifacts.md](references/artifacts.md).
 
 Load only that engine. Add another only when facts cross its boundary.
 
-Lead owns intent, decisions, integration, and acceptance. Fast receives a complete contract and remains a leaf; Standard receives judgment.
+Lead owns intent, decisions, integration, and acceptance. Fast gets a complete leaf contract; Standard gets judgment.
 
 ## Decision-first communication
 

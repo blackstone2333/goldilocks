@@ -14,8 +14,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterable
 
+import model_economics as economics
 
-DEFAULT_EXPERIMENT = "routing-rationale-v3"
+
+DEFAULT_EXPERIMENT = "routing-rationale-v3.1"
 ROUTE_LINE = re.compile(
     r"^ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
     r"WRITE_READY=(\d+)\s*\|\s*READ_READY=(\d+)\s*\|\s*"
@@ -165,6 +167,250 @@ def load_observed_dispatches(
                     )
                 observed[turn_id] = count
     return observed
+
+
+def parse_mapping(values: list[str], *, numeric: bool = False) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError(f"expected KEY=VALUE, received {value}")
+        key, raw = value.split("=", 1)
+        key = key.strip()
+        raw = raw.strip()
+        if not key or not raw:
+            raise ValueError(f"expected KEY=VALUE, received {value}")
+        if numeric:
+            amount = float(raw)
+            if amount <= 0:
+                raise ValueError(f"budget must be positive: {value}")
+            result[key] = amount
+        else:
+            result[key] = raw
+    return result
+
+
+def row_value(row: sqlite3.Row, key: str) -> object | None:
+    return row[key] if key in row.keys() else None
+
+
+def load_usage_economics(
+    database: Path,
+    registry_path: Path,
+    channel_overrides: dict[str, object],
+    remaining_budgets: dict[str, object],
+) -> dict[str, object]:
+    registry = economics.load_economics(registry_path)
+    routes: list[dict[str, object]] = []
+    with sqlite3.connect(database) as connection:
+        connection.row_factory = sqlite3.Row
+        tables = {
+            str(row[0])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        if "executions" in tables:
+            decision_columns = (
+                {
+                    str(row[1])
+                    for row in connection.execute("PRAGMA table_info(decisions)")
+                }
+                if "decisions" in tables
+                else set()
+            )
+            billing_select = (
+                "decision.billing_channel AS decision_billing_channel"
+                if "billing_channel" in decision_columns
+                else "NULL AS decision_billing_channel"
+            )
+            if "decisions" in tables:
+                rows = connection.execute(
+                    f"""
+                    SELECT execution.*, decision.status AS decision_status,
+                           decision.tier AS decision_tier, {billing_select}
+                    FROM executions AS execution
+                    LEFT JOIN decisions AS decision
+                        ON decision.decision_id = execution.decision_id
+                    """
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT execution.*, NULL AS decision_status, NULL AS decision_tier, "
+                    "NULL AS decision_billing_channel FROM executions AS execution"
+                ).fetchall()
+            for row in rows:
+                model = str(row_value(row, "actual_model") or "")
+                routes.append(
+                    {
+                        "kind": "native",
+                        "model": model,
+                        "input_tokens": row_value(row, "input_tokens"),
+                        "cached_input_tokens": row_value(row, "cached_input_tokens"),
+                        "output_tokens": row_value(row, "output_tokens"),
+                        "elapsed_ms": row_value(row, "elapsed_ms"),
+                        "verified": str(row_value(row, "decision_status") or "")
+                        in {"verified_pass", "verified_fail"},
+                        "unplanned_sol": model == "gpt-5.6-sol"
+                        and (
+                            not row_value(row, "decision_id")
+                            or row_value(row, "correlation_confidence") == "unplanned"
+                        ),
+                        "billing_channel": row_value(row, "decision_billing_channel")
+                        or channel_overrides.get(model),
+                        "pricing_snapshot": None,
+                    }
+                )
+        if "external_routes" in tables:
+            rows = connection.execute("SELECT * FROM external_routes").fetchall()
+            for row in rows:
+                model = str(
+                    row_value(row, "actual_model")
+                    or row_value(row, "expected_model")
+                    or ""
+                )
+                stored_snapshot: dict[str, object] | None = None
+                raw_snapshot = row_value(row, "pricing_snapshot")
+                if isinstance(raw_snapshot, str) and raw_snapshot:
+                    try:
+                        parsed = json.loads(raw_snapshot)
+                        if isinstance(parsed, dict):
+                            stored_snapshot = parsed
+                    except json.JSONDecodeError:
+                        pass
+                routes.append(
+                    {
+                        "kind": "external",
+                        "model": model,
+                        "input_tokens": row_value(row, "input_tokens"),
+                        "cached_input_tokens": row_value(row, "cached_input_tokens"),
+                        "output_tokens": row_value(row, "output_tokens"),
+                        "elapsed_ms": row_value(row, "elapsed_ms"),
+                        "verified": row_value(row, "lead_result") in {"pass", "fail"},
+                        "unplanned_sol": False,
+                        "billing_channel": row_value(row, "billing_channel")
+                        or channel_overrides.get(model),
+                        "pricing_snapshot": stored_snapshot,
+                    }
+                )
+
+    totals = {
+        "routes": len(routes),
+        "verified_routes": sum(bool(route["verified"]) for route in routes),
+        "unverified_routes": sum(not bool(route["verified"]) for route in routes),
+        "unplanned_sol_workers": sum(bool(route["unplanned_sol"]) for route in routes),
+        "input_tokens": 0,
+        "cached_input_tokens": 0,
+        "uncached_input_tokens": 0,
+        "output_tokens": 0,
+        "processing_tokens": 0,
+        "elapsed_ms": 0,
+    }
+    by_model: dict[str, dict[str, object]] = {}
+    pool_costs: dict[str, dict[str, object]] = {}
+    unknown_cost_routes = 0
+    for route in routes:
+        model = str(route["model"] or "unknown")
+        input_tokens = max(0, int(route["input_tokens"] or 0))
+        cached_tokens = min(input_tokens, max(0, int(route["cached_input_tokens"] or 0)))
+        output_tokens = max(0, int(route["output_tokens"] or 0))
+        elapsed_ms = max(0, int(route["elapsed_ms"] or 0))
+        uncached_tokens = input_tokens - cached_tokens
+        totals["input_tokens"] += input_tokens
+        totals["cached_input_tokens"] += cached_tokens
+        totals["uncached_input_tokens"] += uncached_tokens
+        totals["output_tokens"] += output_tokens
+        totals["processing_tokens"] += input_tokens + output_tokens
+        totals["elapsed_ms"] += elapsed_ms
+        model_row = by_model.setdefault(
+            model,
+            {
+                "routes": 0,
+                "verified_routes": 0,
+                "input_tokens": 0,
+                "cached_input_tokens": 0,
+                "uncached_input_tokens": 0,
+                "output_tokens": 0,
+                "processing_tokens": 0,
+                "elapsed_ms": 0,
+            },
+        )
+        model_row["routes"] += 1
+        model_row["verified_routes"] += int(bool(route["verified"]))
+        model_row["input_tokens"] += input_tokens
+        model_row["cached_input_tokens"] += cached_tokens
+        model_row["uncached_input_tokens"] += uncached_tokens
+        model_row["output_tokens"] += output_tokens
+        model_row["processing_tokens"] += input_tokens + output_tokens
+        model_row["elapsed_ms"] += elapsed_ms
+
+        channel = route.get("billing_channel")
+        snapshot = route.get("pricing_snapshot")
+        if channel:
+            try:
+                snapshot = economics.pricing_snapshot(
+                    registry,
+                    model,
+                    str(channel),
+                    require_current=True,
+                    require_rankable=False,
+                )
+            except economics.EconomicsError:
+                if isinstance(snapshot, dict):
+                    try:
+                        current = economics.parse_timestamp(
+                            snapshot.get("source", {}).get("expires_at")
+                        ) >= datetime.now(timezone.utc)
+                    except (AttributeError, economics.EconomicsError):
+                        current = False
+                    snapshot = {**snapshot, "price_current": current}
+                else:
+                    snapshot = None
+        if not isinstance(snapshot, dict):
+            unknown_cost_routes += 1
+            continue
+        estimate = economics.estimate_cost(
+            snapshot, input_tokens, cached_tokens, output_tokens
+        )
+        if estimate["status"] != "estimated":
+            unknown_cost_routes += 1
+            continue
+        pool = str(estimate["billing_channel"])
+        currency = str(estimate["currency"])
+        bucket = pool_costs.setdefault(
+            pool,
+            {"currency": currency, "estimated_amount": 0.0, "routes": 0},
+        )
+        if bucket["currency"] != currency:
+            raise ValueError(f"billing channel {pool} contains mixed currencies")
+        bucket["estimated_amount"] += float(estimate["amount"])
+        bucket["routes"] += 1
+
+    for pool, bucket in pool_costs.items():
+        bucket["estimated_amount"] = round(float(bucket["estimated_amount"]), 12)
+        budget = remaining_budgets.get(pool)
+        if isinstance(budget, (int, float)):
+            bucket["remaining_budget"] = float(budget)
+            bucket["estimated_budget_fraction"] = round(
+                float(bucket["estimated_amount"]) / float(budget), 12
+            )
+    sol = by_model.get("gpt-5.6-sol", {})
+    sol_share = {
+        key: round(float(sol.get(key, 0)) / float(totals[key]), 6)
+        if totals[key]
+        else 0.0
+        for key in ("uncached_input_tokens", "output_tokens", "processing_tokens")
+    }
+    return {
+        "raw": totals,
+        "by_model": dict(sorted(by_model.items())),
+        "sol_share": sol_share,
+        "cost_by_billing_channel": dict(sorted(pool_costs.items())),
+        "unknown_cost_routes": unknown_cost_routes,
+        "cross_pool_rule": (
+            "Compare estimated_budget_fraction when provided; otherwise preserve separate "
+            "currency/allowance totals and a Pareto frontier."
+        ),
+    }
 
 
 def matching_logs(roots: Iterable[Path], session_ids: set[str]) -> Iterable[Path]:
@@ -355,6 +601,26 @@ def main() -> None:
     parser.add_argument("--database", type=Path, default=default_database())
     parser.add_argument("--experiment", default=DEFAULT_EXPERIMENT)
     parser.add_argument("--logs", type=Path, nargs="*", default=default_log_roots())
+    parser.add_argument(
+        "--economics",
+        type=Path,
+        default=economics.DEFAULT_ECONOMICS,
+        help="Official model-economics registry.",
+    )
+    parser.add_argument(
+        "--billing-channel",
+        action="append",
+        default=[],
+        metavar="MODEL=CHANNEL",
+        help="Explicit active billing channel for native routes lacking one.",
+    )
+    parser.add_argument(
+        "--remaining-budget",
+        action="append",
+        default=[],
+        metavar="CHANNEL=AMOUNT",
+        help="Optional remaining pool budget for cross-pool normalization.",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -368,6 +634,12 @@ def main() -> None:
         load_observed_dispatches(args.database.expanduser(), candidates),
     )
     report["experiment"] = args.experiment
+    report["usage_economics"] = load_usage_economics(
+        args.database.expanduser(),
+        args.economics.expanduser(),
+        parse_mapping(args.billing_channel),
+        parse_mapping(args.remaining_budget, numeric=True),
+    )
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
         return
@@ -375,6 +647,14 @@ def main() -> None:
     print(
         f"{args.experiment}: {report['answered_count']}/{report['candidate_count']} compliant "
         f"({float(report['compliance_rate']):.0%})"
+    )
+    usage = report["usage_economics"]
+    print(
+        f"workers={usage['raw']['routes']} verified={usage['raw']['verified_routes']} "
+        f"unverified={usage['raw']['unverified_routes']} "
+        f"unplanned_sol={usage['raw']['unplanned_sol_workers']} "
+        f"processing_tokens={usage['raw']['processing_tokens']} "
+        f"unknown_cost_routes={usage['unknown_cost_routes']}"
     )
     print(f"routes={report['route_distribution']} reasons={report['reason_distribution']}")
     print(

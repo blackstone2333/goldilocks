@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-08-04",
+  "policies": {
+    "quality_gate": "Compare cost only after a route clears the same acceptance floor.",
+    "automatic_ranking": "Require a current official rate and an explicitly matched billing channel. Unknown prices stay unknown.",
+    "cross_pool_comparison": "Do not add currencies or allowance units. Compare estimated spend divided by the remaining budget for each pool, or preserve a Pareto frontier when budgets are unknown.",
+    "time": "Use elapsed time as a guardrail or a separately normalized budget; a slightly slower route may win when scarce-quota cost is materially lower.",
+    "dynamic_agents": "Discovery is read-only. First preflight, profile creation, and use require explicit user authority bound globally to the model and billing channel until explicit revocation. Price expiry disables automatic cost ranking but does not revoke model use."
+  },
+  "sources": {
+    "openai-codex-pricing": {
+      "kind": "official",
+      "url": "https://learn.chatgpt.com/docs/pricing",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "openai-api-pricing": {
+      "kind": "official",
+      "url": "https://developers.openai.com/api/docs/pricing",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "kimi-k3-pricing": {
+      "kind": "official",
+      "url": "https://platform.kimi.com/docs/pricing/chat-k3",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "kimi-k27-code-pricing": {
+      "kind": "official",
+      "url": "https://platform.kimi.com/docs/pricing/chat-k27-code",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "kimi-k26-pricing": {
+      "kind": "official",
+      "url": "https://platform.kimi.com/docs/pricing/chat-k26",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "deepseek-api-pricing": {
+      "kind": "official",
+      "url": "https://api-docs.deepseek.com/quick_start/pricing",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    },
+    "alibaba-model-studio-pricing": {
+      "kind": "official",
+      "url": "https://help.aliyun.com/zh/model-studio/model-pricing",
+      "retrieved_at": "2026-08-04T00:00:00+08:00",
+      "expires_at": "2026-09-03T00:00:00+08:00"
+    }
+  },
+  "models": {
+    "gpt-5.6-sol": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "reasoning", "tools", "lead"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 125.0, "cached_input": 12.5, "output": 750.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 312.5, "cached_input": 31.25, "output": 1875.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.5}},
+        {"billing_channel": "openai-api-standard", "currency": "USD", "unit": "per_1m_tokens", "input": 5.0, "cached_input": 0.5, "output": 30.0, "source_id": "openai-api-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-api-priority", "currency": "USD", "unit": "per_1m_tokens", "input": 10.0, "cached_input": 1.0, "output": 60.0, "source_id": "openai-api-pricing", "conditions": {"service_tier": "priority", "official_multiplier": 2.0}}
+      ]
+    },
+    "gpt-5.6-terra": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "reasoning", "tools", "standard"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 50.0, "cached_input": 5.0, "output": 300.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 125.0, "cached_input": 12.5, "output": 750.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.5}},
+        {"billing_channel": "openai-api-standard", "currency": "USD", "unit": "per_1m_tokens", "input": 2.0, "cached_input": 0.2, "output": 12.0, "source_id": "openai-api-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-api-priority", "currency": "USD", "unit": "per_1m_tokens", "input": 4.0, "cached_input": 0.4, "output": 24.0, "source_id": "openai-api-pricing", "conditions": {"service_tier": "priority", "official_multiplier": 2.0}}
+      ]
+    },
+    "gpt-5.6-luna": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "reasoning", "tools", "fast"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 5.0, "cached_input": 0.5, "output": 30.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 12.5, "cached_input": 1.25, "output": 75.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.5}},
+        {"billing_channel": "openai-api-standard", "currency": "USD", "unit": "per_1m_tokens", "input": 0.2, "cached_input": 0.02, "output": 1.2, "source_id": "openai-api-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-api-priority", "currency": "USD", "unit": "per_1m_tokens", "input": 0.4, "cached_input": 0.04, "output": 2.4, "source_id": "openai-api-pricing", "conditions": {"service_tier": "priority", "official_multiplier": 2.0}}
+      ]
+    },
+    "gpt-5.5": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "reasoning", "tools", "lead"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 125.0, "cached_input": 12.5, "output": 750.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 312.5, "cached_input": 31.25, "output": 1875.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.5}}
+      ]
+    },
+    "gpt-5.4": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "reasoning", "tools", "standard"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 62.5, "cached_input": 6.25, "output": 375.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 125.0, "cached_input": 12.5, "output": 750.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.0}}
+      ]
+    },
+    "gpt-5.4-mini": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "tools", "fast"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-credits-standard", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 18.75, "cached_input": 1.875, "output": 113.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "standard"}},
+        {"billing_channel": "openai-chatgpt-credits-fast", "currency": "CHATGPT_CREDIT", "unit": "per_1m_tokens", "input": 37.5, "cached_input": 3.75, "output": 226.0, "source_id": "openai-codex-pricing", "conditions": {"service_tier": "fast", "official_multiplier": 2.0}}
+      ]
+    },
+    "gpt-5.3-codex-spark": {
+      "provider": "openai",
+      "capabilities": ["text", "coding", "tools", "fast"],
+      "rates": [
+        {"billing_channel": "openai-chatgpt-spark-preview", "currency": "SEPARATE_USAGE_POOL", "unit": "unknown", "input": null, "cached_input": null, "output": null, "source_id": "openai-codex-pricing", "rankable": false, "unknown_reason": "Research preview uses separate usage limits with no public credit rate."}
+      ]
+    },
+    "kimi-k3": {
+      "provider": "kimi",
+      "capabilities": ["text", "coding", "reasoning", "tools", "vision", "lead"],
+      "rates": [
+        {"billing_channel": "kimi-api-standard", "currency": "CNY", "unit": "per_1m_tokens", "input": 20.0, "cached_input": 2.0, "output": 100.0, "source_id": "kimi-k3-pricing"}
+      ]
+    },
+    "kimi-k2.7-code": {
+      "provider": "kimi",
+      "capabilities": ["text", "coding", "reasoning", "tools", "vision", "fast"],
+      "rates": [
+        {"billing_channel": "kimi-api-standard", "currency": "CNY", "unit": "per_1m_tokens", "input": 6.5, "cached_input": 1.3, "output": 27.0, "source_id": "kimi-k27-code-pricing"}
+      ]
+    },
+    "kimi-k2.7-code-highspeed": {
+      "provider": "kimi",
+      "capabilities": ["text", "coding", "reasoning", "tools", "vision", "fast"],
+      "rates": [
+        {"billing_channel": "kimi-api-highspeed", "currency": "CNY", "unit": "per_1m_tokens", "input": 13.0, "cached_input": 2.6, "output": 54.0, "source_id": "kimi-k27-code-pricing"}
+      ]
+    },
+    "kimi-k2.6": {
+      "provider": "kimi",
+      "capabilities": ["text", "coding", "reasoning", "tools", "vision", "standard"],
+      "rates": [
+        {"billing_channel": "kimi-api-standard", "currency": "CNY", "unit": "per_1m_tokens", "input": 6.5, "cached_input": 1.1, "output": 27.0, "source_id": "kimi-k26-pricing"}
+      ]
+    },
+    "deepseek-v4-flash": {
+      "provider": "deepseek",
+      "capabilities": ["text", "coding", "reasoning", "tools", "fast"],
+      "rates": [
+        {"billing_channel": "deepseek-api-standard", "currency": "USD", "unit": "per_1m_tokens", "input": 0.14, "cached_input": 0.0028, "output": 0.28, "source_id": "deepseek-api-pricing", "conditions": {"future_peak_multiplier": 2.0, "future_peak_hours": "09:00-12:00 and 14:00-18:00 Asia/Shanghai; effective date not yet announced"}}
+      ]
+    },
+    "deepseek-v4-pro": {
+      "provider": "deepseek",
+      "capabilities": ["text", "coding", "reasoning", "tools", "standard"],
+      "rates": [
+        {"billing_channel": "deepseek-api-standard", "currency": "USD", "unit": "per_1m_tokens", "input": 0.435, "cached_input": 0.003625, "output": 0.87, "source_id": "deepseek-api-pricing", "conditions": {"future_peak_multiplier": 2.0, "future_peak_hours": "09:00-12:00 and 14:00-18:00 Asia/Shanghai; effective date not yet announced"}}
+      ]
+    },
+    "qwen3.8-max": {
+      "provider": "alibaba",
+      "capabilities": ["text", "coding", "reasoning", "tools", "standard"],
+      "rates": [
+        {"billing_channel": "alibaba-model-studio-cn-standard", "currency": "CNY", "unit": "per_1m_tokens", "input": 12.0, "cached_input": null, "output": 36.0, "source_id": "alibaba-model-studio-pricing", "rankable": false, "unknown_reason": "Exact cached-input rate depends on current cache terms.", "conditions": {"region": "china-mainland", "context_tier": "0<Token<=1M", "batch": "50% of standard", "cache": "discount exists; exact cached-input rate must be resolved before cached-cost ranking"}}
+      ]
+    }
+  }
+}
