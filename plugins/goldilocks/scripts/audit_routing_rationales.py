@@ -17,11 +17,12 @@ from typing import Iterable
 import model_economics as economics
 
 
-DEFAULT_EXPERIMENT = "routing-rationale-v3.1"
+DEFAULT_EXPERIMENT = "routing-rationale-v3.2"
 ROUTE_LINE = re.compile(
     r"^ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
     r"WRITE_READY=(\d+)\s*\|\s*READ_READY=(\d+)\s*\|\s*"
-    r"EXISTING=(\d+)\s*\|\s*NEW_DISPATCH=(\d+)\s*\|\s*"
+    r"EXISTING=(\d+)\s*\|\s*"
+    r"(?:PLANNED_DISPATCH|NEW_DISPATCH)=(\d+)\s*\|\s*"
     r"LEAD=(.*?)\s*\|\s*REASON=([a-z_]+)\s*\|\s*DETAIL=(.+?)\s*$",
     re.MULTILINE,
 )
@@ -62,6 +63,44 @@ def load_candidates(database: Path, experiment: str) -> dict[str, dict[str, obje
             "delegation_grant_active": bool(grant_active),
         }
         for session_id, turn_id, cwd_hash, injected_at, grant_active in rows
+    }
+
+
+def load_silent_audits(database: Path, experiment: str) -> dict[str, object]:
+    with sqlite3.connect(database) as connection:
+        table = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'route_audits'"
+        ).fetchone()
+        if table is None:
+            return {
+                "audit_count": 0,
+                "flagged_audit_count": 0,
+                "flag_distribution": {},
+                "planned_dispatch_total": 0,
+                "observed_dispatch_total": 0,
+            }
+        rows = connection.execute(
+            "SELECT planned_dispatch, observed_dispatch, review_flags "
+            "FROM route_audits WHERE routing_experiment_id = ?",
+            (experiment,),
+        ).fetchall()
+    flags: Counter[str] = Counter()
+    flagged = 0
+    for _planned, _observed, raw_flags in rows:
+        try:
+            parsed = json.loads(str(raw_flags or "[]"))
+        except json.JSONDecodeError:
+            parsed = []
+        values = [str(value) for value in parsed if isinstance(value, str)]
+        if values:
+            flagged += 1
+            flags.update(values)
+    return {
+        "audit_count": len(rows),
+        "flagged_audit_count": flagged,
+        "flag_distribution": dict(sorted(flags.items())),
+        "planned_dispatch_total": sum(int(row[0] or 0) for row in rows),
+        "observed_dispatch_total": sum(int(row[1] or 0) for row in rows),
     }
 
 
@@ -479,13 +518,13 @@ def parse_decision(line: str) -> dict[str, object] | None:
     match = ROUTE_LINE.fullmatch(line.strip())
     if match is None:
         return None
-    route, write_ready, read_ready, existing, new_dispatch, lead, reason, detail = match.groups()
+    route, write_ready, read_ready, existing, planned_dispatch, lead, reason, detail = match.groups()
     return {
         "route": route,
         "write_ready": int(write_ready),
         "read_ready": int(read_ready),
         "existing": int(existing),
-        "new_dispatch": int(new_dispatch),
+        "planned_dispatch": int(planned_dispatch),
         "lead": lead.strip(),
         "reason": reason,
         "detail": detail.strip(),
@@ -517,9 +556,9 @@ def build_report(
         write_ready = int(decision["write_ready"])
         read_ready = int(decision["read_ready"])
         existing = int(decision["existing"])
-        new_dispatch = int(decision["new_dispatch"])
+        planned_dispatch = int(decision["planned_dispatch"])
         observed_dispatch = int(observed_dispatches.get(turn_id, 0))
-        decision["observed_new_dispatch"] = observed_dispatch
+        decision["observed_dispatch"] = observed_dispatch
         grant_active = bool(candidates.get(turn_id, {}).get("delegation_grant_active"))
         issues: list[str] = []
         if route == "direct" and (write_ready > 0 or read_ready > 0):
@@ -528,20 +567,18 @@ def build_report(
             issues.append("direct_with_delegation_gain_reason")
         if route != "direct" and reason in {"lead_faster", "review_cost"}:
             issues.append("delegated_with_direct_reason")
-        if reason == "route_unavailable":
-            issues.append("manually_verify_named_route_or_probe")
         if reason == "shared_surface" and write_ready > 0:
             issues.append("manually_verify_independent_write_units")
-        if route == "direct" and new_dispatch > 0:
-            issues.append("direct_claims_new_dispatch")
-        if route == "mixed" and existing == 0 and new_dispatch == 0:
+        if route == "direct" and planned_dispatch > 0:
+            issues.append("direct_plans_dispatch")
+        if route == "mixed" and existing == 0 and planned_dispatch == 0:
             issues.append("mixed_without_parallel_ownership")
-        if new_dispatch > write_ready + read_ready:
-            issues.append("dispatch_exceeds_ready_units")
-        if new_dispatch > observed_dispatch:
-            issues.append("claimed_dispatch_without_observed_start")
+        if planned_dispatch > write_ready + read_ready:
+            issues.append("planned_dispatch_exceeds_ready_units")
+        if planned_dispatch != observed_dispatch:
+            issues.append("planned_dispatch_mismatch")
         if grant_active and write_ready + read_ready > 0 and observed_dispatch == 0:
-            issues.append("authorized_ready_without_new_dispatch")
+            issues.append("authorized_ready_without_observed_dispatch")
         if issues:
             flags[turn_id] = issues
 
@@ -558,7 +595,7 @@ def build_report(
     active_dispatch = [
         turn_id
         for turn_id, decision in parsed.items()
-        if int(decision["observed_new_dispatch"]) > 0
+        if int(decision["observed_dispatch"]) > 0
     ]
     return {
         "experiment": DEFAULT_EXPERIMENT,
@@ -573,11 +610,11 @@ def build_report(
         "write_ready_total": sum(int(item["write_ready"]) for item in parsed.values()),
         "read_ready_total": sum(int(item["read_ready"]) for item in parsed.values()),
         "existing_parallel_total": sum(int(item["existing"]) for item in parsed.values()),
-        "claimed_new_dispatch_total": sum(
-            int(item["new_dispatch"]) for item in parsed.values()
+        "planned_dispatch_total": sum(
+            int(item["planned_dispatch"]) for item in parsed.values()
         ),
-        "new_dispatch_total": sum(
-            int(item["observed_new_dispatch"]) for item in parsed.values()
+        "observed_dispatch_total": sum(
+            int(item["observed_dispatch"]) for item in parsed.values()
         ),
         "active_dispatch_turns": len(active_dispatch),
         "authorized_candidate_count": sum(
@@ -634,6 +671,9 @@ def main() -> None:
         load_observed_dispatches(args.database.expanduser(), candidates),
     )
     report["experiment"] = args.experiment
+    report["silent_audits"] = load_silent_audits(
+        args.database.expanduser(), args.experiment
+    )
     report["usage_economics"] = load_usage_economics(
         args.database.expanduser(),
         args.economics.expanduser(),
@@ -660,8 +700,8 @@ def main() -> None:
     print(
         f"WRITE_READY={report['write_ready_total']} READ_READY={report['read_ready_total']} "
         f"EXISTING={report['existing_parallel_total']} "
-        f"CLAIMED_NEW_DISPATCH={report['claimed_new_dispatch_total']} "
-        f"OBSERVED_NEW_DISPATCH={report['new_dispatch_total']} "
+        f"PLANNED_DISPATCH={report['planned_dispatch_total']} "
+        f"OBSERVED_DISPATCH={report['observed_dispatch_total']} "
         f"authorized_dispatch_rate={float(report['authorized_active_dispatch_rate']):.0%} "
         f"flags={len(report['review_flags'])}"
     )
@@ -671,8 +711,8 @@ def main() -> None:
         print(
             f"{turn_id} ROUTE={decision['route']} WRITE_READY={decision['write_ready']} "
             f"READ_READY={decision['read_ready']} EXISTING={decision['existing']} "
-            f"CLAIMED_NEW_DISPATCH={decision['new_dispatch']} "
-            f"OBSERVED_NEW_DISPATCH={decision['observed_new_dispatch']} "
+            f"PLANNED_DISPATCH={decision['planned_dispatch']} "
+            f"OBSERVED_DISPATCH={decision['observed_dispatch']} "
             f"REASON={decision['reason']} "
             f"DETAIL={decision['detail']}{suffix}"
         )

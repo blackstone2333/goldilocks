@@ -13,8 +13,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import route_auditor
 
-POLICY_VERSION = "0.4.5-exp3.1"
+
+POLICY_VERSION = "0.4.5-exp3.2"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 
@@ -336,6 +339,10 @@ def main() -> None:
                 record_baseline(connection, payload)
                 return
             if event == "Stop":
+                try:
+                    route_auditor.audit(payload, connection)
+                except (OSError, sqlite3.Error, TypeError, ValueError):
+                    pass
                 message = build_receipt(connection, payload)
                 print(json.dumps({"systemMessage": message} if message else {}, ensure_ascii=False))
     except (OSError, sqlite3.Error, TypeError, ValueError, json.JSONDecodeError):

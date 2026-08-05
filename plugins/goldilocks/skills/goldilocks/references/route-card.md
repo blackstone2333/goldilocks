@@ -17,9 +17,13 @@ Use official channel-specific input/cached/output rates. Compare different curre
 
 Emit one line only:
 
-`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<n> | READ_READY=<n> | EXISTING=<n> | NEW_DISPATCH=<n> | LEAD=<nodes> | REASON=<code> | DETAIL=<sentence>`
+`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<n> | READ_READY=<n> | EXISTING=<n> | PLANNED_DISPATCH=<n> | LEAD=<nodes> | REASON=<code> | DETAIL=<sentence>`
 
-`EXISTING` is user/other-workflow ownership; `NEW_DISPATCH` is workers started now. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
+`EXISTING` is active user/other-workflow ownership, not completed artifacts or idle agent handles; `PLANNED_DISPATCH` is intended starts and Hooks observe actual starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
+
+After dispatch, actively collect every terminal child with the host wait/status mechanism and reconcile it once so the user never has to open a finished child manually. Completion or idle state immediately releases ownership; only currently running work counts.
+
+The decision may be silently checked against existing run data. Do not create evidence, probes, documents, tests, model calls, or extra narration for that check. When route history is unknown, the first bounded, useful real contract may validate it; a startup failure falls back to Direct.
 
 With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value unit by default even when it is slightly slower. Raw-token or elapsed growth must remain proportionate. Direct needs concrete weighted-cost, quality, shared-surface, failed-route, or authority evidence. The grant permits bounded Fast/Standard dispatch only; it adds no external or destructive authority.
 

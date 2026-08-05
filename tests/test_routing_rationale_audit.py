@@ -41,7 +41,7 @@ def main() -> None:
             )
             connection.executemany(
                 "INSERT INTO gate_injections VALUES "
-                "(?, ?, 1, 'routing-rationale-v3.1', ?, 'cwd-a', ?)",
+                "(?, ?, 1, 'routing-rationale-v3.2', ?, 'cwd-a', ?)",
                 [
                     ("session-a", "turn-a", 1, "2026-08-03T00:00:00+00:00"),
                     ("session-a", "turn-b", 1, "2026-08-03T00:01:00+00:00"),
@@ -102,6 +102,15 @@ def main() -> None:
                     ),
                 ],
             )
+            connection.execute(
+                "CREATE TABLE route_audits (planned_dispatch INTEGER, "
+                "observed_dispatch INTEGER, review_flags TEXT, routing_experiment_id TEXT)"
+            )
+            connection.execute(
+                "INSERT INTO route_audits VALUES "
+                "(2, 2, '[\"existing_above_observed_agents\"]', "
+                "'routing-rationale-v3.2')"
+            )
 
         log = root / "rollout-session-a.jsonl"
         log.write_text(
@@ -110,13 +119,13 @@ def main() -> None:
                     response(
                         "turn-a",
                         "ROUTE=direct | WRITE_READY=0 | READ_READY=1 | EXISTING=0 | "
-                        "NEW_DISPATCH=0 | LEAD=接口与验收 | "
+                        "PLANNED_DISPATCH=0 | LEAD=接口与验收 | "
                         "REASON=review_cost | DETAIL=交接和复核比本地诊断更慢。",
                     ),
                     response(
                         "turn-b",
                         "ROUTE=mixed | WRITE_READY=1 | READ_READY=2 | EXISTING=1 | "
-                        "NEW_DISPATCH=2 | LEAD=集成 | "
+                        "PLANNED_DISPATCH=2 | LEAD=集成 | "
                         "REASON=parallel_gain | DETAIL=独立工作可并行。",
                     ),
                     json.dumps(
@@ -154,8 +163,8 @@ def main() -> None:
         assert report["write_ready_total"] == 1
         assert report["read_ready_total"] == 3
         assert report["existing_parallel_total"] == 1
-        assert report["claimed_new_dispatch_total"] == 2
-        assert report["new_dispatch_total"] == 2
+        assert report["planned_dispatch_total"] == 2
+        assert report["observed_dispatch_total"] == 2
         assert report["active_dispatch_turns"] == 1
         assert report["authorized_ready_count"] == 2
         assert report["authorized_active_dispatch_rate"] == 0.5
@@ -173,8 +182,15 @@ def main() -> None:
         assert credit_cost["estimated_amount"] == 0.029325
         assert report["review_flags"]["turn-a"] == [
             "direct_declined_ready_work",
-            "authorized_ready_without_new_dispatch",
+            "authorized_ready_without_observed_dispatch",
         ]
+        assert report["silent_audits"] == {
+            "audit_count": 1,
+            "flagged_audit_count": 1,
+            "flag_distribution": {"existing_above_observed_agents": 1},
+            "planned_dispatch_total": 2,
+            "observed_dispatch_total": 2,
+        }
 
         with sqlite3.connect(database) as connection:
             connection.execute("DELETE FROM decisions")
@@ -195,9 +211,9 @@ def main() -> None:
         )
         assert unobserved.returncode == 0, unobserved.stderr
         unobserved_report = json.loads(unobserved.stdout)
-        assert unobserved_report["claimed_new_dispatch_total"] == 2
-        assert unobserved_report["new_dispatch_total"] == 0
-        assert "claimed_dispatch_without_observed_start" in unobserved_report[
+        assert unobserved_report["planned_dispatch_total"] == 2
+        assert unobserved_report["observed_dispatch_total"] == 0
+        assert "planned_dispatch_mismatch" in unobserved_report[
             "review_flags"
         ]["turn-b"]
 

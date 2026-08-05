@@ -1,6 +1,6 @@
 # Orchestrate
 
-Orchestration assigns decisions, implementation, and review to the cheapest capable layer. Run a routing pass after planning or check clear Direct work in constant time. Lead owns the outcome; Standard a bounded domain; Fast fixed-decision contracts.
+Run a routing pass after planning, or check clear Direct work in constant time. Lead owns outcome and integration; Standard a bounded domain; Fast fixed-decision contracts.
 
 ## Run the make-or-delegate check
 
@@ -8,77 +8,73 @@ Before an expensive model starts implementation, make one quick comparison:
 
 `delegation gain = Lead spend/budget share avoided + parallel time saved - worker spend/budget share - briefing - review - integration - failure × retry`
 
-Reuse a verified project pattern after checking invalidators. Read [execution-memory.md](execution-memory.md) only for recurring or reusable routes.
-
 - Keep Direct when its weighted quota and time cost wins; Lead finishing a little faster is not enough.
 - Use Fast for a complete objective, scope, interfaces, acceptance, and prohibitions.
 - Use Standard when bounded domain judgment remains; it may contract Fast.
 - Keep Critical judgment, cross-domain interfaces, authority, and final integration with Lead.
 
-This check is constant-time for clear work. Do not write a plan merely to decide that a two-minute task is Direct.
+This make-or-delegate check is constant-time for clear work. Reuse verified project patterns after checking invalidators; read [execution-memory.md](execution-memory.md) only for reusable routes. Do not write a plan merely to choose Direct.
 
 ## Explain the route briefly
 
 For work that entered this engine because decomposition may help, emit one decision line before implementation:
 
-`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | NEW_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
+`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | PLANNED_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
 
-Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain` as the reason code. `DETAIL` may explain the concrete tradeoff in normal language but stays to one sentence; do not expose chain-of-thought or write a routing essay.
+Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `DETAIL` is one concise sentence, never chain-of-thought.
 
-This is not a delegation quota. Direct remains valid. With an active project grant, a verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when it is slightly slower. Keep raw tokens and elapsed time proportionate. The grant covers bounded Fast/Standard dispatch only and adds no external authority; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
+This is not a delegation quota; Direct remains valid. With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when slightly slower. Keep raw tokens and time proportionate. The grant covers bounded Fast/Standard dispatch only; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
-Judge the project-level organization. `WRITE_READY` and `READ_READY` count unowned executable and read-only units; `EXISTING` is user/other-workflow ownership, while `NEW_DISPATCH` is a worker started now. A shared mutable surface blocks concurrent writers only, not independent diagnosis or review. Existing ownership with Lead work is `ROUTE=mixed`. Direct with ready work names its concrete transfer loss. `route_unavailable` names the missing route or failed minimal probe.
+Judge project-level organization. `WRITE_READY` and `READ_READY` count unowned executable and read-only units; `EXISTING` means active outside ownership, never completed or unverified artifacts. `PLANNED_DISPATCH` is intended starts; Hooks observe actual starts. A shared mutable surface blocks concurrent writers only, not independent diagnosis or review. Existing ownership plus Lead work is `ROUTE=mixed`. Direct names concrete transfer loss; `route_unavailable` names a missing route or observed startup failure.
 
-Use codes narrowly: `lead_faster` compares end-to-end time; `critical_judgment` protects a real decision boundary; `review_cost` names verification burden; `contract_not_ready` identifies the missing interface or acceptance decision; `parallel_gain` and `quota_gain` justify delegation. Never manufacture work to improve counts.
+The route line may be silently compared with existing Hook, session, and SQLite data. Do not create proof, probes, documents, tests, model calls, or narration for this review; findings are soft and never block delivery.
+
+Close every wave: use the host wait/status mechanism until each worker is terminal, consume finals promptly, then reconcile status once if notification and UI state differ. Never make the user open a finished child. Completed/idle handles and unverified artifacts are not `EXISTING`; only running or externally owned work counts. A terminal event or rollout `task_complete` overrides stale UI for routing.
+
+Use codes narrowly: `lead_faster` compares end-to-end time; `critical_judgment` protects a decision; `review_cost` names verification burden; `contract_not_ready` names a missing interface or acceptance decision; `parallel_gain` and `quota_gain` justify delegation. Never manufacture work.
 
 ## Require a ready route before delegation
 
-Route readiness is a prerequisite. Reuse cached route evidence only when executable, model, provider, sandbox, authentication, and tools still match. Otherwise run one minimal probe before writing a full contract and count its cost.
-
-Do not debug worker transport inside a product task. On first startup or host-boundary failure, keep the decisive error, invalidate the route, and fall back to Direct or another verified route. Repair adapters separately; never combine contract, diagnosis, retry, and full Lead implementation.
+Route readiness is a prerequisite. Reuse cached route evidence only while executable, model, provider, sandbox, authentication, and tools match. With no history, let the first bounded, useful real contract validate the route instead of a probe. On startup failure, keep the decisive error, invalidate the route, and fall back to Direct or another verified route. Do not debug worker transport inside a product task; repair adapters separately.
 
 ## Choose only the useful depth
 
 Use the shallowest organization that shortens the critical path or reduces quota-weighted expensive work:
 
-- Lead → Direct for tiny or inseparable work.
-- Lead → Fast for a ready execution contract.
-- Lead → Standard for one bounded expert task.
-- Lead → Standard → Fast when a domain contains several contractible units.
-- Multiple Standard advisers may investigate a hard decision independently, but one named owner decides and integrates. Do not create a committee of overlapping writers.
+- Lead → Direct: tiny or inseparable work.
+- Lead → Fast: ready contract.
+- Lead → Standard: bounded expert judgment.
+- Lead → Standard → Fast: one domain with several ready units.
+- Multiple Standard advisers may investigate independently, but one owner decides; never create overlapping writers.
 
-Fast is a leaf executor and does not delegate. Standard may delegate Fast only inside its assigned domain and may not expand scope, change shared interfaces, cross an authority boundary, or claim final integration. Each additional management layer must earn itself; remove it when transfer and review cost exceed the saving.
-
-Lead implements only for faster Direct delivery, inseparable Critical core, shared interfaces, emergency unblocking, or worker failure after valid task execution. Transport startup failure returns to the ready-route rule.
+Fast is a leaf and does not delegate. Standard may delegate Fast only within its domain; it cannot expand scope, change shared interfaces, cross authority, or claim final integration. Each layer must earn itself. Lead implements for faster Direct delivery, inseparable Critical core, shared interfaces, emergency unblocking, or worker failure after valid execution.
 
 ## Split into execution contracts
 
-Classify after decomposition, not before it. A large cross-file unit can be Fast when its remaining discretion is low; a ten-line security decision can remain Lead.
+Classify after decomposition: a large unit can be Fast when discretion is low; a small security decision can remain Lead. Each contract states objective, non-goals, allowed files/domain, interfaces, dependencies, acceptance, evidence, and forbidden external/destructive actions. Give task-local paths and decisions, not conversation history. If intent or architecture remains implicit, it is not Fast-ready.
 
-Every delegated contract states objective, non-goals, allowed files or domain, stable interfaces, dependencies, acceptance checks, expected evidence, and forbidden external or destructive actions. Give task-local repository paths and decisions instead of copying the conversation. If a competent worker still has to infer product intent or architecture, the contract is not Fast-ready.
+Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; owners inspect real diffs and evidence.
 
-Every worker returns five compact sections: `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`. This replaces transcript replay; the owner inspects the real diff and evidence.
-
-Prefer one worker implementing a coherent unit and its focused checks. Do not split implementation and tests when that duplicates the same context. Workers escalate ambiguity instead of guessing. After one failed repair or requirement mismatch, reconsider the contract or capability; after a second, stop the worker loop and upgrade or keep the work local.
+Keep a coherent unit and focused checks together. Workers escalate ambiguity. After one failed repair or requirement mismatch, reconsider contract or capability; after a second, stop the loop and upgrade or keep work local.
 
 ## Parallelize the ready graph
 
-Define dependencies, shared interfaces, ownership, integration order, and combined acceptance before dispatch. Only ready units run. Keep overlapping edits to one fragile surface serial and give every shared interface one owner.
+Before dispatch, define dependencies, interfaces, ownership, integration order, and combined acceptance. Run only ready units; serialize overlapping edits and give each shared interface one owner.
 
-Do not impose a fixed worker count. Useful concurrency is bounded by independent ready units, host capacity, isolated workspaces, integration risk, and reviewer throughput. Fill available capacity when it shortens the critical path; use waves when the host limit or dependency graph requires them.
+Do not impose a fixed worker count. Concurrency is bounded by ready units, host capacity, isolation, integration risk, and reviewer throughput. Fill capacity only when it shortens the critical path; otherwise use waves.
 
-Detect existing isolation before creating worktrees. Inspect branch, dirty state, untracked files, repository instructions, and conventions. Create a worktree when it protects user changes or separates concurrent writers; skip it when the host already isolates work or setup costs more than it protects. Never move, overwrite, strand, or delete user work to simplify orchestration.
+Before creating worktrees inspect existing isolation, branch, dirty/untracked files, and repository rules. Add one when it protects user changes or separates writers; skip it when already isolated or not worth setup. Never move, overwrite, strand, or delete user work.
 
 ## Route capability and quota
 
-Read [model-routing.md](model-routing.md) when multiple models, billing channels, or capability levels are available. Apply the quality and authority gates first. Then prefer the route that lowers quota-weighted expensive usage and wall-clock time while keeping total raw tokens inside a reasonable envelope.
+Read [model-routing.md](model-routing.md) for multiple models, billing channels, or capability levels. Apply quality and authority gates, then minimize quota-weighted expensive usage and time within a reasonable raw-token envelope.
 
-Confirm the model exists on the actual route; use `model-routing.md`'s packaged Fast adapter when native Codex omits the selected coding or general model, and never silently inherit Lead.
+Confirm the model exists on the route; use the packaged Fast adapter when native Codex omits it, and never silently inherit Lead.
 
-Fast describes low remaining discretion, not small original scope. Standard describes bounded residual judgment, not medium file count. Lead describes authority and integration responsibility, not a requirement to type every line.
+Fast means low residual discretion, Standard bounded judgment, and Lead authority/integration—not task size.
 
 ## Integrate upward
 
-Fast returns the changed files and focused evidence to its Standard or Lead owner. Standard reviews actual diffs, resolves domain-local issues, runs domain checks, and returns one coherent domain result. Lead reviews integrated diffs and shared boundaries, resolves conflicts, and reruns the combined acceptance gate.
+Fast returns changed files and focused evidence. Standard reviews diffs, resolves domain issues, runs checks, and returns one result. Lead reviews integration and shared boundaries, resolves conflicts, and reruns combined acceptance.
 
-Agent completion messages are not evidence. For native Codex workers, use `model-routing.md`'s outcome recorder only after Lead's combined acceptance so stopped work is distinct from `verified_pass` or `verified_fail`. If useful adjacent ideas appear, preserve them without following them; read [evolve.md](evolve.md) only when durable capture is warranted. When sessions or layers need durable coordination, read [continuity.md](continuity.md) and keep one authoritative execution frontier.
+Agent messages are not evidence. Use the outcome recorder only after Lead acceptance so stopped work differs from `verified_pass`/`verified_fail`. Preserve adjacent ideas without following them via [evolve.md](evolve.md) when warranted. For cross-session coordination, use [continuity.md](continuity.md) and one authoritative frontier.

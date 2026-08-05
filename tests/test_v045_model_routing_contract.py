@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
 VERSION = "0.4.5"
-EXPERIMENT_POLICY = "0.4.5-exp3.1"
+EXPERIMENT_POLICY = "0.4.5-exp3.2"
 
 
 def read(path: Path) -> str:
@@ -58,7 +58,7 @@ def main() -> None:
         "WRITE_READY=<count>",
         "READ_READY=<count>",
         "EXISTING=<count>",
-        "NEW_DISPATCH=<count>",
+        "PLANNED_DISPATCH=<count>",
         "DETAIL=<one concise sentence>",
         "lead_faster",
         "parallel_gain",
@@ -69,7 +69,11 @@ def main() -> None:
         "shared mutable surface",
         "blocks concurrent writers only",
         "ROUTE=mixed",
-        "failed minimal probe",
+        "first bounded, useful real contract",
+        "silently compared",
+        "Do not create proof, probes, documents, tests, model calls",
+        "host wait/status mechanism",
+        "Never make the user open a finished child",
         "default to actually dispatching",
     ):
         if marker not in orchestrate:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "experiment": "routing-rationale-v3.1",
+  "experiment": "routing-rationale-v3.2",
   "economics": {
     "registry": "model-economics.json",
     "decision": "quality gate, then billing-pool cost, elapsed-time and raw-token Pareto comparison",

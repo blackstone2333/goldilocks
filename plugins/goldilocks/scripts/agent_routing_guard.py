@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.4.5-exp3.1"
+POLICY_VERSION = "0.4.5-exp3.2"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"

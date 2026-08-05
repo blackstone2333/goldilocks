@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -25,6 +26,7 @@ def run_hook(
     data_dir: Path | None = None,
     prompt: str = "Build and test the full-stack feature with the specialist Skill.",
     turn_id: str = "test-turn",
+    session_roots: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     payload = {
         "session_id": "test-session",
@@ -45,6 +47,8 @@ def run_hook(
         env["PLUGIN_DATA"] = str(data_dir)
     else:
         env.pop("PLUGIN_DATA", None)
+    if session_roots is not None:
+        env["GOLDILOCKS_SESSION_ROOTS"] = str(session_roots)
     return subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(payload),
@@ -146,7 +150,7 @@ def main() -> None:
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
             )
             connection.execute(
-                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3.1')",
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3.2')",
                 (project_hash,),
             )
         rationale = run_hook(
@@ -167,8 +171,12 @@ def main() -> None:
             "WRITE_READY",
             "READ_READY",
             "EXISTING",
-            "NEW_DISPATCH",
-            "user/other-workflow parallelism",
+            "PLANNED_DISPATCH",
+            "never completed/idle agents",
+            "silently checked against existing run data",
+            "create no proof, probe, document, test, or model call",
+            "EXISTING counts active ownership",
+            "collect child finals via host wait/status",
             "Shared writes",
             "explicit bounded-delegation grant",
             "current official input/cached/output rates",
@@ -183,10 +191,105 @@ def main() -> None:
                 "FROM gate_injections WHERE turn_id = 'rationale-turn'"
             ).fetchone()
         assert rationale_row["routing_rationale_candidate"] == 1
-        assert rationale_row["routing_experiment_id"] == "routing-rationale-v3.1"
+        assert rationale_row["routing_experiment_id"] == "routing-rationale-v3.2"
         assert multi_unit_prompt.encode() not in (
             data_dir / "orchestration.db"
         ).read_bytes(), "routing audit must not retain candidate prompt text"
+
+        lifecycle_data = parent / "lifecycle-data"
+        lifecycle_data.mkdir()
+        lifecycle_sessions = parent / "lifecycle-sessions"
+        lifecycle_sessions.mkdir()
+        started = datetime.now(timezone.utc) - timedelta(minutes=2)
+        completed = started + timedelta(minutes=1)
+        running = datetime.now(timezone.utc) - timedelta(seconds=10)
+        with sqlite3.connect(lifecycle_data / "orchestration.db") as connection:
+            connection.execute(
+                "CREATE TABLE decisions (decision_id TEXT PRIMARY KEY, session_id TEXT, "
+                "tier TEXT, status TEXT)"
+            )
+            connection.execute(
+                "CREATE TABLE executions (agent_id TEXT PRIMARY KEY, session_id TEXT, "
+                "decision_id TEXT, started_at TEXT, stopped_at TEXT, elapsed_ms INTEGER)"
+            )
+            connection.executemany(
+                "INSERT INTO decisions VALUES (?, 'test-session', 'fast', 'started')",
+                [("completed-decision",), ("running-decision",)],
+            )
+            connection.executemany(
+                "INSERT INTO executions VALUES (?, 'test-session', ?, ?, NULL, NULL)",
+                [
+                    ("completed-agent", "completed-decision", started.isoformat()),
+                    ("running-agent", "running-decision", running.isoformat()),
+                ],
+            )
+        completed_rollout = lifecycle_sessions / "rollout-test-completed-agent.jsonl"
+        completed_rollout.write_text(
+            "\n".join(
+                json.dumps(
+                    {
+                        "timestamp": stamp.isoformat().replace("+00:00", "Z"),
+                        "type": "event_msg",
+                        "payload": {"type": event},
+                    }
+                )
+                for stamp, event in (
+                    (started, "task_started"),
+                    (completed, "task_complete"),
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        running_rollout = lifecycle_sessions / "rollout-test-running-agent.jsonl"
+        running_rollout.write_text(
+            "\n".join(
+                json.dumps(
+                    {
+                        "timestamp": stamp.isoformat().replace("+00:00", "Z"),
+                        "type": "event_msg",
+                        "payload": {"type": event},
+                    }
+                )
+                for stamp, event in (
+                    (started, "task_complete"),
+                    (running, "task_started"),
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        lifecycle = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=lifecycle_data,
+            prompt="继续当前实现。",
+            turn_id="lifecycle-turn",
+            session_roots=lifecycle_sessions,
+        )
+        assert lifecycle.returncode == 0, lifecycle.stderr
+        lifecycle_context = json.loads(lifecycle.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "1 completed worker outcome(s) remain unverified" in lifecycle_context
+        with sqlite3.connect(lifecycle_data / "orchestration.db") as connection:
+            completed_row = connection.execute(
+                "SELECT stopped_at, elapsed_ms FROM executions "
+                "WHERE agent_id = 'completed-agent'"
+            ).fetchone()
+            running_row = connection.execute(
+                "SELECT stopped_at FROM executions WHERE agent_id = 'running-agent'"
+            ).fetchone()
+            statuses = dict(
+                connection.execute("SELECT decision_id, status FROM decisions").fetchall()
+            )
+        assert completed_row[0] == completed.isoformat().replace("+00:00", "Z")
+        assert completed_row[1] == 60_000
+        assert running_row[0] is None
+        assert statuses == {
+            "completed-decision": "stopped",
+            "running-decision": "started",
+        }
 
         simple_change = run_hook(
             nested,

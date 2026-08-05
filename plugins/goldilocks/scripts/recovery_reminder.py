@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5-exp3.1"
-ROUTING_EXPERIMENT_ID = "routing-rationale-v3.1"
+POLICY_VERSION = "0.4.5-exp3.2"
+ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
     "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
@@ -31,11 +31,12 @@ ROUTING_GATE = (
 )
 ROUTING_RATIONALE_GATE = (
     "Likely multi-unit work detected. Before implementation, read route-card.md and emit its one "
-    "ROUTE line with WRITE_READY, READ_READY, EXISTING, NEW_DISPATCH, LEAD, REASON, and DETAIL. "
-    "EXISTING is user/other-workflow parallelism; NEW_DISPATCH counts workers Goldilocks actually "
-    "starts now. Shared writes do not block independent read-only work. Direct with ready work must "
-    "name the concrete briefing, review, latency, authority, shared-surface, or failed-route cost. "
-    "Protect intent, interfaces, integration, and acceptance—not worker-ready typing."
+    "ROUTE line with WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, and DETAIL. "
+    "EXISTING counts active ownership, never completed/idle agents; collect child finals via host "
+    "wait/status. PLANNED_DISPATCH is intent; Hooks count starts. Shared writes permit reads. Direct "
+    "names transfer cost. The route is "
+    "silently checked against existing run data; create no proof, probe, document, test, or model "
+    "call for that check."
 )
 AUTHORIZED_DISPATCH_GATE = (
     "This project has an explicit bounded-delegation grant. Compare cost, not speed alone: use "
@@ -309,6 +310,8 @@ def routing_debt_context(payload: dict[str, object]) -> str:
             return ""
         session_id = str(payload.get("session_id") or "unknown-session")
         with sqlite3.connect(database, timeout=3) as connection:
+            connection.row_factory = sqlite3.Row
+            reconcile_native_completions(connection, session_id)
             tables = {
                 str(row[0])
                 for row in connection.execute(
@@ -363,6 +366,113 @@ def routing_debt_context(payload: dict[str, object]) -> str:
         )
     except (OSError, sqlite3.Error, TypeError, ValueError):
         return ""
+
+
+def session_roots() -> list[Path]:
+    configured = os.environ.get("GOLDILOCKS_SESSION_ROOTS")
+    if configured:
+        return [
+            Path(value).expanduser()
+            for value in configured.split(os.pathsep)
+            if value.strip()
+        ]
+    codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+    return [codex_home / "sessions", codex_home / "archived_sessions"]
+
+
+def rollout_terminal_time(agent_id: str) -> str | None:
+    latest: tuple[str, str] | None = None
+    for root in session_roots():
+        if not root.is_dir():
+            continue
+        try:
+            paths = root.rglob(f"rollout-*-{agent_id}.jsonl")
+            for path in paths:
+                with path.open("rb") as handle:
+                    size = handle.seek(0, os.SEEK_END)
+                    offset = max(0, size - 512 * 1024)
+                    handle.seek(offset)
+                    lines = handle.read().splitlines()
+                if offset and lines:
+                    lines = lines[1:]
+                for raw in lines:
+                    try:
+                        record = json.loads(raw)
+                    except (UnicodeDecodeError, json.JSONDecodeError):
+                        continue
+                    payload = record.get("payload")
+                    if record.get("type") != "event_msg" or not isinstance(payload, dict):
+                        continue
+                    event = str(payload.get("type") or "")
+                    timestamp = str(record.get("timestamp") or "")
+                    if event in {"task_started", "task_complete"} and timestamp:
+                        if latest is None or timestamp > latest[1]:
+                            latest = (event, timestamp)
+        except OSError:
+            continue
+    return latest[1] if latest and latest[0] == "task_complete" else None
+
+
+def reconcile_native_completions(
+    connection: sqlite3.Connection, session_id: str
+) -> int:
+    available = {
+        str(row[0])
+        for row in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        )
+    }
+    if not {"decisions", "executions"}.issubset(available):
+        return 0
+    decision_columns = {
+        str(row[1]) for row in connection.execute("PRAGMA table_info(decisions)")
+    }
+    execution_columns = {
+        str(row[1]) for row in connection.execute("PRAGMA table_info(executions)")
+    }
+    if not {"decision_id", "status"}.issubset(decision_columns) or not {
+        "agent_id",
+        "session_id",
+        "decision_id",
+        "started_at",
+        "stopped_at",
+    }.issubset(execution_columns):
+        return 0
+    rows = connection.execute(
+        "SELECT agent_id, decision_id, started_at FROM executions "
+        "WHERE session_id = ? AND stopped_at IS NULL",
+        (session_id,),
+    ).fetchall()
+    reconciled = 0
+    for row in rows:
+        completed_at = rollout_terminal_time(str(row["agent_id"] or ""))
+        if completed_at is None:
+            continue
+        elapsed_ms: int | None = None
+        try:
+            started = datetime.fromisoformat(str(row["started_at"]).replace("Z", "+00:00"))
+            stopped = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+            elapsed_ms = max(0, int((stopped - started).total_seconds() * 1000))
+        except (TypeError, ValueError):
+            pass
+        if "elapsed_ms" in execution_columns:
+            connection.execute(
+                "UPDATE executions SET stopped_at = ?, elapsed_ms = ? WHERE agent_id = ?",
+                (completed_at, elapsed_ms, row["agent_id"]),
+            )
+        else:
+            connection.execute(
+                "UPDATE executions SET stopped_at = ? WHERE agent_id = ?",
+                (completed_at, row["agent_id"]),
+            )
+        if row["decision_id"]:
+            connection.execute(
+                "UPDATE decisions SET status = 'stopped' WHERE decision_id = ? "
+                "AND status IN ('planned', 'started')",
+                (row["decision_id"],),
+            )
+        reconciled += 1
+    return reconciled
 
 
 def has_continuity_debt(payload: dict[str, object], cwd: Path) -> bool:
