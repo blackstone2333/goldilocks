@@ -97,7 +97,7 @@ def main() -> None:
         assert "Before final" in compact_usage_context
         assert "usage_reporter.py" in compact_usage_context
         assert "--current" in compact_usage_context
-        assert "append its Usage line" in compact_usage_context
+        assert "append nonempty Usage" in compact_usage_context
 
         no_ledger_steer = run_hook(nested, "UserPromptSubmit", data_dir=data_dir)
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
@@ -115,7 +115,7 @@ def main() -> None:
         assert "Before final" in style_context
         assert "usage_reporter.py" in style_context
         assert "--current" in style_context
-        assert "append its Usage line" in style_context
+        assert "append nonempty Usage" in style_context
         assert "never estimate" in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
@@ -507,9 +507,9 @@ def main() -> None:
         fake_codex = fake_bin / "codex"
         fake_codex.write_text(
             "#!/usr/bin/env python3\n"
-            "import json\n"
+            "import json, os\n"
             f"print(json.dumps({{'installed':[{{'pluginId':'goldilocks@goldilocks-local',"
-            f"'source':{{'path':{str(PLUGIN)!r}}}}}]}}))\n",
+            "'enabled':True,'source':{'path':os.environ['FAKE_PLUGIN_ROOT']}}]}))\n",
             encoding="utf-8",
         )
         fake_codex.chmod(0o755)
@@ -519,6 +519,7 @@ def main() -> None:
                 "PATH": f"{fake_bin}{os.pathsep}{fallback_env.get('PATH', '')}",
                 "PLUGIN_ROOT": str(parent / "deleted-versioned-cache"),
                 "PLUGIN_DATA": str(parent / "stable-hook-data"),
+                "FAKE_PLUGIN_ROOT": str(PLUGIN),
             }
         )
         stable = subprocess.run(
@@ -543,6 +544,28 @@ def main() -> None:
             "additionalContext"
         ]
         assert "Goldilocks zero-cost gate" in stable_context
+
+        live_plugin = parent / "live-plugin"
+        live_scripts = live_plugin / "scripts"
+        live_scripts.mkdir(parents=True)
+        (live_scripts / "usage_reporter.py").write_text(
+            'print("Usage: dynamically resolved")\n', encoding="utf-8"
+        )
+        usage_command = stable_context.split("Before final: run `", 1)[1].split("`;", 1)[0]
+        assert str(PLUGIN) not in usage_command
+        assert "codex" in usage_command and "plugin" in usage_command
+        current_env = fallback_env.copy()
+        current_env["FAKE_PLUGIN_ROOT"] = str(live_plugin)
+        current = subprocess.run(
+            usage_command,
+            text=True,
+            capture_output=True,
+            check=False,
+            shell=True,
+            env=current_env,
+        )
+        assert current.returncode == 0, current.stderr
+        assert current.stdout.strip() == "Usage: dynamically resolved"
 
     print("Goldilocks recovery hook contract passed.")
 

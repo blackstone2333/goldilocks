@@ -521,13 +521,16 @@ def find_ledger(cwd: Path) -> Path | None:
 
 
 def usage_receipt_gate() -> str:
-    reporter = Path(__file__).with_name("usage_reporter.py")
     python = "py -3" if os.name == "nt" else "python3"
-    command = f"{python} {json.dumps(str(reporter))} --current"
-    return (
-        f"Before final, run `{command}` and append its Usage line; omit unavailable output "
-        "and never estimate."
+    resolver = (
+        "import json,os,runpy,subprocess;d=json.loads(subprocess.check_output("
+        "['codex','plugin','list','--json']))['installed'];"
+        "p=os.path.join(next(filter(lambda x:x['pluginId'].startswith('goldilocks@')"
+        "and x.get('enabled',True),d))['source']['path'],'scripts','usage_reporter.py');"
+        "runpy.run_path(p,run_name='__main__')"
     )
+    command = f"{python} -c {json.dumps(resolver)} --current"
+    return f"Before final: run `{command}`; append nonempty Usage; never estimate."
 
 
 def main() -> None:
