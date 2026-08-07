@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="Version 0.4.5">
+  <img src="https://img.shields.io/badge/version-0.5.0--alpha.1-D4A72C" alt="Version 0.5.0-alpha.1">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -31,12 +31,23 @@ Goldilocks is domain-agnostic: any executable work may enter the router, includi
 
 Do not enable Goldilocks and Superpowers together.
 
+> **Alpha field test:** this tag contains experimental cost-aware routing, model naming, routing audit, and recursive Usage receipts. For the focused stable defect-explanation fix, install `v0.4.2` from the default branch instead. Do not install both variants at once.
+
+### Install this Alpha directly in Codex
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin add goldilocks@goldilocks-local
+```
+
+Start a new task, review the bundled commands through `/hooks`, and persistently trust them only after confirming they belong to Goldilocks. Useful field feedback includes the task type, visible `ROUTE` line, child names/models, elapsed time, final cause/fix/verification, Usage line or its absence, and whether the result felt clearer, faster, or cheaper than Direct.
+
 ### Ask an AI to install it
 
 Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
 
 ```text
-Install the latest Goldilocks from https://github.com/blackstone2333/goldilocks. Detect this agent's platform first: prefer the native plugin installation documented in the repository when supported; otherwise install Goldilocks globally as a compatible Skill. Do not enable Goldilocks and Superpowers together. Before any Hook approval, explain what the requested Hooks do and ask me to confirm; do not approve unrelated permissions. After installation, verify the installed version and availability, then tell me whether a new conversation is required. Do not modify unrelated configuration.
+Install the Goldilocks v0.5.0-alpha.1 prerelease from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.0-alpha.1; for Codex run `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1` and then install `goldilocks@goldilocks-local`. Do not enable it with Superpowers or another Goldilocks version. Explain that this is experimental, ask once before persistently trusting its Hooks through /hooks, then verify the installed version, Hook state, and availability without changing unrelated configuration.
 ```
 
 ### Any Skills-compatible agent
@@ -56,7 +67,7 @@ Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `
 ### Native Codex plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -64,11 +75,16 @@ codex plugin add goldilocks@goldilocks-local
 
 The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
 
+**Trusting all bundled Goldilocks Hooks is the recommended setup.** After installation, enter `/hooks` inside the interactive Codex CLI—not in the ordinary shell—verify that the commands come from Goldilocks, and choose the persistent “Trust all” or “Always allow” option (wording varies by Codex version), not “Allow once.” Trust is bound to the current Hook definition and reused by later tasks, so unchanged Hooks need approval only once. Codex may request review again when an update changes the Hook hash.
+
 - `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
 - `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory. A stopped worker is not marked successful until Lead reruns acceptance and `record_routing_outcome.py` closes it as verified pass or fail; only an evidence hash is retained.
 - `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
+- `usage_reporter.py` summarizes per-model tokens and elapsed time without another model call. Goldilocks reads its `--current` one-line receipt immediately before the final answer; if Codex has not written the turn's first usage checkpoint yet, it stays silent instead of falsely reporting zero.
 
-If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
+If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, update notices, and token receipts will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
+
+If authorization still appears on every task, use `/hooks` to confirm that persistent trust—not one-time allowance—was selected, and check whether a startup script is reinstalling the plugin or refreshing its cache on every run.
 
 ### Native Claude Code plugin
 
@@ -132,7 +148,7 @@ The invariant is final quality, not process volume or who typed the code. Goldil
 
 The root router is under 300 words. If there is no material decision, unknown cause, continuity need, external risk, or useful ready work to delegate, Goldilocks exits before loading a workflow reference. It inspects task-local facts, makes the smallest coherent change, and runs the smallest check that would fail if the result were wrong.
 
-An existing hook adds a 26-word communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
+An existing hook adds a compact communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. Defect work still reports an evidence-backed cause (or explicitly unknown), the fix, and verification, so brevity does not turn debugging into a black box.
 
 The same Hook now places a compact zero-cost gate before specialist Skills. Pure conversation skips it; clear executable work stays Direct without loading the full router; material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`. A local audit records only prompt and workspace hashes, session/turn identifiers, and timestamps so activation can be verified without retaining prompt content.
 
@@ -227,6 +243,6 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 ## Status
 
-Goldilocks remains experimental at `v0.4.5`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks `v0.5.0-alpha.1` is an opt-in field-test build. It can better replace Superpowers on the tested workflow surface, but its new routing and Usage behavior still needs diverse real-project feedback before a stable `v0.5.0` decision. [Issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

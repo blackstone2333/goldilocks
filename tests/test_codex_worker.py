@@ -202,13 +202,15 @@ Implement the bounded parser change.
         assert "Goldilocks Fast leaf" in prompt
         assert "Do not delegate" in prompt
         assert "Do not delegate, reroute, broaden scope" in prompt
-        assert "fast__focused_implementation" in prompt
+        assert "fast__focused_implementation_luna" in prompt
         assert "Implement the bounded parser change" in prompt
         assert "changed files" in prompt and "checks" in prompt
+        assert "evidence-backed cause" in prompt
+        assert "explicitly unknown" in prompt
         assert "Do not rerun Goldilocks routing" in prompt
         assert "one coherent batch" in prompt
         worker_header = prompt.split("--- execution contract ---", 1)[0]
-        assert len(worker_header.split()) <= 125, "leaf briefing must stay context-lean"
+        assert len(worker_header.split()) <= 140, "leaf briefing must stay context-lean"
         assert "company-style" not in worker_header
         assert "report changed files" in worker_header.lower()
 
@@ -227,6 +229,7 @@ Implement the bounded parser change.
         summary = json.loads(captured.stdout.strip())
         assert summary["model"] == LUNA_MODEL
         event_path = Path(summary["events"])
+        assert event_path.name.startswith("fast__focused_implementation_luna.")
         assert event_path.parent.samefile(events_dir)
         assert event_path.read_text(encoding="utf-8").strip() == "FAKE_SPARK_OK"
         captured_argv = json.loads(probe.read_text(encoding="utf-8"))["argv"]
@@ -263,6 +266,9 @@ Implement the bounded parser change.
         assert ["-m", SPARK_MODEL] == spark_argv[
             spark_argv.index("-m") : spark_argv.index("-m") + 2
         ]
+        assert "fast__focused_implementation_spark" in json.loads(
+            probe.read_text(encoding="utf-8")
+        )["stdin"]
 
         probe.unlink()
         legacy_coding = run_dispatcher(

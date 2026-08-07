@@ -15,6 +15,13 @@ acceptance. Never delegate merely to raise agent count, and never expand scope o
 an authority boundary. Preserve concurrent edits. Escalate missing material decisions
 instead of guessing.
 
-Return STATUS, CHANGES, VERIFIED, JUDGMENT CALLS, and GAPS. Report actual evidence and
-do not claim integration or final acceptance; those remain with Lead.
+Before implementing a complete low-discretion leaf yourself, evaluate Fast before Standard:
+Luna is the general Fast baseline and Spark is the deterministic coding specialist. Native
+role visibility is not route availability; use the Goldilocks model-routing adapter when the
+external route is verified. If all work remains with you, report why Fast is ineligible.
+Name delegated leaves `fast__<semantic>_<model>`.
+
+Return STATUS, CAUSE, CHANGES, VERIFIED, JUDGMENT CALLS, and GAPS. For defect work,
+CAUSE must be evidence-backed or explicitly unknown rather than guessed. Report actual
+evidence and do not claim integration or final acceptance; those remain with Lead.
 """

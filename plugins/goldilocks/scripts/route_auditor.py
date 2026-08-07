@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.4.5-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 TRANSCRIPT_TAIL_BYTES = 16 * 1024 * 1024
 ROUTE_LINE = re.compile(
@@ -317,11 +317,11 @@ def available_route_models(
                 SELECT DISTINCT execution.actual_model
                 FROM executions AS execution
                 JOIN decisions AS decision ON decision.decision_id = execution.decision_id
-                WHERE decision.cwd_hash = ? AND execution.started_at < ?
+                WHERE execution.started_at < ?
                   AND execution.stopped_at IS NOT NULL
                   AND execution.actual_model = decision.expected_model
                 """,
-                (cwd_hash, route_at.isoformat()),
+                (route_at.isoformat(),),
             ).fetchall()
             models.update(str(row[0]) for row in rows if row[0])
     if "external_routes" in available:
@@ -337,10 +337,10 @@ def available_route_models(
                 """
                 SELECT DISTINCT COALESCE(actual_model, expected_model)
                 FROM external_routes
-                WHERE cwd_hash = ? AND started_at < ? AND status = 'succeeded'
+                WHERE started_at < ? AND status = 'succeeded'
                   AND COALESCE(actual_model, '') != ''
                 """,
-                (cwd_hash, route_at.isoformat()),
+                (route_at.isoformat(),),
             ).fetchall()
             models.update(str(row[0]) for row in rows if row[0])
     return models

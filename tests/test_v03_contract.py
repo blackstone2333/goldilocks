@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.4.5"
+RELEASE_VERSION = "0.5.0-alpha.1"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -204,7 +204,8 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
         ]:
             if command not in readme:
                 fail(f"{readme_name} lacks installation command: {command}")
-        if f"version-{RELEASE_VERSION}" not in readme:
+        badge_version = RELEASE_VERSION.replace("-", "--")
+        if f"version-{badge_version}" not in readme:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
         for route_contract in [
             "gpt-5.3-codex-spark",

@@ -2,6 +2,17 @@
 
 Goldilocks can be installed as portable Agent Skills or as a native Codex or Claude Code plugin.
 
+## Install the v0.5.0 Alpha in Codex
+
+The Alpha and stable plugin share one marketplace name, so choose one rather than installing both:
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin add goldilocks@goldilocks-local
+```
+
+Start a new task and verify `v0.5.0-alpha.1` before testing. The exact Git ref keeps this install on the prerelease instead of the default stable branch.
+
 ## Choose an installation
 
 - **Core router:** install only `goldilocks` for the Just-Necessary routing logic. It is self-contained and has the smallest footprint.

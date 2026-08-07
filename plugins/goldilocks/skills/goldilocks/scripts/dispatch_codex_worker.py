@@ -25,6 +25,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PLUGIN_ROOT / "scripts"))
 
 import model_economics as economics  # noqa: E402
+from model_naming import model_name_suffix, visible_task_name  # noqa: E402
 
 
 SPARK_MODEL = "gpt-5.3-codex-spark"
@@ -39,7 +40,7 @@ FAST_MODELS = {
 TASK_NAME_PATTERN = re.compile(r"^fast__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
-POLICY_VERSION = "0.4.5-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
 
 
 def parser() -> argparse.ArgumentParser:
@@ -253,7 +254,7 @@ Implement and verify only the contract below in the assigned workspace.
 - Do not rerun Goldilocks routing, continuity, update checks, or task ledgers.
 - Treat listed units as one coherent batch; keep each independently checkable.
 - Preserve unrelated work and repository rules. Stop rather than guess when a material decision is missing.
-- At completion, report changed files, focused checks and results, then unresolved blockers or risks. No preamble or repeated recap.
+- At completion, report changed files, focused checks and results, then unresolved blockers or risks. For defect work, report the evidence-backed cause or mark it explicitly unknown, then the fix and verification. No preamble or repeated recap.
 
 Task name: {task_name}
 Work type: {work_type}
@@ -697,8 +698,8 @@ def main() -> int:
     arguments = parser()
     args = arguments.parse_args()
 
-    task_name = args.task_name.strip().lower()
-    if not TASK_NAME_PATTERN.fullmatch(task_name):
+    requested_task_name = args.task_name.strip().lower()
+    if not TASK_NAME_PATTERN.fullmatch(requested_task_name):
         fail(arguments, "task-name must start with fast__ and contain only letters, digits, _ or -")
 
     workdir = args.workdir.expanduser().resolve()
@@ -751,6 +752,7 @@ def main() -> int:
         )
         pricing = fixed_pricing_snapshot(selected_model, requested_channel)
         billing_channel = requested_channel
+    task_name = visible_task_name(requested_task_name, selected_model)
     codex_binary = find_codex(arguments)
     route_id = start_external_audit(
         audit_dir,

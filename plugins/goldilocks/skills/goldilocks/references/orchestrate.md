@@ -25,11 +25,13 @@ Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, 
 
 This is not a delegation quota; Direct remains valid. With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when slightly slower. Keep raw tokens and time proportionate. The grant covers bounded Fast/Standard dispatch only; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
-Judge project-level organization. `WRITE_READY` and `READ_READY` count unowned executable and read-only units; `EXISTING` means active outside ownership, never completed or unverified artifacts. `PLANNED_DISPATCH` is intended starts; Hooks observe actual starts. A shared mutable surface blocks concurrent writers only, not independent diagnosis or review. Existing ownership plus Lead work is `ROUTE=mixed`. Direct names concrete transfer loss; `route_unavailable` names a missing route or observed startup failure.
+With that grant, evaluate every ready unit for Fast before Standard. A missing native Luna role is a transport choice, not `route_unavailable`, while the packaged external adapter remains verified. If all delegated units use Terra, `DETAIL` names why Fast is ineligible because residual judgment, tools, authority, or acceptance cannot be externalized. This is an explanation requirement, not a Fast quota.
+
+Judge project-level organization. Count unowned executable and read-only units in `WRITE_READY` and `READ_READY`. `EXISTING` counts only host-confirmed running ownership; ignore UI labels, idle/completed handles, unverified artifacts, and lone historical `task_started`. On conflict use host status/list, then fresh runtime evidence. `PLANNED_DISPATCH` is intended starts; Hooks observe starts. A shared mutable surface blocks concurrent writers only, not diagnosis or review. Existing ownership plus Lead work is `ROUTE=mixed`. Direct names transfer loss; `route_unavailable` names a missing or failed route.
 
 The route line may be silently compared with existing Hook, session, and SQLite data. Do not create proof, probes, documents, tests, model calls, or narration for this review; findings are soft and never block delivery.
 
-Close every wave: use the host wait/status mechanism until each worker is terminal, consume finals promptly, then reconcile status once if notification and UI state differ. Never make the user open a finished child. Completed/idle handles and unverified artifacts are not `EXISTING`; only running or externally owned work counts. A terminal event or rollout `task_complete` overrides stale UI for routing.
+Close every wave with the host wait/status mechanism, consume finals, and reconcile once. Never make the user open a finished child. Completed, idle, stale, or unverified records are not `EXISTING`; only confirmed running ownership counts. `task_complete` overrides stale UI; lifecycle-expired records are cleanup debt, not capacity.
 
 Use codes narrowly: `lead_faster` compares end-to-end time; `critical_judgment` protects a decision; `review_cost` names verification burden; `contract_not_ready` names a missing interface or acceptance decision; `parallel_gain` and `quota_gain` justify delegation. Never manufacture work.
 
@@ -53,7 +55,9 @@ Fast is a leaf and does not delegate. Standard may delegate Fast only within its
 
 Classify after decomposition: a large unit can be Fast when discretion is low; a small security decision can remain Lead. Each contract states objective, non-goals, allowed files/domain, interfaces, dependencies, acceptance, evidence, and forbidden external/destructive actions. Give task-local paths and decisions, not conversation history. If intent or architecture remains implicit, it is not Fast-ready.
 
-Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; owners inspect real diffs and evidence.
+Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; defects add evidence-backed `CAUSE` or explicitly unknown. Owners inspect real diffs and evidence.
+
+Name every child `<tier>__<semantic>_<model>`: `fast__..._luna`, `fast__..._spark`, `standard__..._terra`, or `lead__..._sol`. Hooks/adapters derive the model suffix from the pinned model; callers must preserve the routing-tier prefix.
 
 Keep a coherent unit and focused checks together. Workers escalate ambiguity. After one failed repair or requirement mismatch, reconsider contract or capability; after a second, stop the loop and upgrade or keep work local.
 

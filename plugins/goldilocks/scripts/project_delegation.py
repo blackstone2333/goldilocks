@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Store or inspect one explicit project-level Goldilocks delegation grant."""
+"""Store or inspect an explicit Goldilocks delegation grant."""
 
 from __future__ import annotations
 
@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
+GLOBAL_GRANT_KEY = "__global__"
 
 
 def parser() -> argparse.ArgumentParser:
@@ -23,6 +24,12 @@ def parser() -> argparse.ArgumentParser:
     action.add_argument("--revoke", action="store_true")
     action.add_argument("--status", action="store_true")
     value.add_argument("--authority", choices=("explicit-user",))
+    value.add_argument(
+        "--global",
+        dest="global_scope",
+        action="store_true",
+        help="Apply the bounded delegation preference to future projects until revoked.",
+    )
     value.add_argument("--workdir", type=Path, default=Path.cwd())
     value.add_argument("--data-dir", type=Path)
     return value
@@ -79,6 +86,7 @@ def main() -> None:
     root.mkdir(parents=True, exist_ok=True)
     database = root / "orchestration.db"
     project = cwd_hash(args.workdir)
+    grant_key = GLOBAL_GRANT_KEY if args.global_scope else project
     timestamp = datetime.now(timezone.utc).isoformat()
 
     with sqlite3.connect(database, timeout=10) as connection:
@@ -95,31 +103,51 @@ def main() -> None:
                     active = 1, granted_at = excluded.granted_at,
                     revoked_at = NULL, policy_version = excluded.policy_version
                 """,
-                (project, timestamp, POLICY_VERSION),
+                (grant_key, timestamp, POLICY_VERSION),
             )
         elif args.revoke:
             connection.execute(
                 """
-                UPDATE project_grants SET active = 0, revoked_at = ?, policy_version = ?
-                WHERE cwd_hash = ?
+                INSERT INTO project_grants (
+                    cwd_hash, active, granted_at, revoked_at, policy_version
+                ) VALUES (?, 0, ?, ?, ?)
+                ON CONFLICT(cwd_hash) DO UPDATE SET
+                    active = 0, revoked_at = excluded.revoked_at,
+                    policy_version = excluded.policy_version
                 """,
-                (timestamp, POLICY_VERSION, project),
+                (grant_key, timestamp, timestamp, POLICY_VERSION),
             )
         row = connection.execute(
             "SELECT active, granted_at, revoked_at, policy_version FROM project_grants "
             "WHERE cwd_hash = ?",
-            (project,),
+            (grant_key,),
         ).fetchone()
+        effective_source = "global" if args.global_scope else "project"
+        if not args.global_scope and row is None:
+            row = connection.execute(
+                "SELECT active, granted_at, revoked_at, policy_version FROM project_grants "
+                "WHERE cwd_hash = ?",
+                (GLOBAL_GRANT_KEY,),
+            ).fetchone()
+            if row is not None:
+                effective_source = "global"
 
     print(
         json.dumps(
             {
                 "status": "active" if row and row[0] else "inactive",
-                "project_hash": project,
+                "project_hash": None if args.global_scope else project,
+                "requested_scope": "global" if args.global_scope else "project",
+                "effective_source": effective_source if row is not None else None,
                 "granted_at": row[1] if row else None,
                 "revoked_at": row[2] if row else None,
                 "policy_version": row[3] if row else POLICY_VERSION,
-                "scope": "bounded Fast/Standard dispatch only; no additional external authority",
+                "scope": (
+                    "global bounded Fast/Standard dispatch preference; per-project opt-out; "
+                    "no additional external authority"
+                    if args.global_scope
+                    else "bounded Fast/Standard dispatch only; no additional external authority"
+                ),
             },
             sort_keys=True,
         )

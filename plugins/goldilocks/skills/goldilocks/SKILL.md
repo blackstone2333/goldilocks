@@ -11,9 +11,9 @@ Default to Direct. Preserve quality, authority, safety, and acceptance; add only
 
 Check once:
 
-- Is product, architecture, authority, safety, irreversibility, or causality materially uncertain?
+- Is architecture, authority, safety, irreversibility, or causality uncertain?
 - Must work survive compaction, stages, waiting, delegation, or handoff?
-- Are two units ready, or can one complete worker contract avoid substantial Lead work on a verified route?
+- Are two units ready, or can one complete worker contract avoid substantial Lead work?
 
 Visible multi-unit implementation reads [route-card.md](references/route-card.md) before Lead edits. Load `orchestrate.md` only for delegation or worktrees; Direct remains valid after constant-time comparison.
 
@@ -39,4 +39,4 @@ Lead owns intent, decisions, integration, and acceptance. Fast gets a complete l
 
 ## Decision-first communication
 
-Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Expand when safety, ambiguity, or authority requires it.
+Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote long logs. Status is delta only; use the shortest decisive evidence. Defect handoffs add the evidence-backed cause—or explicitly unknown—fix, and verification. Expand for safety, ambiguity, or authority.

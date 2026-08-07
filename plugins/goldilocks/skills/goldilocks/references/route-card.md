@@ -1,32 +1,32 @@
 # Route Card
 
-Use this card for the first decision; load full orchestration only for actual delegation, worktrees, or layered integration.
+Use once before multi-unit implementation; load orchestration only for delegation.
 
-Compare once. Speed alone does not decide:
+`DirectCost = Lead budget share + time + failure risk`
 
-`DirectCost = Lead token spend/budget share + Direct time + failure risk`
+`DelegateCost = worker budget share + time + briefing + review + integration + failure × retry`
 
-`DelegateCost = worker token spend/budget share + elapsed time + briefing + review + integration + failure × retry`
+Use official active-channel rates. Compare separate pools by remaining-budget share; otherwise keep a Pareto result.
 
-Use official channel-specific input/cached/output rates. Compare different currencies or allowance pools by their remaining-budget fractions, or keep a Pareto comparison when budgets are unknown. Never invent one blended number.
+- Direct: weighted cost wins, work is inseparable, or authority stays local.
+- Fast: fixed scope, interfaces, prohibitions, and acceptance.
+- Standard: bounded domain judgment.
+- Lead: intent, authority, integration, and acceptance.
 
-- Direct when its weighted cost wins, work is inseparable, or authority must remain local. A slightly faster Lead is not cheaper by definition.
-- Fast requires fixed objective, surface, interfaces, prohibitions, and acceptance.
-- Standard owns one bounded domain with local judgment.
-- Lead retains intent, shared decisions, authority, integration, and acceptance.
-
-Emit one line only:
+Emit one line:
 
 `ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<n> | READ_READY=<n> | EXISTING=<n> | PLANNED_DISPATCH=<n> | LEAD=<nodes> | REASON=<code> | DETAIL=<sentence>`
 
-`EXISTING` is active user/other-workflow ownership, not completed artifacts or idle agent handles; `PLANNED_DISPATCH` is intended starts and Hooks observe actual starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
+`EXISTING` is host-confirmed running ownership, not completed artifacts, idle/UI handles, or historical `task_started`. Resolve conflicts with host status/list. `PLANNED_DISPATCH` is intended starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
 
-After dispatch, actively collect every terminal child with the host wait/status mechanism and reconcile it once so the user never has to open a finished child manually. Completion or idle state immediately releases ownership; only currently running work counts.
+Collect terminal children with host wait/status; never make the user open them. Stale records count only when host-confirmed running.
 
-The decision may be silently checked against existing run data. Do not create evidence, probes, documents, tests, model calls, or extra narration for that check. When route history is unknown, the first bounded, useful real contract may validate it; a startup failure falls back to Direct.
+Silently check run data without creating probes or narration. Recheck preconditions; one useful contract may validate a route, while startup failure returns Direct.
 
-With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value unit by default even when it is slightly slower. Raw-token or elapsed growth must remain proportionate. Direct needs concrete weighted-cost, quality, shared-surface, failed-route, or authority evidence. The grant permits bounded Fast/Standard dispatch only; it adds no external or destructive authority.
+With an active grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value ready unit even when slightly slower, while keeping time and raw tokens proportionate. Direct needs concrete cost, quality, shared-surface, route-failure, or authority evidence.
 
-Persist explicit user approval with `../../../scripts/project_delegation.py --grant --authority explicit-user --workdir <project>`; never infer approval.
+Evaluate every ready unit for Fast before Standard. If all workers are Terra, `DETAIL` states why residual judgment, tools, authority, or acceptance make Fast ineligible. Missing native Luna visibility is not `route_unavailable` while the verified adapter works. Name children `<tier>__<semantic>_<model>`.
 
-If dispatching, read [orchestrate.md](orchestrate.md) and [model-routing.md](model-routing.md), then verify the route. Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; Lead inspects evidence and integrates.
+Persist approval with `../../../scripts/project_delegation.py --grant --global --authority explicit-user`; use project `--revoke` for opt-out. The grant adds no external or destructive authority.
+
+If dispatching, read [orchestrate.md](orchestrate.md) and [model-routing.md](model-routing.md). Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; Lead inspects and accepts.

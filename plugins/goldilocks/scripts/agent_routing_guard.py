@@ -15,8 +15,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from model_naming import model_name_suffix, visible_task_name
 
-POLICY_VERSION = "0.4.5-exp3.2"
+
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
@@ -78,6 +81,14 @@ def classify(task_name: str) -> str | None:
         if normalized.startswith(prefix):
             return tier
     return None
+
+
+def rewrite_visible_task_name(tool_input: dict[str, Any], model: str) -> dict[str, Any]:
+    rewritten = dict(tool_input)
+    rewritten["task_name"] = visible_task_name(
+        str(tool_input.get("task_name") or ""), model
+    )
+    return rewritten
 
 
 def valid_fork_turns(tier: str, raw_value: object) -> tuple[bool, str]:
@@ -382,7 +393,7 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 f"remove the conflicting {requested_effort} override."
             )
             return
-        rewritten = dict(tool_input)
+        rewritten = rewrite_visible_task_name(tool_input, expected_model)
         rewritten.pop("model", None)
         rewritten.pop("reasoning_effort", None)
         rewritten.pop("service_tier", None)
@@ -418,13 +429,24 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 "or Spark is unavailable, use the packaged dispatch_codex_worker.py adapter."
             )
             return
+        rewritten = rewrite_visible_task_name(tool_input, requested_model)
         record_plan(
             payload,
-            tool_input,
+            rewritten,
             tier,
             requested_model,
             expected_effort=str(tool_input.get("reasoning_effort") or "") or None,
         )
+        if rewritten != tool_input:
+            emit(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "allow",
+                        "updatedInput": rewritten,
+                    }
+                }
+            )
         return
 
     if tier == "lead" and fork_value == "all":
@@ -432,7 +454,7 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         if not inherited_model:
             deny("Goldilocks could not identify the parent Lead model for the full-history handoff.")
             return
-        rewritten = dict(tool_input)
+        rewritten = rewrite_visible_task_name(tool_input, inherited_model)
         rewritten.pop("model", None)
         rewritten.pop("reasoning_effort", None)
         rewritten.pop("service_tier", None)
@@ -457,13 +479,24 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         )
         return
 
+    rewritten = rewrite_visible_task_name(tool_input, requested_model)
     record_plan(
         payload,
-        tool_input,
+        rewritten,
         tier,
         requested_model,
         expected_effort=str(tool_input.get("reasoning_effort") or "") or None,
     )
+    if rewritten != tool_input:
+        emit(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "allow",
+                    "updatedInput": rewritten,
+                }
+            }
+        )
 
 
 def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:

@@ -2,6 +2,19 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.0-alpha.1 — 2026-08-07
+
+### Cost-aware field-test routing
+
+- Added opt-in global authorization for bounded Fast and Standard delegation; new model/profile creation still requires explicit user consent.
+- Added a visible, fixed-category route rationale and a zero-burden audit so Direct decisions can be reviewed without creating extra probes, documents, tests, or model calls.
+- Required every ready unit to be evaluated for Fast before Standard. Codex uses Luna for general Fast work, Spark for deterministic coding batches, Terra for bounded judgment, and Sol for Lead authority and integration when those routes are available.
+- Standardized child names as `<tier>__<task>_<model>` and added dynamic suffixes for other providers such as DeepSeek, Kimi, and Qwen.
+- Added recursive per-model Usage receipts for Lead, native children, and external Fast workers. Missing host usage stays unavailable rather than being estimated or reported as zero.
+- Added causal transparency for defect work: cause—or explicitly unknown—fix, and verification remain visible despite lean output, with more detail on request.
+
+This prerelease is intended for real-project feedback. Routing and Usage behavior may vary with host model availability, billing pools, transcript events, and Hook trust; use `v0.4.2` when only the stable defect-explanation fix is wanted.
+
 ## 0.4.5 — 2026-07-31
 
 ### Cheaper Fast and Standard Routing That Actually Closes

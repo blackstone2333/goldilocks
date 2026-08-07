@@ -2,6 +2,17 @@
 
 Goldilocks 既可以作为跨平台 Agent Skills 安装，也可以作为 Codex 或 Claude Code 原生插件安装。
 
+## 在 Codex 中安装 v0.5.0 Alpha
+
+Alpha 与稳定版共用同一个市场名称，因此二选一安装，不要同时启用：
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin add goldilocks@goldilocks-local
+```
+
+安装后新建任务，并在测试前确认版本是 `v0.5.0-alpha.1`。命令锁定了准确 Git ref，不会误装默认稳定分支。
+
 ## 选择安装方式
 
 - **核心路由器：** 只安装 `goldilocks`，获得 Just-Necessary 动态流程判断，体积和上下文开销最小，可独立工作。

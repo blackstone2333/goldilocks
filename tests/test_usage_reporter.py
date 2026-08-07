@@ -55,7 +55,11 @@ def run_hook(
     if event == "Stop":
         payload["last_assistant_message"] = "done"
         payload["stop_hook_active"] = False
-    env = {**os.environ, "PLUGIN_DATA": str(data)}
+    env = {
+        **os.environ,
+        "PLUGIN_DATA": str(data),
+        "GOLDILOCKS_SESSION_ROOTS": str(data.parent),
+    }
     if worker:
         env["GOLDILOCKS_WORKER"] = "1"
     return subprocess.run(
@@ -68,6 +72,21 @@ def run_hook(
     )
 
 
+def run_current(data: Path, session_id: str = "session-1") -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(REPORTER), "--current"],
+        text=True,
+        capture_output=True,
+        check=False,
+        env={
+            **os.environ,
+            "PLUGIN_DATA": str(data),
+            "CODEX_THREAD_ID": session_id,
+            "GOLDILOCKS_SESSION_ROOTS": str(data.parent),
+        },
+    )
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory() as temporary:
         root = Path(temporary)
@@ -77,6 +96,11 @@ def main() -> None:
 
         baseline = run_hook(data, transcript, "UserPromptSubmit")
         assert baseline.returncode == 0 and baseline.stdout == "", baseline.stderr
+        stale_snapshot = run_current(data)
+        assert stale_snapshot.returncode == 0, stale_snapshot.stderr
+        assert stale_snapshot.stdout == "", stale_snapshot.stdout
+        terra_transcript = root / "rollout-terra-agent.jsonl"
+        append_usage(terra_transcript, 80, 70, 8)
         with sqlite3.connect(data / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             task = connection.execute("SELECT * FROM task_usage_baselines").fetchone()
@@ -84,6 +108,7 @@ def main() -> None:
             assert task["baseline_cached_input_tokens"] == 60
             assert task["baseline_output_tokens"] == 10
             assert task["baseline_available"] == 1
+            assert task["transcript_path"] == str(transcript)
             connection.execute(
                 """
                 CREATE TABLE decisions (
@@ -94,18 +119,22 @@ def main() -> None:
             connection.execute(
                 """
                 CREATE TABLE executions (
-                    decision_id TEXT, actual_model TEXT, stopped_at TEXT,
+                    agent_id TEXT, decision_id TEXT, actual_model TEXT,
+                    started_at TEXT, stopped_at TEXT,
                     input_tokens INTEGER, cached_input_tokens INTEGER,
                     output_tokens INTEGER
                 )
                 """
             )
             connection.execute(
-                "INSERT INTO decisions VALUES ('native-1', 'session-1', 'turn-1')"
+                "INSERT INTO decisions VALUES ('native-1', 'session-1', 'turn-1'), "
+                "('native-2', 'session-1', 'terra-child-turn')"
             )
             connection.execute(
                 "INSERT INTO executions VALUES "
-                "('native-1', 'gpt-5.6-luna', 'done', 50, 40, 5)"
+                "('luna-agent', 'native-1', 'gpt-5.6-luna', ?, 'done', 50, 40, 5), "
+                "('terra-agent', 'native-2', 'gpt-5.6-terra', ?, 'done', NULL, NULL, NULL)",
+                (task["started_at"], task["started_at"]),
             )
             connection.execute(
                 """
@@ -122,15 +151,40 @@ def main() -> None:
                 "'gpt-5.3-codex-spark', 70, 60, 7)",
                 (task["started_at"],),
             )
+            connection.execute(
+                "INSERT INTO external_routes VALUES "
+                "('terra-agent', ?, 'done', 'gpt-5.6-luna', "
+                "'gpt-5.6-luna', 30, 20, 3), "
+                "('session-1', ?, 'done', 'deepseek-ai/DeepSeek-V4-Flash', "
+                "'deepseek-ai/DeepSeek-V4-Flash', 40, 30, 4)",
+                (task["started_at"], task["started_at"]),
+            )
 
         append_usage(transcript, 300, 200, 30)
+        visible = run_current(data)
+        assert visible.returncode == 0, visible.stderr
+        assert visible.stdout.strip() == (
+            "Usage: Sol 220 (in 200 / cached 140 / out 20) | "
+            "Terra 88 (in 80 / cached 70 / out 8) | "
+            "Luna 88 (in 80 / cached 60 / out 8) | "
+            "Spark 77 (in 70 / cached 60 / out 7) | "
+            "DeepSeek V4 Flash 44 (in 40 / cached 30 / out 4) | total 517 tokens"
+        )
+        with sqlite3.connect(data / "orchestration.db") as connection:
+            recovered = connection.execute(
+                "SELECT input_tokens, cached_input_tokens, output_tokens "
+                "FROM executions WHERE agent_id = 'terra-agent'"
+            ).fetchone()
+        assert recovered == (80, 70, 8)
         stopped = run_hook(data, transcript, "Stop")
         assert stopped.returncode == 0, stopped.stderr
         message = json.loads(stopped.stdout)["systemMessage"]
         assert "gpt-5.6-sol: in 200 (140 cached) + out 20 = 220" in message
-        assert "gpt-5.6-luna: in 50 (40 cached) + out 5 = 55" in message
+        assert "gpt-5.6-terra: in 80 (70 cached) + out 8 = 88" in message
+        assert "gpt-5.6-luna: in 80 (60 cached) + out 8 = 88" in message
         assert "gpt-5.3-codex-spark: in 70 (60 cached) + out 7 = 77" in message
-        assert "total 352 tokens" in message
+        assert "deepseek-ai/DeepSeek-V4-Flash: in 40 (30 cached) + out 4 = 44" in message
+        assert "total 517 tokens" in message
 
         duplicate = run_hook(data, transcript, "Stop")
         assert duplicate.returncode == 0 and json.loads(duplicate.stdout) == {}
@@ -139,7 +193,7 @@ def main() -> None:
         updated = run_hook(data, transcript, "Stop")
         updated_message = json.loads(updated.stdout)["systemMessage"]
         assert "gpt-5.6-sol: in 210 (145 cached) + out 22 = 232" in updated_message
-        assert "total 364 tokens" in updated_message
+        assert "total 529 tokens" in updated_message
 
         missing_start = run_hook(data, None, "UserPromptSubmit", turn_id="turn-2")
         assert missing_start.returncode == 0 and missing_start.stdout == ""

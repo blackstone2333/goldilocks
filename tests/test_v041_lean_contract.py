@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.5"
+VERSION = "0.5.0-alpha.1"
 
 
 def read(path: Path) -> str:
@@ -35,6 +35,8 @@ def main() -> None:
         "Do not narrate planned work",
         "delta only",
         "shortest decisive evidence",
+        "evidence-backed cause",
+        "explicitly unknown",
     )
     for phrase in required_root_phrases:
         if phrase not in root_skill:
@@ -136,7 +138,8 @@ def main() -> None:
 
     for path in (ROOT / "README.md", ROOT / "README.zh-CN.md"):
         body = read(path)
-        if f"version-{VERSION}" not in body:
+        badge_version = VERSION.replace("-", "--")
+        if f"version-{badge_version}" not in body:
             failures.append(f"{path.name} badge is not {VERSION}")
         if "Caveman" not in body or "ADHD" not in body:
             failures.append(f"{path.name} does not explain the lean-output influence")
@@ -211,6 +214,10 @@ def main() -> None:
         "Omit work preambles",
         "Report only changed state",
         "decisive evidence",
+        "For defect work",
+        "evidence-backed cause",
+        "explicitly unknown",
+        "fix and verification",
         "goldilocks:goldilocks",
         "gate_injections",
         "prompt_fingerprint",
@@ -223,7 +230,7 @@ def main() -> None:
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.5 lean-routing contract passed.")
+    print(f"Goldilocks v{VERSION} lean-routing contract passed.")
 
 
 if __name__ == "__main__":

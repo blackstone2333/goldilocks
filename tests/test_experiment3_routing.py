@@ -157,6 +157,48 @@ def test_project_grant(root: Path) -> None:
     assert revoked.returncode == 0, revoked.stderr
     assert json.loads(revoked.stdout)["status"] == "inactive"
 
+    global_grant = command(
+        str(GRANT),
+        "--grant",
+        "--global",
+        "--authority",
+        "explicit-user",
+        "--data-dir",
+        str(data),
+    )
+    assert global_grant.returncode == 0, global_grant.stderr
+    global_result = json.loads(global_grant.stdout)
+    assert global_result["status"] == "active"
+    assert global_result["requested_scope"] == "global"
+
+    inherited_project = root / "inherited-project"
+    inherited_project.mkdir()
+    inherited = command(
+        str(GRANT),
+        "--status",
+        "--workdir",
+        str(inherited_project),
+        "--data-dir",
+        str(data),
+    )
+    inherited_result = json.loads(inherited.stdout)
+    assert inherited_result["status"] == "active"
+    assert inherited_result["effective_source"] == "global"
+
+    project_opt_out = command(
+        str(GRANT),
+        "--revoke",
+        "--workdir",
+        str(inherited_project),
+        "--data-dir",
+        str(data),
+    )
+    assert json.loads(project_opt_out.stdout)["status"] == "inactive"
+    global_status = command(
+        str(GRANT), "--status", "--global", "--data-dir", str(data)
+    )
+    assert json.loads(global_status.stdout)["status"] == "active"
+
 
 def test_runtime_inspector(root: Path) -> None:
     thread = "11111111-2222-4333-8444-555555555555"
@@ -279,6 +321,7 @@ def test_native_role_audit(root: Path) -> None:
     assert planned.returncode == 0, planned.stderr
     update = json.loads(planned.stdout)["hookSpecificOutput"]["updatedInput"]
     assert update["agent_type"] == "goldilocks_terra_engineer"
+    assert update["task_name"] == "standard__bounded_domain_terra"
     assert "model" not in update and "reasoning_effort" not in update
 
     started = hook(
@@ -423,7 +466,7 @@ def test_native_role_audit(root: Path) -> None:
             "turn_id": "observed-child-turn",
             "agent_id": "observed-terra-child",
             "agent_type": "goldilocks_terra_engineer",
-            "agent_path": "/root/standard__observed_route",
+            "agent_path": "/root/standard__observed_route_terra",
             "model": TERRA,
         },
     )
@@ -436,7 +479,7 @@ def test_native_role_audit(root: Path) -> None:
         observed_execution = connection.execute(
             "SELECT * FROM executions WHERE agent_id = 'observed-terra-child'"
         ).fetchone()
-    assert observed_decision["task_name"] == "standard__observed_route"
+    assert observed_decision["task_name"] == "standard__observed_route_terra"
     assert observed_decision["expected_agent_type"] == "goldilocks_terra_engineer"
     assert observed_decision["expected_effort"] == "high"
     assert observed_execution["correlation_confidence"] == "role_observed"
@@ -538,6 +581,7 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
         connection.row_factory = sqlite3.Row
         route = connection.execute("SELECT * FROM external_routes").fetchone()
     assert route["expected_agent_type"] == "goldilocks_spark_coder"
+    assert route["task_name"] == "fast__external_probe_spark"
     assert route["expected_model"] == "gpt-5.3-codex-spark"
     assert route["actual_model"] == route["expected_model"]
     assert route["actual_effort"] == "medium"
@@ -651,6 +695,7 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
             (failed_summary["route_id"],),
         ).fetchone()
     assert failed_route["status"] == "failed"
+    assert failed_route["task_name"] == "fast__external_failure_spark"
     assert failed_route["stopped_at"]
     assert failed_route["child_thread_id"] == failed_summary["thread_id"]
 
@@ -891,6 +936,7 @@ raise SystemExit(int(os.environ.get('FAKE_EXIT_CODE', '0')))
             (dynamic_summary["route_id"],),
         ).fetchone()
     assert dynamic_route["expected_agent_type"] == profile["name"]
+    assert dynamic_route["task_name"] == "fast__authorized_kimi-k2-7-code"
     assert dynamic_route["agent_profile"] == str(profile_path)
     assert json.loads(dynamic_route["pricing_snapshot"])["currency"] == "CNY"
 

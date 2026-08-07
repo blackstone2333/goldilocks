@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import subprocess
 import sys
@@ -14,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "agent_routing_guard.py"
 RECORDER = ROOT / "plugins" / "goldilocks" / "scripts" / "record_routing_outcome.py"
+HOOKS = ROOT / "plugins" / "goldilocks" / "hooks" / "hooks.json"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 LEAD_MODEL = "gpt-5.6-sol"
@@ -123,6 +125,18 @@ def assert_silent(result: subprocess.CompletedProcess[str], reason: str) -> None
     assert result.stdout == "", reason
 
 
+def test_hook_matcher_contract() -> None:
+    hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]
+    matcher = re.compile(hooks["PreToolUse"][0]["matcher"])
+    for tool_name in (
+        "Agent",
+        "spawn_agent",
+        "collaboration.spawn_agent",
+        "functions.collaboration.spawn_agent",
+    ):
+        assert matcher.fullmatch(tool_name), f"routing Hook misses {tool_name}"
+
+
 def rows(data_dir: Path, table: str) -> list[sqlite3.Row]:
     database = data_dir / "orchestration.db"
     assert database.is_file(), "routing state must use PLUGIN_DATA/orchestration.db"
@@ -215,12 +229,14 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         tool_input=fast_terra_input,
         tool_use_id="fast-terra-explicit",
     )
-    assert_silent(fast_terra, "explicit Terra Fast routing should pass through unchanged")
+    terra_rewrite = hook_output(fast_terra)["updatedInput"]
+    assert terra_rewrite["task_name"] == "fast__inspect_logs_terra"
     recorded_fast = next(
         row for row in rows(data_dir, "decisions") if row["tool_use_id"] == "fast-terra-explicit"
     )
     assert recorded_fast["expected_model"] == TERRA_MODEL
     assert recorded_fast["fork_turns"] == "none"
+    assert recorded_fast["task_name"] == "fast__inspect_logs_terra"
 
     fast_spark_input = spawn_input(
         "fast__spark_when_available",
@@ -234,7 +250,34 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         tool_input=fast_spark_input,
         tool_use_id="fast-spark-explicit",
     )
-    assert_silent(fast_spark, "an explicitly selected available Spark Fast route should pass through unchanged")
+    spark_rewrite = hook_output(fast_spark)["updatedInput"]
+    assert spark_rewrite["task_name"] == "fast__spark_when_available_spark"
+
+    fast_luna = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input=spawn_input(
+            "fast__summarize_logs_terra",
+            fork_turns="none",
+            model=LUNA_MODEL,
+            reasoning_effort="low",
+        ),
+        tool_use_id="fast-luna-visible-name",
+    )
+    luna_rewrite = hook_output(fast_luna)["updatedInput"]
+    assert luna_rewrite["task_name"] == "fast__summarize_logs_luna"
+
+    already_named = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input=spawn_input(
+            "fast__already_named_luna",
+            fork_turns="none",
+            model=LUNA_MODEL,
+        ),
+        tool_use_id="fast-luna-already-named",
+    )
+    assert_silent(already_named, "a truthful existing suffix must not be rewritten")
 
     recursive_fast = run_hook(
         data_dir,
@@ -264,7 +307,7 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         data_dir,
         "PreToolUse",
         tool_input=spawn_input(
-            "standard__known_pattern",
+            "standard__known_pattern_terra",
             fork_turns="2",
             model=TERRA_MODEL,
             reasoning_effort="medium",
@@ -278,7 +321,7 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         "PreToolUse",
         model=LEAD_MODEL,
         tool_input=spawn_input(
-            "lead__security_review",
+            "lead__security_review_sol",
             fork_turns="1",
             model=LEAD_MODEL,
             reasoning_effort="high",
@@ -301,6 +344,7 @@ def test_pre_tool_contract(data_dir: Path) -> None:
     )
     rewritten_lead = hook_output(lead_full_history)["updatedInput"]
     assert rewritten_lead["fork_turns"] == "all"
+    assert rewritten_lead["task_name"] == "lead__architecture_owner_sol"
     assert "model" not in rewritten_lead
     assert "reasoning_effort" not in rewritten_lead
 
@@ -312,7 +356,7 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="decision-a",
-        tool_input=spawn_input("fast__spark_a", fork_turns="none", model=SPARK_MODEL),
+        tool_input=spawn_input("fast__spark_a_spark", fork_turns="none", model=SPARK_MODEL),
     )
     assert_silent(fast, "explicit Spark Fast plan should be recorded")
     standard = run_hook(
@@ -321,7 +365,7 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         session_id=session,
         tool_use_id="decision-b",
         tool_input=spawn_input(
-            "standard__terra_b", fork_turns="2", model=TERRA_MODEL
+            "standard__terra_b_terra", fork_turns="2", model=TERRA_MODEL
         ),
     )
     assert_silent(standard, "Terra plan should be recorded")
@@ -366,7 +410,7 @@ def test_ambiguous_same_model_correlation(data_dir: Path) -> None:
             session_id=session,
             tool_use_id=f"same-model-{suffix}",
             tool_input=spawn_input(
-                f"standard__same_model_{suffix}", fork_turns="1", model=TERRA_MODEL
+                f"standard__same_model_{suffix}_terra", fork_turns="1", model=TERRA_MODEL
             ),
         )
         assert_silent(planned, "same-model plans should be accepted")
@@ -396,7 +440,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="stop-decision",
-        tool_input=spawn_input("fast__stop_target", fork_turns="none", model=TERRA_MODEL),
+        tool_input=spawn_input("fast__stop_target_terra", fork_turns="none", model=TERRA_MODEL),
     )
     assert_silent(planned, "explicit Terra Fast plan should be recorded")
     started = run_hook(
@@ -527,7 +571,7 @@ def test_real_mismatch(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="mismatch-decision",
-        tool_input=spawn_input("fast__focused_tests", fork_turns="none", model=TERRA_MODEL),
+        tool_input=spawn_input("fast__focused_tests_terra", fork_turns="none", model=TERRA_MODEL),
     )
     assert_silent(planned, "explicit Terra Fast plan should be recorded")
     mismatch = run_hook(
@@ -583,6 +627,7 @@ def test_unplanned_sol_immediate_return(data_dir: Path) -> None:
 
 
 def main() -> None:
+    test_hook_matcher_contract()
     with tempfile.TemporaryDirectory() as temp_dir:
         data_dir = Path(temp_dir)
         test_pre_tool_contract(data_dir)
@@ -593,7 +638,7 @@ def main() -> None:
         test_real_mismatch(data_dir)
         test_unplanned_sol_immediate_return(data_dir)
 
-    print("Goldilocks v0.4.5 agent routing hook contract passed.")
+    print("Goldilocks alpha agent routing hook contract passed.")
 
 
 if __name__ == "__main__":

@@ -47,7 +47,7 @@ Resolve `../assets/codex-route-profiles.json`:
 
 Install native templates with `../../../scripts/install_agents.py`, then start a new task. The installer never edits `config.toml` or overwrites a differing file. Requested read-only is not proof of OS isolation; use `../../../scripts/inspect_agent_runtime.py --record` when runtime evidence is incomplete.
 
-Cache visibility is not route readiness. Confirm the model on the actual native host. Every native spawn uses `fast__<name>`, `standard__<name>`, or `lead__<name>` and an explicit `fork_turns`:
+Cache visibility is not route readiness. Confirm the model on the native host. Name spawns `fast__<name>_<model>`, `standard__<name>_<model>`, or `lead__<name>_<model>` and set `fork_turns` explicitly. The Hook derives `_luna`, `_spark`, `_terra`, or `_sol` from the selected model:
 
 - Fast: normally `none` plus a task-local contract.
 - Standard: `none` or at most four relevant turns.
@@ -72,6 +72,8 @@ python3 <dispatch-script> \
 ```
 
 Use `--work-type spark-coding` only for a qualifying batch; `general` and `coding` remain compatibility aliases. The adapter calls `codex exec`, pins model/effort/sandbox, forbids danger-full-access, sends the contract on stdin, disables further delegation, and propagates failure without silent fallback.
+
+The adapter derives the visible model suffix; callers may pass only the semantic base name.
 
 `project` isolates global plugins, Apps, MCP, Skills, and Hooks while preserving repository rules. `minimal` also ignores execpolicy rules. `inherit` keeps the full environment only when the contract names a required installed capability. Clean profiles preserve authentication, provider, `models_cache.json`, and runtime.
 

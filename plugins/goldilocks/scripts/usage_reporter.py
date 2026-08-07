@@ -15,11 +15,13 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import route_auditor
+from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.4.5-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
+MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}
 
 
 def now() -> str:
@@ -74,6 +76,7 @@ def connect(root: Path) -> sqlite3.Connection:
             baseline_cached_input_tokens INTEGER NOT NULL DEFAULT 0,
             baseline_output_tokens INTEGER NOT NULL DEFAULT 0,
             baseline_available INTEGER NOT NULL DEFAULT 0,
+            transcript_path TEXT,
             started_at TEXT NOT NULL,
             last_receipt_hash TEXT,
             last_reported_at TEXT,
@@ -82,6 +85,14 @@ def connect(root: Path) -> sqlite3.Connection:
         )
         """
     )
+    columns = {
+        str(row[1])
+        for row in connection.execute("PRAGMA table_info(task_usage_baselines)")
+    }
+    if "transcript_path" not in columns:
+        connection.execute(
+            "ALTER TABLE task_usage_baselines ADD COLUMN transcript_path TEXT"
+        )
     connection.execute(
         "DELETE FROM task_usage_baselines WHERE julianday('now') - julianday(started_at) > 30"
     )
@@ -100,8 +111,8 @@ def record_baseline(connection: sqlite3.Connection, payload: dict[str, Any]) -> 
         INSERT OR IGNORE INTO task_usage_baselines (
             session_id, turn_id, root_model, baseline_input_tokens,
             baseline_cached_input_tokens, baseline_output_tokens,
-            baseline_available, started_at, policy_version
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            baseline_available, transcript_path, started_at, policy_version
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             session_id,
@@ -111,6 +122,7 @@ def record_baseline(connection: sqlite3.Connection, payload: dict[str, Any]) -> 
             values["cached_input_tokens"],
             values["output_tokens"],
             int(usage is not None),
+            str(payload.get("transcript_path") or "") or None,
             now(),
             POLICY_VERSION,
         ),
@@ -148,6 +160,9 @@ def worker_usage(
 ) -> tuple[dict[str, dict[str, int]], int]:
     models: dict[str, dict[str, int]] = {}
     missing = 0
+    owner_sessions = {session_id}
+    pending_sessions = [session_id]
+    seen_agents: set[str] = set()
     tables = {
         str(row[0])
         for row in connection.execute(
@@ -162,47 +177,85 @@ def worker_usage(
         if required_decisions.issubset(decision_columns) and required_executions.issubset(
             execution_columns
         ):
-            rows = connection.execute(
-                """
-                SELECT execution.actual_model, execution.input_tokens,
-                       execution.cached_input_tokens, execution.output_tokens
-                FROM executions AS execution
-                JOIN decisions AS decision
-                    ON decision.decision_id = execution.decision_id
-                WHERE decision.session_id = ? AND decision.turn_id = ?
-                  AND execution.stopped_at IS NOT NULL
-                """,
-                (session_id, turn_id),
-            ).fetchall()
-            for row in rows:
-                if all(row[key] is None for key in TOKEN_KEYS):
-                    missing += 1
-                else:
-                    add_usage(models, row["actual_model"], *(row[key] for key in TOKEN_KEYS))
+            if {"agent_id", "started_at"}.issubset(execution_columns):
+                while pending_sessions:
+                    owner_session = pending_sessions.pop()
+                    rows = connection.execute(
+                        """
+                        SELECT execution.agent_id, execution.actual_model,
+                               execution.input_tokens, execution.cached_input_tokens,
+                               execution.output_tokens
+                        FROM executions AS execution
+                        JOIN decisions AS decision
+                            ON decision.decision_id = execution.decision_id
+                        WHERE decision.session_id = ? AND execution.started_at >= ?
+                          AND execution.stopped_at IS NOT NULL
+                        """,
+                        (owner_session, started_at),
+                    ).fetchall()
+                    for row in rows:
+                        agent_id = str(row["agent_id"] or "")
+                        if agent_id and agent_id in seen_agents:
+                            continue
+                        if agent_id:
+                            seen_agents.add(agent_id)
+                            owner_sessions.add(agent_id)
+                            pending_sessions.append(agent_id)
+                        values = {key: row[key] for key in TOKEN_KEYS}
+                        if all(values[key] is None for key in TOKEN_KEYS):
+                            transcript = find_transcript(agent_id, None)
+                            recovered = (
+                                latest_usage(str(transcript))
+                                if transcript is not None
+                                else None
+                            )
+                            if recovered is None:
+                                missing += 1
+                                continue
+                            values = recovered
+                            connection.execute(
+                                """
+                                UPDATE executions SET input_tokens = ?,
+                                    cached_input_tokens = ?, output_tokens = ?
+                                WHERE agent_id = ?
+                                """,
+                                (
+                                    recovered["input_tokens"],
+                                    recovered["cached_input_tokens"],
+                                    recovered["output_tokens"],
+                                    agent_id,
+                                ),
+                            )
+                        add_usage(
+                            models,
+                            row["actual_model"],
+                            *(values[key] for key in TOKEN_KEYS),
+                        )
 
     if "external_routes" in tables:
         columns = table_columns(connection, "external_routes")
         required = {"parent_session_id", "started_at", "actual_model", "expected_model", *TOKEN_KEYS}
         if required.issubset(columns):
             stopped_filter = "AND stopped_at IS NOT NULL" if "stopped_at" in columns else ""
-            rows = connection.execute(
-                f"""
-                SELECT actual_model, expected_model, input_tokens,
-                       cached_input_tokens, output_tokens
-                FROM external_routes
-                WHERE parent_session_id = ? AND started_at >= ? {stopped_filter}
-                """,
-                (session_id, started_at),
-            ).fetchall()
-            for row in rows:
-                if all(row[key] is None for key in TOKEN_KEYS):
-                    missing += 1
-                else:
-                    add_usage(
-                        models,
-                        row["actual_model"] or row["expected_model"],
-                        *(row[key] for key in TOKEN_KEYS),
-                    )
+            for owner_session in owner_sessions:
+                rows = connection.execute(
+                    f"""
+                    SELECT actual_model, expected_model, input_tokens,
+                           cached_input_tokens, output_tokens
+                    FROM external_routes
+                    WHERE parent_session_id = ? AND started_at >= ? {stopped_filter}
+                    """,
+                    (owner_session, started_at),
+                ).fetchall()
+                for row in rows:
+                    if all(row[key] is None for key in TOKEN_KEYS):
+                        missing += 1
+                    else:
+                        add_usage(
+                            models,
+                            row["actual_model"] or row["expected_model"],
+                            *(row[key] for key in TOKEN_KEYS),
+                        )
     return models, missing
 
 
@@ -272,6 +325,106 @@ def format_receipt(
     return message, fingerprint
 
 
+def resolve_data_root() -> Path:
+    configured = os.environ.get("PLUGIN_DATA")
+    if configured:
+        return Path(configured).expanduser()
+    candidates = sorted(
+        path.parent
+        for path in (Path.home() / ".codex" / "plugins" / "data").glob(
+            "goldilocks-*/orchestration.db"
+        )
+    )
+    if len(candidates) == 1:
+        return candidates[0]
+    return (
+        Path.home()
+        / ".codex"
+        / "plugins"
+        / "data"
+        / "goldilocks-goldilocks-local"
+    )
+
+
+def find_transcript(session_id: str, stored: object) -> Path | None:
+    if isinstance(stored, str) and stored:
+        path = Path(stored).expanduser()
+        if path.is_file():
+            return path
+    configured = os.environ.get("GOLDILOCKS_SESSION_ROOTS")
+    roots = (
+        [Path(value).expanduser() for value in configured.split(os.pathsep) if value]
+        if configured
+        else [
+            Path.home() / ".codex" / "sessions",
+            Path.home() / ".codex" / "archived_sessions",
+        ]
+    )
+    matches: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            matches.extend(root.rglob(f"*{session_id}.jsonl"))
+    return max(matches, key=lambda path: path.stat().st_mtime) if matches else None
+
+
+def format_current(models: dict[str, dict[str, int]]) -> str | None:
+    if not models:
+        return None
+    rows: list[tuple[int, str, dict[str, int]]] = []
+    for model, usage in models.items():
+        label = model_display_label(model)
+        rows.append((MODEL_ORDER.get(label, len(MODEL_ORDER)), label, usage))
+    parts: list[str] = []
+    total = 0
+    for _order, label, usage in sorted(rows, key=lambda row: (row[0], row[1])):
+        processing = usage["input_tokens"] + usage["output_tokens"]
+        if processing == 0:
+            continue
+        total += processing
+        parts.append(
+            f"{label} {processing:,} (in {usage['input_tokens']:,} / "
+            f"cached {usage['cached_input_tokens']:,} / out {usage['output_tokens']:,})"
+        )
+    if not parts:
+        return None
+    return "Usage: " + " | ".join(parts) + f" | total {total:,} tokens"
+
+
+def current_receipt(session_id: str) -> str | None:
+    root = resolve_data_root()
+    database = root / "orchestration.db"
+    if not database.is_file() or not session_id:
+        return None
+    with connect(root) as connection:
+        baseline = connection.execute(
+            "SELECT * FROM task_usage_baselines WHERE session_id = ? "
+            "ORDER BY started_at DESC LIMIT 1",
+            (session_id,),
+        ).fetchone()
+        if baseline is None:
+            return None
+        models, _missing = worker_usage(
+            connection,
+            session_id,
+            str(baseline["turn_id"]),
+            str(baseline["started_at"]),
+        )
+        transcript = find_transcript(session_id, baseline["transcript_path"])
+        current = latest_usage(str(transcript)) if transcript is not None else None
+        if bool(baseline["baseline_available"]) and current is not None:
+            add_usage(
+                models,
+                str(baseline["root_model"] or "unknown"),
+                delta(current["input_tokens"], baseline["baseline_input_tokens"]),
+                delta(
+                    current["cached_input_tokens"],
+                    baseline["baseline_cached_input_tokens"],
+                ),
+                delta(current["output_tokens"], baseline["baseline_output_tokens"]),
+            )
+        return format_current(models)
+
+
 def build_receipt(
     connection: sqlite3.Connection, payload: dict[str, Any]
 ) -> str | None:
@@ -321,6 +474,11 @@ def build_receipt(
 
 
 def main() -> None:
+    if "--current" in sys.argv[1:]:
+        receipt = current_receipt(os.environ.get("CODEX_THREAD_ID", ""))
+        if receipt:
+            print(receipt)
+        return
     event = ""
     try:
         payload = json.load(sys.stdin)

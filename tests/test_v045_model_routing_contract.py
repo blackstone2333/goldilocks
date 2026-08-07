@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
-VERSION = "0.4.5"
-EXPERIMENT_POLICY = "0.4.5-exp3.2"
+VERSION = "0.5.0-alpha.1"
+EXPERIMENT_POLICY = "0.5.0-alpha.1-exp3.2"
 
 
 def read(path: Path) -> str:
@@ -38,6 +38,28 @@ def main() -> None:
     ):
         if marker not in recovery:
             failures.append(f"recovery route gate lacks: {marker}")
+
+    diagnose = read(SKILL / "references" / "diagnose.md")
+    for marker in (
+        "evidence-backed cause",
+        "explicitly unknown",
+        "cause, fix, and verification",
+    ):
+        if marker not in diagnose:
+            failures.append(f"diagnostic handoff lacks: {marker}")
+
+    standard_agent = read(PLUGIN / "agents" / "goldilocks-terra-engineer.toml")
+    for marker in (
+        "CAUSE",
+        "evidence-backed",
+        "explicitly unknown",
+        "Fast before Standard",
+        "Luna",
+        "Spark",
+        "why Fast is ineligible",
+    ):
+        if marker not in standard_agent:
+            failures.append(f"Standard worker handoff lacks: {marker}")
 
     routing = read(SKILL / "references" / "model-routing.md")
     for marker in (
@@ -75,6 +97,9 @@ def main() -> None:
         "host wait/status mechanism",
         "Never make the user open a finished child",
         "default to actually dispatching",
+        "<tier>__<semantic>_<model>",
+        "why Fast is ineligible",
+        "missing native Luna role",
     ):
         if marker not in orchestrate:
             failures.append(f"routing-rationale experiment lacks: {marker}")
@@ -131,7 +156,7 @@ def main() -> None:
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.5 model-routing contract passed.")
+    print(f"Goldilocks v{VERSION} model-routing contract passed.")
 
 
 if __name__ == "__main__":

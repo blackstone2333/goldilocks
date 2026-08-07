@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import hashlib
 import os
 import sqlite3
 import subprocess
@@ -96,11 +95,20 @@ def main() -> None:
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
         style_output = json.loads(no_ledger_steer.stdout)
         style_context = style_output["hookSpecificOutput"]["additionalContext"]
-        assert len(style_context.split()) <= 90
+        assert len(style_context.split()) <= 105
         assert "Lead with the result" in style_context
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
         assert "decisive evidence" in style_context
+        assert "For defect work" in style_context
+        assert "evidence-backed cause" in style_context
+        assert "explicitly unknown" in style_context
+        assert "fix and verification" in style_context
+        assert "Before final" in style_context
+        assert "usage_reporter.py" in style_context
+        assert "--current" in style_context
+        assert "append its Usage line" in style_context
+        assert "never estimate" in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
         assert "goldilocks:goldilocks" in style_context
@@ -143,15 +151,14 @@ def main() -> None:
             "2、实现 Agent 连接。\n"
             "3、补齐测试、文档和发布检查。"
         )
-        project_hash = hashlib.sha256(str(repo.resolve()).encode()).hexdigest()
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             connection.execute(
                 "CREATE TABLE project_grants (cwd_hash TEXT PRIMARY KEY, active INTEGER, "
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
             )
             connection.execute(
-                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.4.5-exp3.2')",
-                (project_hash,),
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.5.0-alpha.1-exp3.2')",
+                ("__global__",),
             )
         rationale = run_hook(
             nested,
@@ -166,24 +173,31 @@ def main() -> None:
         ]
         for phrase in (
             "Likely multi-unit work detected",
-            "read route-card.md",
+            "Read route-card.md",
             "ROUTE line",
             "WRITE_READY",
             "READ_READY",
             "EXISTING",
             "PLANNED_DISPATCH",
-            "never completed/idle agents",
-            "silently checked against existing run data",
-            "create no proof, probe, document, test, or model call",
-            "EXISTING counts active ownership",
-            "collect child finals via host wait/status",
+            "current host-confirmed running ownership",
+            "not UI labels",
+            "historical task_started",
+            "Audit is silent",
+            "create no extra proof, probe, document, test, or model call",
+            "EXISTING is current host-confirmed running ownership",
+            "collect finals via host wait/status",
             "Shared writes",
             "explicit bounded-delegation grant",
             "current official input/cached/output rates",
             "persistent explicit-user authorization",
+            "<tier>__<semantic>_<model>",
+            "Evaluate every ready unit for Fast before Standard",
+            "missing native role alone is not route_unavailable",
+            "all delegated units use Terra",
+            "why Fast is ineligible",
         ):
             assert phrase in rationale_context, phrase
-        assert len(rationale_context.split()) <= 230
+        assert len(rationale_context.split()) <= 285
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rationale_row = connection.execute(
@@ -344,6 +358,8 @@ def main() -> None:
         ]
         assert "2 completed worker outcome(s) remain unverified" in debt_context
         assert "1 worker(s) exceed the lifecycle warning" in debt_context
+        assert "Stale records do not count as EXISTING" in debt_context
+        assert "current host status confirms they are running" in debt_context
 
         first_recurrence_without_history = run_hook(
             nested,

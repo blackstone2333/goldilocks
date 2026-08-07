@@ -29,4 +29,6 @@ After three failed fixes or disproven hypotheses, stop patching. Reassess the re
 
 If the user asked only for diagnosis, stop with the causal chain, evidence, impact, and bounded fix options. Do not mutate source, configuration, production, or external systems.
 
+After a diagnosis-driven fix, final reports the evidence-backed cause or explicitly unknown, then cause, fix, and verification.
+
 If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

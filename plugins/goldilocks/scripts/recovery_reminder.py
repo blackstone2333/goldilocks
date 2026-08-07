@@ -14,37 +14,39 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.4.5-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
+GLOBAL_GRANT_KEY = "__global__"
 MICRO_STYLE = (
-    "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
-    "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
-    "decisive evidence."
+    "Lead with the result. Omit work preambles, repeated plans/status/recaps, tangents, and "
+    "long logs. Report only changed state and decisive evidence; expand for safety/ambiguity. "
+    "For defect work: evidence-backed cause—or explicitly unknown—then fix and verification."
 )
 ROUTING_GATE = (
     "For executable work, silently apply the Goldilocks zero-cost gate before any specialist Skill. "
-    "If material uncertainty, unknown cause, multi-stage continuity, or useful decomposition exists, "
-    "read and use the goldilocks:goldilocks Skill; otherwise take its Direct exit. "
+    "If uncertainty, unknown cause, continuity, or useful decomposition exists, "
+    "read and use goldilocks:goldilocks; otherwise take its Direct exit. "
     "Visible multi-unit implementation must run its make-or-delegate check before Lead edits; "
     "Direct remains valid when briefing and review cost more. "
-    "Skip the gate for pure conversation."
+    "Skip for pure conversation."
 )
 ROUTING_RATIONALE_GATE = (
-    "Likely multi-unit work detected. Before implementation, read route-card.md and emit its one "
-    "ROUTE line with WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, and DETAIL. "
-    "EXISTING counts active ownership, never completed/idle agents; collect child finals via host "
-    "wait/status. PLANNED_DISPATCH is intent; Hooks count starts. Shared writes permit reads. Direct "
-    "names transfer cost. The route is "
-    "silently checked against existing run data; create no proof, probe, document, test, or model "
-    "call for that check."
+    "Likely multi-unit work detected. Read route-card.md before implementation and emit its ROUTE line "
+    "with WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, and DETAIL. EXISTING is "
+    "current host-confirmed running ownership—not UI labels, idle/completed handles, artifacts, or a "
+    "historical task_started; collect finals via host wait/status. PLANNED_DISPATCH is intent; Hooks "
+    "count starts. Shared writes permit reads. Direct names transfer cost. Audit is silent; create no "
+    "extra proof, probe, document, test, or model call. Name every child "
+    "<tier>__<semantic>_<model>, where tier is fast, standard, or lead."
 )
 AUTHORIZED_DISPATCH_GATE = (
-    "This project has an explicit bounded-delegation grant. Compare cost, not speed alone: use "
-    "current official input/cached/output rates on the active billing channel. A materially cheaper "
-    "employee may win when slightly slower if acceptance is equal and time/raw tokens stay "
-    "proportionate. Keep currencies or allowance pools separate unless remaining budgets are known. "
-    "This is not a delegation quota. New-model discovery is read-only; preflight/create/use requires "
-    "persistent explicit-user authorization for that model and billing channel."
+    "An explicit bounded-delegation grant applies. Compare current official input/cached/output rates, "
+    "time, raw tokens, acceptance, and retry; cheaper may be slightly slower. Keep billing pools "
+    "separate when remaining budgets are unknown. This is not a delegation quota. Evaluate every ready "
+    "unit for Fast before Standard. Luna uses dispatch_codex_worker.py when native roles omit it; missing "
+    "native role alone is not route_unavailable. If all delegated units use Terra, DETAIL states why Fast "
+    "is ineligible: residual judgment, tools, authority, or acceptance. New-model discovery is read-only; "
+    "first use requires persistent explicit-user authorization."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
@@ -200,6 +202,11 @@ def project_grant_active(connection: sqlite3.Connection, cwd_hash: str) -> bool:
         return False
     row = connection.execute(
         "SELECT active FROM project_grants WHERE cwd_hash = ?", (cwd_hash,)
+    ).fetchone()
+    if row is not None:
+        return bool(row[0])
+    row = connection.execute(
+        "SELECT active FROM project_grants WHERE cwd_hash = ?", (GLOBAL_GRANT_KEY,)
     ).fetchone()
     return bool(row and row[0])
 
@@ -362,7 +369,8 @@ def routing_debt_context(payload: dict[str, object]) -> str:
         return (
             "Goldilocks routing debt: "
             + "; ".join(parts)
-            + ". Close outcomes and stop or explicitly renew stale workers before reuse."
+            + ". Stale records do not count as EXISTING unless current host status confirms they are "
+            "running; close outcomes and stop or explicitly renew them before reuse."
         )
     except (OSError, sqlite3.Error, TypeError, ValueError):
         return ""
@@ -512,6 +520,16 @@ def find_ledger(cwd: Path) -> Path | None:
     return None
 
 
+def usage_receipt_gate() -> str:
+    reporter = Path(__file__).with_name("usage_reporter.py")
+    python = "py -3" if os.name == "nt" else "python3"
+    command = f"{python} {json.dumps(str(reporter))} --current"
+    return (
+        f"Before final, run `{command}` and append its Usage line; omit unavailable output "
+        "and never estimate."
+    )
+
+
 def main() -> None:
     try:
         if os.environ.get("GOLDILOCKS_WORKER") == "1":
@@ -543,7 +561,7 @@ def main() -> None:
             }
         elif event == "UserPromptSubmit":
             gate_state = record_gate(payload, cwd, ledger)
-            message = f"{MICRO_STYLE} {ROUTING_GATE}"
+            message = f"{MICRO_STYLE} {ROUTING_GATE} {usage_receipt_gate()}"
             if gate_state["routing_rationale_candidate"]:
                 message += f" {ROUTING_RATIONALE_GATE}"
                 if gate_state["delegation_grant_active"]:

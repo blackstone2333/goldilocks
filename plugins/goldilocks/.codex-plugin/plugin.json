@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.4.5+codex.20260805165220",
+  "version": "0.5.0-alpha.1+codex.20260807074219",
   "description": "A Direct-first adaptive workflow and quality-control layer for any executable work.",
   "author": {
     "name": "Charles Roc"

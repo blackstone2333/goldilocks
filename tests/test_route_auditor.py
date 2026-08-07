@@ -112,6 +112,22 @@ def main() -> None:
                 "('old-luna', 'old-session', ?, 'gpt-5.6-luna', 'gpt-5.6-luna', "
                 "'succeeded', '2026-08-05T07:00:00+00:00', "
                 "'2026-08-05T07:05:00+00:00')",
+                ("other-project-route",),
+            )
+            connection.execute(
+                "INSERT INTO decisions VALUES "
+                "('stale-native', 'old-session', ?, 'standard', 'gpt-5.6-terra')",
+                (cwd_hash,),
+            )
+            connection.execute(
+                "INSERT INTO executions VALUES "
+                "('stale-terra', 'stale-native', 'gpt-5.6-terra', "
+                "'2026-08-05T05:00:00+00:00', NULL)"
+            )
+            connection.execute(
+                "INSERT INTO external_routes VALUES "
+                "('stale-spark', 'old-session', ?, 'gpt-5.3-codex-spark', '', "
+                "'started', '2026-08-05T06:00:00+00:00', NULL)",
                 (cwd_hash,),
             )
 

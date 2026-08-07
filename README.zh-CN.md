@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="版本 0.4.5">
+  <img src="https://img.shields.io/badge/version-0.5.0--alpha.1-D4A72C" alt="版本 0.5.0-alpha.1">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
@@ -31,12 +31,23 @@ Goldilocks 不限定工作领域：软件、研究、分析、文档、演示文
 
 不要同时启用 Goldilocks 和 Superpowers。
 
+> **Alpha 实地测试：** 本标签包含仍在观察的成本感知路由、模型命名、路由审查和递归 Usage 回执。只需要稳定的故障解释修复时，请从默认分支安装 `v0.4.2`；两个版本不要同时安装。
+
+### 在 Codex 中直接安装本 Alpha
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin add goldilocks@goldilocks-local
+```
+
+安装后新建任务，在 `/hooks` 中核对命令确实来自 Goldilocks，再决定是否持久信任。有效反馈包括：任务类型、可见 `ROUTE` 行、子智能体名称与模型、耗时、最终的原因/修复/验证、Usage 行或未出现的情况，以及相对 Direct 是否更清晰、更快或更省。
+
 ### 让 AI 一键安装
 
 把下面整段提示词复制给能够管理自身 Skill 或插件的 Codex、Claude Code、Cursor 等 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装最新版 Goldilocks。先识别当前 Agent 平台：支持仓库 README 所述原生插件时优先安装原生插件，否则将 Goldilocks 作为兼容 Skill 全局安装。不要同时启用 Goldilocks 和 Superpowers。出现 Hook 授权前，先向我解释所请求 Hook 的作用并征得确认，不要批准无关权限。安装后验证版本和可用状态，并告诉我是否需要新建对话才能生效。不要修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.0-alpha.1 预发布版，必须锁定 Git ref v0.5.0-alpha.1；Codex 依次运行 `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1` 和安装 `goldilocks@goldilocks-local`。不要与 Superpowers 或其他 Goldilocks 版本同时启用。先说明这是实验版，只问我一次是否愿意在 /hooks 中持久信任其 Hooks，最后验证安装版本、Hook 状态和可用性，不要修改无关配置。
 ```
 
 ### 任意兼容 Skills 的 Agent
@@ -56,7 +67,7 @@ npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent cod
 ### Codex 原生插件
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -64,11 +75,16 @@ codex plugin add goldilocks@goldilocks-local
 
 Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
 
+**推荐完全信任 Goldilocks 自带的全部 Hook。** 安装完成后，在 Codex CLI 的交互界面中输入 `/hooks`（不是在普通 shell 中执行），检查命令来源确实属于 Goldilocks，然后选择持久的“信任全部”或“始终允许”（具体文字随 Codex 版本而异），不要选择“仅本次允许”。该信任会绑定当前 Hook 定义并供后续任务复用；定义不变时只需完成一次，不应每个任务重复询问。插件更新改变 Hook 哈希后，Codex 出于安全原因可能要求重新审核。
+
 - `recovery_reminder.py`：在专业 Skill 之前注入极小门禁，把重复失败升级为持久连续性，恢复压缩后的任务状态，并加入精简沟通约束。本地审计只保存哈希、有限的复发标志和时间，不保存提示词原文。
 - `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。Worker 停止后不会被直接记为成功；Lead 重跑验收并由 `record_routing_outcome.py` 记为 verified pass 或 fail 后才闭环，系统只保留证据哈希。
 - `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
+- `usage_reporter.py`：无需额外调用模型即可汇总本轮各模型的 token 和耗时。Goldilocks 会在最终回答前读取 `--current` 单行回执；若 Codex 尚未写入本轮首个统计检查点则保持静默，不会误报 0。
 
-如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束和更新提醒不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
+如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束、更新提醒和 token 回执不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
+
+如果每个任务仍反复弹出授权，先用 `/hooks` 确认选择的是持久信任而非仅允许一次，并检查启动脚本是否在每次运行时重新安装插件或刷新插件缓存。
 
 ### Claude Code 原生插件
 
@@ -132,7 +148,7 @@ flowchart TD
 
 根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会在加载任何工作流参考前直接退出。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。
 
-现有 Hook 会加入一条 26 词沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全或歧义时恢复完整说明。它减少叙述噪声，不会让模型模仿原始人说话，也不会删掉必要证据。
+现有 Hook 会加入一条紧凑沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全或歧义时恢复完整说明。故障任务仍必须交代有证据支持的原因（或明确说明尚未确认）、修复方式和验证结果，避免为了简洁把调试变成黑盒。
 
 同一个 Hook 现在会在专业 Skill 之前加入紧凑的零成本门禁：纯对话跳过；清晰的可执行任务保持 Direct，不加载完整路由器；出现实质不确定性、未知根因、多阶段连续性或有效拆分空间时，明确加载 `goldilocks:goldilocks`。本地审计只记录提示词与工作区哈希、会话/回合标识和时间，因此能够验证门禁是否生效，又不保留提示词内容。
 
@@ -227,6 +243,6 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 
 ## 当前状态
 
-Goldilocks 仍是实验版 `v0.4.5`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks `v0.5.0-alpha.1` 是自愿安装的实地测试版本。它在已测试工作流表面上能够更好地替代 Superpowers，但新增路由和 Usage 行为仍需更多真实项目反馈，再决定是否发布稳定 `v0.5.0`。[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
 
 Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。
