@@ -8,6 +8,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -16,7 +17,14 @@ REPORTER = ROOT / "plugins" / "goldilocks" / "scripts" / "usage_reporter.py"
 HOOKS = ROOT / "plugins" / "goldilocks" / "hooks" / "hooks.json"
 
 
-def append_usage(path: Path, input_tokens: int, cached: int, output: int) -> None:
+def append_usage(
+    path: Path,
+    input_tokens: int,
+    cached: int,
+    output: int,
+    *,
+    timestamp: str | None = None,
+) -> None:
     record = {
         "type": "event_msg",
         "payload": {
@@ -29,6 +37,18 @@ def append_usage(path: Path, input_tokens: int, cached: int, output: int) -> Non
                 }
             },
         },
+    }
+    if timestamp is not None:
+        record["timestamp"] = timestamp
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record) + "\n")
+
+
+def append_task_event(path: Path, event: str, turn_id: str, timestamp: str) -> None:
+    record = {
+        "timestamp": timestamp,
+        "type": "event_msg",
+        "payload": {"type": event, "turn_id": turn_id},
     }
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record) + "\n")
@@ -101,6 +121,7 @@ def main() -> None:
         assert stale_snapshot.stdout == "", stale_snapshot.stdout
         terra_transcript = root / "rollout-terra-agent.jsonl"
         append_usage(terra_transcript, 80, 70, 8)
+        reused_transcript = root / "rollout-reused-agent.jsonl"
         with sqlite3.connect(data / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             task = connection.execute("SELECT * FROM task_usage_baselines").fetchone()
@@ -128,13 +149,51 @@ def main() -> None:
             )
             connection.execute(
                 "INSERT INTO decisions VALUES ('native-1', 'session-1', 'turn-1'), "
-                "('native-2', 'session-1', 'terra-child-turn')"
+                "('native-2', 'session-1', 'terra-child-turn'), "
+                "('native-3', 'session-1', 'historical-child-turn')"
             )
+            baseline_time = datetime.fromisoformat(task["started_at"])
+            historical = (baseline_time - timedelta(minutes=5)).isoformat()
+            followup_started = (baseline_time + timedelta(seconds=1)).isoformat()
+            followup_checkpoint = (baseline_time + timedelta(seconds=2)).isoformat()
+            followup_stopped = (baseline_time + timedelta(seconds=3)).isoformat()
             connection.execute(
                 "INSERT INTO executions VALUES "
                 "('luna-agent', 'native-1', 'gpt-5.6-luna', ?, 'done', 50, 40, 5), "
-                "('terra-agent', 'native-2', 'gpt-5.6-terra', ?, 'done', NULL, NULL, NULL)",
-                (task["started_at"], task["started_at"]),
+                "('terra-agent', 'native-2', 'gpt-5.6-terra', ?, 'done', NULL, NULL, NULL), "
+                "('reused-agent', 'native-3', 'gpt-5.6-terra', ?, ?, 1120, 1000, 112)",
+                (
+                    task["started_at"],
+                    task["started_at"],
+                    historical,
+                    followup_stopped,
+                ),
+            )
+            append_usage(
+                reused_transcript,
+                1000,
+                900,
+                100,
+                timestamp=historical,
+            )
+            append_task_event(
+                reused_transcript,
+                "task_started",
+                "followup-turn",
+                followup_started,
+            )
+            append_usage(
+                reused_transcript,
+                1120,
+                1000,
+                112,
+                timestamp=followup_checkpoint,
+            )
+            append_task_event(
+                reused_transcript,
+                "task_complete",
+                "followup-turn",
+                followup_stopped,
             )
             connection.execute(
                 """
@@ -165,11 +224,11 @@ def main() -> None:
         assert visible.returncode == 0, visible.stderr
         assert visible.stdout.strip() == (
             "Usage: Sol 220 (in 200 / cached 140 / out 20) | "
-            "Terra 88 (in 80 / cached 70 / out 8) | "
+            "Terra 220 (in 200 / cached 170 / out 20) | "
             "Luna 88 (in 80 / cached 60 / out 8) | "
             "Spark 77 (in 70 / cached 60 / out 7) | "
-            "DeepSeek V4 Flash 44 (in 40 / cached 30 / out 4) | total 517 tokens"
-        )
+            "DeepSeek V4 Flash 44 (in 40 / cached 30 / out 4) | total 649 tokens"
+        ), visible.stdout
         with sqlite3.connect(data / "orchestration.db") as connection:
             recovered = connection.execute(
                 "SELECT input_tokens, cached_input_tokens, output_tokens "
@@ -180,11 +239,11 @@ def main() -> None:
         assert stopped.returncode == 0, stopped.stderr
         message = json.loads(stopped.stdout)["systemMessage"]
         assert "gpt-5.6-sol: in 200 (140 cached) + out 20 = 220" in message
-        assert "gpt-5.6-terra: in 80 (70 cached) + out 8 = 88" in message
+        assert "gpt-5.6-terra: in 200 (170 cached) + out 20 = 220" in message
         assert "gpt-5.6-luna: in 80 (60 cached) + out 8 = 88" in message
         assert "gpt-5.3-codex-spark: in 70 (60 cached) + out 7 = 77" in message
         assert "deepseek-ai/DeepSeek-V4-Flash: in 40 (30 cached) + out 4 = 44" in message
-        assert "total 517 tokens" in message
+        assert "total 649 tokens" in message
 
         duplicate = run_hook(data, transcript, "Stop")
         assert duplicate.returncode == 0 and json.loads(duplicate.stdout) == {}
@@ -193,7 +252,7 @@ def main() -> None:
         updated = run_hook(data, transcript, "Stop")
         updated_message = json.loads(updated.stdout)["systemMessage"]
         assert "gpt-5.6-sol: in 210 (145 cached) + out 22 = 232" in updated_message
-        assert "total 529 tokens" in updated_message
+        assert "total 661 tokens" in updated_message
 
         missing_start = run_hook(data, None, "UserPromptSubmit", turn_id="turn-2")
         assert missing_start.returncode == 0 and missing_start.stdout == ""

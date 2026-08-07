@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0--alpha.1-D4A72C" alt="Version 0.5.0-alpha.1">
+  <img src="https://img.shields.io/badge/version-0.5.0--alpha.2-D4A72C" alt="Version 0.5.0-alpha.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -36,7 +36,7 @@ Do not enable Goldilocks and Superpowers together.
 ### Install this Alpha directly in Codex
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -47,7 +47,7 @@ Start a new task, review the bundled commands through `/hooks`, and persistently
 Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
 
 ```text
-Install the Goldilocks v0.5.0-alpha.1 prerelease from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.0-alpha.1; for Codex run `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1` and then install `goldilocks@goldilocks-local`. Do not enable it with Superpowers or another Goldilocks version. Explain that this is experimental, ask once before persistently trusting its Hooks through /hooks, then verify the installed version, Hook state, and availability without changing unrelated configuration.
+Install the Goldilocks v0.5.0-alpha.2 prerelease from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.0-alpha.2; for Codex run `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2` and then install `goldilocks@goldilocks-local`. Do not enable it with Superpowers or another Goldilocks version. Explain that this is experimental, ask once before persistently trusting its Hooks through /hooks, then verify the installed version, Hook state, and availability without changing unrelated configuration.
 ```
 
 ### Any Skills-compatible agent
@@ -67,7 +67,7 @@ Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `
 ### Native Codex plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -80,7 +80,7 @@ The native Codex plugin contains local command Hooks, so Codex asks for approval
 - `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
 - `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory. A stopped worker is not marked successful until Lead reruns acceptance and `record_routing_outcome.py` closes it as verified pass or fail; only an evidence hash is retained.
 - `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
-- `usage_reporter.py` summarizes per-model tokens and elapsed time without another model call. Goldilocks reads its `--current` one-line receipt immediately before the final answer; if Codex has not written the turn's first usage checkpoint yet, it stays silent instead of falsely reporting zero.
+- `usage_reporter.py` summarizes per-model tokens and elapsed time without another model call, including new task segments run by reused completed agents. Goldilocks reads its `--current` one-line receipt immediately before the final answer; if Codex has not written the turn's first usage checkpoint yet, it stays silent instead of falsely reporting zero.
 
 If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, update notices, and token receipts will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
 
@@ -194,6 +194,8 @@ Fast means low residual discretion after decomposition, not a small original tas
 
 The July 31, 2026 OpenAI price change makes Luna one tenth of Terra and four percent of Sol at standard short-context token rates; Codex plan estimates likewise allow roughly ten times as many Luna messages as Terra messages. Price never bypasses the quality, authority, modality, or tool gates. See the [dated routing update](docs/model-routing-update-2026-07-31.md).
 
+Alpha 2 moves those ratios into the Route Card used before Direct decisions. Shared writes block conflicting writers, not read-only work, and generic “extra tokens” is no longer enough to reject a cheaper ready unit.
+
 Goldilocks prefers a native, explicitly supported host model. When native Spark or Luna is unavailable but the local Codex CLI exposes it, `dispatch_codex_worker.py` uses `codex exec` with the chosen model and a complete contract. The default `project` profile preserves repository rules while isolating unrelated global plugins, Apps, MCP servers, Skills, and Hooks. Explicit `inherit` is available when a contract names a required user capability. Fast loses delegation authority, not ordinary execution tools.
 
 Delegation begins only on a verified route. A route startup failure returns to Direct or another already proven route instead of spending a Lead turn diagnosing worker transport inside the product task. Child event streams can remain outside Lead context while concise evidence flows upward.
@@ -243,6 +245,6 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 ## Status
 
-Goldilocks `v0.5.0-alpha.1` is an opt-in field-test build. It can better replace Superpowers on the tested workflow surface, but its new routing and Usage behavior still needs diverse real-project feedback before a stable `v0.5.0` decision. [Issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks `v0.5.0-alpha.2` is an opt-in field-test build. It can better replace Superpowers on the tested workflow surface, but its new routing and Usage behavior still needs diverse real-project feedback before a stable `v0.5.0` decision. [Issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

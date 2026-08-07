@@ -18,7 +18,7 @@ import route_auditor
 from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}
@@ -26,6 +26,29 @@ MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna
 
 def now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def parse_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+
+
+def usage_from_record(record: object) -> dict[str, int] | None:
+    if not isinstance(record, dict) or record.get("type") != "event_msg":
+        return None
+    payload = record.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    info = payload.get("info")
+    total = info.get("total_token_usage") if isinstance(info, dict) else None
+    if not isinstance(total, dict):
+        return None
+    return {key: max(0, int(total.get(key) or 0)) for key in TOKEN_KEYS}
 
 
 def latest_usage(path: object) -> dict[str, int] | None:
@@ -44,20 +67,73 @@ def latest_usage(path: object) -> dict[str, int] | None:
                 record = json.loads(raw)
             except (UnicodeDecodeError, json.JSONDecodeError):
                 continue
-            payload = record.get("payload")
-            if record.get("type") != "event_msg" or not isinstance(payload, dict):
-                continue
-            info = payload.get("info")
-            total = info.get("total_token_usage") if isinstance(info, dict) else None
-            if not isinstance(total, dict):
-                continue
-            return {
-                key: max(0, int(total.get(key) or 0))
-                for key in TOKEN_KEYS
-            }
+            usage = usage_from_record(record)
+            if usage is not None:
+                return usage
     except (OSError, TypeError, ValueError):
         return None
     return None
+
+
+def completed_task_usage_since(path: object, started_at: str) -> dict[str, int] | None:
+    """Sum completed child-task deltas after a Lead baseline.
+
+    Reused Codex agents append new task segments to one cumulative rollout. Their
+    lifetime total cannot be charged to the later Lead turn, so each completed
+    segment is measured from its immediately preceding cumulative checkpoint.
+    """
+
+    if not isinstance(path, str) or not path:
+        return None
+    transcript = Path(path).expanduser()
+    cutoff = parse_timestamp(started_at)
+    if not transcript.is_file() or cutoff is None:
+        return None
+    totals = {key: 0 for key in TOKEN_KEYS}
+    last_usage: dict[str, int] | None = None
+    active: dict[str, dict[str, dict[str, int] | None]] = {}
+    completed = 0
+    try:
+        with transcript.open(encoding="utf-8") as handle:
+            for raw in handle:
+                try:
+                    record = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                usage = usage_from_record(record)
+                if usage is not None:
+                    last_usage = usage
+                    for segment in active.values():
+                        segment["latest"] = dict(usage)
+                    continue
+                if record.get("type") != "event_msg":
+                    continue
+                payload = record.get("payload")
+                if not isinstance(payload, dict):
+                    continue
+                event = payload.get("type")
+                turn_id = str(payload.get("turn_id") or "")
+                timestamp = parse_timestamp(record.get("timestamp"))
+                if event == "task_started":
+                    if turn_id and timestamp is not None and timestamp >= cutoff:
+                        active[turn_id] = {
+                            "baseline": dict(last_usage) if last_usage is not None else None,
+                            "latest": None,
+                        }
+                    continue
+                if event != "task_complete" or turn_id not in active:
+                    continue
+                segment = active.pop(turn_id)
+                baseline = segment["baseline"]
+                latest = segment["latest"]
+                if baseline is None or latest is None:
+                    continue
+                for key in TOKEN_KEYS:
+                    totals[key] += delta(latest[key], baseline[key])
+                completed += 1
+    except (OSError, TypeError, ValueError):
+        return None
+    return totals if completed else None
 
 
 def connect(root: Path) -> sqlite3.Connection:
@@ -169,41 +245,81 @@ def worker_usage(
             "SELECT name FROM sqlite_master WHERE type = 'table'"
         )
     }
-    if {"decisions", "executions"}.issubset(tables):
-        decision_columns = table_columns(connection, "decisions")
+    if "executions" in tables:
+        decision_columns = (
+            table_columns(connection, "decisions") if "decisions" in tables else set()
+        )
         execution_columns = table_columns(connection, "executions")
-        required_decisions = {"decision_id", "session_id", "turn_id"}
-        required_executions = {"decision_id", "actual_model", "stopped_at", *TOKEN_KEYS}
-        if required_decisions.issubset(decision_columns) and required_executions.issubset(
-            execution_columns
+        required_executions = {
+            "agent_id",
+            "started_at",
+            "stopped_at",
+            "actual_model",
+            *TOKEN_KEYS,
+        }
+        can_join_decisions = {
+            "decision_id",
+            "session_id",
+        }.issubset(decision_columns) and "decision_id" in execution_columns
+        has_execution_owner = "session_id" in execution_columns
+        if required_executions.issubset(execution_columns) and (
+            has_execution_owner or can_join_decisions
         ):
-            if {"agent_id", "started_at"}.issubset(execution_columns):
-                while pending_sessions:
-                    owner_session = pending_sessions.pop()
-                    rows = connection.execute(
-                        """
-                        SELECT execution.agent_id, execution.actual_model,
-                               execution.input_tokens, execution.cached_input_tokens,
-                               execution.output_tokens
-                        FROM executions AS execution
-                        JOIN decisions AS decision
-                            ON decision.decision_id = execution.decision_id
-                        WHERE decision.session_id = ? AND execution.started_at >= ?
-                          AND execution.stopped_at IS NOT NULL
-                        """,
-                        (owner_session, started_at),
-                    ).fetchall()
-                    for row in rows:
-                        agent_id = str(row["agent_id"] or "")
-                        if agent_id and agent_id in seen_agents:
+            while pending_sessions:
+                owner_session = pending_sessions.pop()
+                if has_execution_owner:
+                    source = "FROM executions AS execution"
+                    owner_clause = "execution.session_id = ?"
+                else:
+                    source = (
+                        "FROM executions AS execution JOIN decisions AS decision "
+                        "ON decision.decision_id = execution.decision_id"
+                    )
+                    owner_clause = "decision.session_id = ?"
+                rows = connection.execute(
+                    f"""
+                    SELECT execution.agent_id, execution.actual_model,
+                           execution.started_at, execution.input_tokens,
+                           execution.cached_input_tokens, execution.output_tokens
+                    {source}
+                    WHERE {owner_clause} AND execution.stopped_at IS NOT NULL
+                      AND (
+                          julianday(execution.stopped_at) >= julianday(?)
+                          OR (
+                              julianday(execution.stopped_at) IS NULL
+                              AND julianday(execution.started_at) >= julianday(?)
+                          )
+                      )
+                    """,
+                    (owner_session, started_at, started_at),
+                ).fetchall()
+                for row in rows:
+                    agent_id = str(row["agent_id"] or "")
+                    if agent_id and agent_id in seen_agents:
+                        continue
+                    if agent_id:
+                        seen_agents.add(agent_id)
+                        owner_sessions.add(agent_id)
+                        pending_sessions.append(agent_id)
+                    transcript = find_transcript(agent_id, None)
+                    execution_started = parse_timestamp(row["started_at"])
+                    cutoff = parse_timestamp(started_at)
+                    reused = (
+                        execution_started is not None
+                        and cutoff is not None
+                        and execution_started < cutoff
+                    )
+                    if reused:
+                        values = completed_task_usage_since(
+                            str(transcript) if transcript is not None else None,
+                            started_at,
+                        )
+                        if values is None:
+                            missing += 1
                             continue
-                        if agent_id:
-                            seen_agents.add(agent_id)
-                            owner_sessions.add(agent_id)
-                            pending_sessions.append(agent_id)
+                    else:
                         values = {key: row[key] for key in TOKEN_KEYS}
                         if all(values[key] is None for key in TOKEN_KEYS):
-                            transcript = find_transcript(agent_id, None)
                             recovered = (
                                 latest_usage(str(transcript))
                                 if transcript is not None
@@ -226,11 +342,11 @@ def worker_usage(
                                     agent_id,
                                 ),
                             )
-                        add_usage(
-                            models,
-                            row["actual_model"],
-                            *(values[key] for key in TOKEN_KEYS),
-                        )
+                    add_usage(
+                        models,
+                        row["actual_model"],
+                        *(values[key] for key in TOKEN_KEYS),
+                    )
 
     if "external_routes" in tables:
         columns = table_columns(connection, "external_routes")

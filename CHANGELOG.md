@@ -2,6 +2,18 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.0-alpha.2 — 2026-08-07
+
+### Weighted-Cost Routing and Reused-Agent Usage
+
+- Moved the current Codex same-mix cost seed into the always-read Route Card: Luna is 4% and Terra 40% of Sol; Spark remains a separate unpriced allowance pool.
+- Required every independent ready unit to be priced before Direct. Shared writes no longer justify withholding read-only work, and generic “extra tokens” or Lead convenience no longer qualifies as `review_cost` evidence.
+- Preserved Lead ownership of intent, authority, shared writes, integration, and final acceptance while making inexpensive read-only or bounded Fast work easier to dispatch.
+- Fixed Usage receipts for `followup_task` reactivations. Reused completed agents now contribute only their new completed task-segment deltas instead of disappearing or charging lifetime totals.
+- Added regression coverage for weighted Direct decisions and reused-agent accounting while keeping the capability-documentation budget below its existing limit.
+
+This prerelease changes no Hook permissions. Codex may still request renewed Hook trust after installing a new plugin version or cache copy.
+
 ## 0.5.0-alpha.1 — 2026-08-07
 
 ### Cost-aware field-test routing

@@ -165,7 +165,7 @@ def main() -> None:
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
             )
             connection.execute(
-                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.5.0-alpha.1-exp3.2')",
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.5.0-alpha.2-exp3.2')",
                 ("__global__",),
             )
         rationale = run_hook(

@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
-VERSION = "0.5.0-alpha.1"
-EXPERIMENT_POLICY = "0.5.0-alpha.1-exp3.2"
+VERSION = "0.5.0-alpha.2"
+EXPERIMENT_POLICY = "0.5.0-alpha.2-exp3.2"
 
 
 def read(path: Path) -> str:

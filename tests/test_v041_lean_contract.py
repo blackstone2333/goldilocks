@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.5.0-alpha.1"
+VERSION = "0.5.0-alpha.2"
 
 
 def read(path: Path) -> str:
@@ -90,6 +90,21 @@ def main() -> None:
     for phrase in required_route_phrases:
         if phrase not in orchestrate:
             failures.append(f"orchestration is missing failure-economy rule: {phrase}")
+
+    route_card = read(
+        PLUGIN / "skills" / "goldilocks" / "references" / "route-card.md"
+    )
+    for phrase in (
+        "Luna = `0.04 × Sol`",
+        "Terra = `0.40 × Sol`",
+        "Spark remains a separate unpriced pool",
+        "Price every independent ready unit before Direct",
+        "Shared writes block conflicting writers, not read-only work",
+        "`shared_surface` alone cannot justify `PLANNED_DISPATCH=0`",
+        "generic “extra tokens” or Lead convenience is insufficient",
+    ):
+        if phrase not in route_card:
+            failures.append(f"route card is missing weighted-cost guard: {phrase}")
 
     diagnose = read(PLUGIN / "skills" / "goldilocks" / "references" / "diagnose.md")
     continuity = read(PLUGIN / "skills" / "goldilocks" / "references" / "continuity.md")

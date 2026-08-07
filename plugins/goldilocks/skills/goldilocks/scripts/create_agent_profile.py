@@ -25,7 +25,7 @@ import model_economics as economics  # noqa: E402
 import dispatch_codex_worker as dispatcher  # noqa: E402
 
 
-POLICY_VERSION = "0.5.0-alpha.1-exp3.2"
+POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
 NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 EFFORTS = ("low", "medium", "high", "xhigh")
 SAFE_SANDBOXES = ("read-only", "workspace-write")

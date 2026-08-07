@@ -7,11 +7,11 @@ Goldilocks 既可以作为跨平台 Agent Skills 安装，也可以作为 Codex 
 Alpha 与稳定版共用同一个市场名称，因此二选一安装，不要同时启用：
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建任务，并在测试前确认版本是 `v0.5.0-alpha.1`。命令锁定了准确 Git ref，不会误装默认稳定分支。
+安装后新建任务，并在测试前确认版本是 `v0.5.0-alpha.2`。命令锁定了准确 Git ref，不会误装默认稳定分支。
 
 ## 选择安装方式
 

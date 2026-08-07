@@ -1,32 +1,29 @@
 # Route Card
 
-Use once before multi-unit implementation; load orchestration only for delegation.
+Use once before multi-unit implementation; load orchestration only when dispatching.
 
 `DirectCost = Lead budget share + time + failure risk`
 
 `DelegateCost = worker budget share + time + briefing + review + integration + failure × retry`
 
-Use official active-channel rates. Compare separate pools by remaining-budget share; otherwise keep a Pareto result.
+Use official active-channel rates; keep separate pools on a cost/time/token Pareto frontier when remaining budgets are unknown.
 
-- Direct: weighted cost wins, work is inseparable, or authority stays local.
-- Fast: fixed scope, interfaces, prohibitions, and acceptance.
-- Standard: bounded domain judgment.
-- Lead: intent, authority, integration, and acceptance.
+Codex same-mix seed: Luna = `0.04 × Sol`; Terra = `0.40 × Sol`; Spark remains a separate unpriced pool. Token-charge break-even is about `25×` and `2.5×` Sol raw tokens before other costs.
 
-Emit one line:
+Fast gets fixed scope and acceptance; Standard gets bounded judgment; Lead keeps intent, authority, integration, and acceptance.
+
+Emit:
 
 `ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<n> | READ_READY=<n> | EXISTING=<n> | PLANNED_DISPATCH=<n> | LEAD=<nodes> | REASON=<code> | DETAIL=<sentence>`
 
-`EXISTING` is host-confirmed running ownership, not completed artifacts, idle/UI handles, or historical `task_started`. Resolve conflicts with host status/list. `PLANNED_DISPATCH` is intended starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
+`EXISTING` means host-confirmed running ownership, never UI labels, completed/idle handles, artifacts, or historical `task_started`. `PLANNED_DISPATCH` means intended starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
 
-Collect terminal children with host wait/status; never make the user open them. Stale records count only when host-confirmed running.
+Price every independent ready unit before Direct. Shared writes block conflicting writers, not read-only work. With `READ_READY > 0`, `shared_surface` alone cannot justify `PLANNED_DISPATCH=0`. `review_cost` must name concrete transfer, acceptance, retry, or time evidence; generic “extra tokens” or Lead convenience is insufficient.
 
-Silently check run data without creating probes or narration. Recheck preconditions; one useful contract may validate a route, while startup failure returns Direct.
+Silently reuse run data; create no probe. Direct needs concrete weighted-cost, quality, authority, route-failure, or inseparability evidence. With an active grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value ready unit within time and raw-token bounds.
 
-With an active grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value ready unit even when slightly slower, while keeping time and raw tokens proportionate. Direct needs concrete cost, quality, shared-surface, route-failure, or authority evidence.
+Evaluate Fast before Standard. If all workers are Terra, `DETAIL` explains why judgment, tools, authority, or acceptance exclude Fast. Missing native Luna visibility is not `route_unavailable` while the adapter works. Name children `<tier>__<semantic>_<model>`.
 
-Evaluate every ready unit for Fast before Standard. If all workers are Terra, `DETAIL` states why residual judgment, tools, authority, or acceptance make Fast ineligible. Missing native Luna visibility is not `route_unavailable` while the verified adapter works. Name children `<tier>__<semantic>_<model>`.
+Collect terminal children with host wait/status; never make the user open one. Persist approval with `../../../scripts/project_delegation.py --grant --global --authority explicit-user`; use project `--revoke` for opt-out.
 
-Persist approval with `../../../scripts/project_delegation.py --grant --global --authority explicit-user`; use project `--revoke` for opt-out. The grant adds no external or destructive authority.
-
-If dispatching, read [orchestrate.md](orchestrate.md) and [model-routing.md](model-routing.md). Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; Lead inspects and accepts.
+If dispatching, read [orchestrate.md](orchestrate.md) and [model-routing.md](model-routing.md). Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; Lead accepts the result.
