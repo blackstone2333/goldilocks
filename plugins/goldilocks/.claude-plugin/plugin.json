@@ -1,6 +1,6 @@
 {
   "name": "goldilocks",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A Direct-first Superpowers replacement that loads project workflow only when a concrete trigger earns it.",
   "author": {
     "name": "Charles Roc"

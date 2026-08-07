@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.1-D4A72C" alt="Version 0.4.1">
+  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="Version 0.4.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
@@ -75,7 +75,11 @@ The invariant is final quality, not process volume or who typed the code. Goldil
 
 The root router is under 300 words. If there is no material decision, unknown cause, continuity need, external risk, or useful ready work to delegate, Goldilocks exits before loading a workflow reference. It inspects task-local facts, makes the smallest coherent change, and runs the smallest check that would fail if the result were wrong.
 
-An existing hook adds a 26-word communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
+An existing hook adds a compact communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety, ambiguity, or an explicit request for detail requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
+
+## Defect work is not a black box
+
+After repairing a defect, Goldilocks reports three distinct items: the evidence-backed cause—or explicitly says it is still unknown—the fix, and fresh verification. This exception applies to Lead and delegated worker handoffs, so lean output cannot hide why a change was needed. Users can ask for a deeper explanation of the root cause, trigger conditions, repair mechanism, or verification at any time.
 
 ## Continuity without document spam
 
@@ -220,6 +224,6 @@ Repository and skills.sh installs follow the GitHub source but do not silently r
 
 ## Status
 
-Goldilocks remains experimental at `v0.4.1`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks remains experimental at `v0.4.2`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

@@ -65,4 +65,6 @@ Fast describes low remaining discretion, not small original scope. Standard desc
 
 Fast returns the changed files and focused evidence to its Standard or Lead owner. Standard reviews actual diffs, resolves domain-local issues, runs domain checks, and returns one coherent domain result. Lead reviews integrated diffs and shared boundaries, resolves conflicts, and reruns the combined acceptance gate.
 
+Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; defect handoffs add a distinct evidence-backed `CAUSE`, or explicitly mark it unknown. Expand causal detail when asked.
+
 Agent completion messages are not evidence. If useful adjacent ideas appear, preserve them without following them; read [evolve.md](evolve.md) only when durable capture is warranted. When sessions or layers need durable coordination, read [continuity.md](continuity.md) and keep one authoritative execution frontier.

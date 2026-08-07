@@ -9,11 +9,11 @@ Default to Direct. Preserve quality, safety, authority, and acceptance; add proc
 
 ## Zero-cost gate
 
-Before loading workflow, make one check:
+Check once:
 
 - Does a material product, architecture, authority, safety, or irreversible decision remain?
 - Must the work survive compaction, several stages, waiting, delegation, or handoff?
-- Are there at least two independent ready units, or one large complete Fast contract that clearly avoids substantial Lead work on a verified route?
+- Are two units ready, or can one complete Fast contract avoid substantial Lead work?
 
 If all answers are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow documents or continuity state. Do not announce the route. Inspect task-local facts, make the smallest coherent change, and run the smallest decisive check.
 
@@ -35,4 +35,4 @@ Lead owns intent, shared decisions, integration, and final acceptance. Fast rece
 
 ## Decision-first communication
 
-Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Expand when safety, ambiguity, or authority requires it.
+Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Defects add the evidence-backed cause—or explicitly unknown—then the fix and verification; expand when asked, or for safety, ambiguity, or authority.

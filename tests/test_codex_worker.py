@@ -178,6 +178,14 @@ Implement the bounded parser change.
         assert "plugins" not in argv
         assert "apps" not in argv
         assert "mcp_servers={}" not in argv
+        for phrase in (
+            "Defects add",
+            "evidence-backed CAUSE",
+            "explicitly unknown",
+            "fix and verification",
+            "expand when asked",
+        ):
+            assert phrase in invocation["stdin"]
         assert 'model_reasoning_effort="medium"' in argv
         assert argv[-1] == "-", "the contract must travel over stdin, not shell interpolation"
         assert Path(invocation["cwd"]).samefile(worktree)

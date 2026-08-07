@@ -11,9 +11,10 @@ from pathlib import Path
 
 
 MICRO_STYLE = (
-    "Lead with the result. Omit work preambles, repeated plans, status, recaps, tangents, "
-    "and oversized logs. Report only changed state; expand for safety, ambiguity, or "
-    "decisive evidence."
+    "Lead with the result. Omit work preambles, repeated plans/status/recaps, tangents, and "
+    "long logs. Report only changed state and decisive evidence; expand for safety/ambiguity or "
+    "when asked. For defects, state the evidence-backed cause—or explicitly unknown—then "
+    "the fix and verification."
 )
 
 

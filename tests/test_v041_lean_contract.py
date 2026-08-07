@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 
 
 def read(path: Path) -> str:
@@ -35,6 +35,10 @@ def main() -> None:
         "Do not narrate planned work",
         "delta only",
         "shortest decisive evidence",
+        "evidence-backed cause",
+        "explicitly unknown",
+        "fix and verification",
+        "expand when asked",
     )
     for phrase in required_root_phrases:
         if phrase not in root_skill:
@@ -137,13 +141,18 @@ def main() -> None:
         "Omit work preambles",
         "Report only changed state",
         "decisive evidence",
+        "For defects",
+        "evidence-backed cause",
+        "explicitly unknown",
+        "fix and verification",
+        "when asked",
     ):
         if phrase not in recovery:
             failures.append(f"recovery hook lacks micro-style contract: {phrase}")
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.1 lean-routing contract passed.")
+    print(f"Goldilocks v{VERSION} lean-routing contract passed.")
 
 
 if __name__ == "__main__":

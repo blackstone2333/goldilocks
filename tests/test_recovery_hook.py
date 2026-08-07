@@ -57,11 +57,16 @@ def main() -> None:
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
         style_output = json.loads(no_ledger_steer.stdout)
         style_context = style_output["hookSpecificOutput"]["additionalContext"]
-        assert len(style_context.split()) <= 35
+        assert len(style_context.split()) <= 55
         assert "Lead with the result" in style_context
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
         assert "decisive evidence" in style_context
+        assert "For defects" in style_context
+        assert "evidence-backed cause" in style_context
+        assert "explicitly unknown" in style_context
+        assert "fix and verification" in style_context
+        assert "when asked" in style_context
 
         no_ledger_compact = run_hook(nested, "PostCompact")
         assert no_ledger_compact.returncode == 0, no_ledger_compact.stderr

@@ -2,6 +2,15 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.4.2 — 2026-08-07
+
+### Causal transparency for defect work
+
+- Defect completions now state the evidence-backed cause, or explicitly mark it unknown, followed by the fix and fresh verification.
+- Applied the same contract to the Lead Hook, root Skill, Diagnose engine, native worker handoffs, and the packaged Codex Fast worker.
+- Preserved lean output for routine work while allowing users to request deeper explanation of root cause, trigger conditions, repair mechanism, or verification.
+- Added deterministic contracts covering every causal-reporting surface and a real Luna repair probe that succeeded without being prompted to explain.
+
 ## 0.4.1 — 2026-07-26
 
 ### Thin Adaptive Superpowers Replacement
