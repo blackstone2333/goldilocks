@@ -11,6 +11,7 @@
 - Required every ready unit to be evaluated for Fast before Standard. Codex uses Luna for general Fast work, Spark for deterministic coding batches, Terra for bounded judgment, and Sol for Lead authority and integration when those routes are available.
 - Standardized child names as `<tier>__<task>_<model>` and added dynamic suffixes for other providers such as DeepSeek, Kimi, and Qwen.
 - Added recursive per-model Usage receipts for Lead, native children, and external Fast workers. Missing host usage stays unavailable rather than being estimated or reported as zero.
+- Preserved the pre-final Usage instruction after automatic or manual context compaction, including turns without a continuity ledger.
 - Added causal transparency for defect work: cause—or explicitly unknown—fix, and verification remain visible despite lean output, with more detail on request.
 
 This prerelease is intended for real-project feedback. Routing and Usage behavior may vary with host model availability, billing pools, transcript events, and Hook trust; use `v0.4.2` when only the stable defect-explanation fix is wanted.

@@ -22,6 +22,8 @@ Observed fallback decisions may also store the child's `turn_id` rather than the
 
 `usage_reporter.py --current` now reads the active turn's existing local telemetry and emits one compact per-model Token line. The prompt contract asks Lead to run it once immediately before the final answer and append the output. It never estimates missing data or calls another model.
 
+`PostCompact` now restores the same pre-final Usage instruction after every automatic or manual compaction. Previously it restored only continuity state, and stayed entirely silent without continuity debt; a long turn could therefore retain exact worker telemetry while forgetting to append the visible receipt.
+
 An all-zero pre-final snapshot must be treated as unavailable and omitted. The exact completed total remains captured by the Stop Hook for audit, but current Codex Desktop does not expose a way for a plugin Hook to append that post-final value to the already-rendered assistant answer.
 
 For completed native children, recover exact cumulative usage from the uniquely named child rollout and backfill the execution row. Traverse native child ownership before collecting external routes so Standard → Fast usage rolls up once to Lead.
@@ -30,6 +32,7 @@ For completed native children, recover exact cumulative usage from the uniquely 
 
 - `python3 tests/test_usage_reporter.py`
 - `python3 tests/test_recovery_hook.py`
+- The recovery regression covers compaction with no ledger, continuity debt without a ledger, and an active ledger.
 - Full contract suite and Skill validation.
 - A real Terra child with null database telemetry recovered `2,774,123` input, `2,614,528` cached input, and `28,552` output tokens from its rollout, then backfilled the row with `missing=0`.
 - A real historical Standard → Fast task produced one combined receipt containing both Terra and Luna.

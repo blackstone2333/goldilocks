@@ -586,17 +586,18 @@ def main() -> None:
         elif event == "PostCompact":
             if ledger is None:
                 if not has_continuity_debt(payload, cwd):
-                    return
-                system_message = (
-                    "Goldilocks continuity debt survived compaction without a task frontier. Read "
-                    "continuity.md, reconcile repository evidence, create or update "
-                    ".goldilocks/ACTIVE.md and the existing debug/validation record, then resume "
-                    "from the exact next test."
-                )
+                    system_message = usage_receipt_gate()
+                else:
+                    system_message = (
+                        "Goldilocks continuity debt survived compaction without a task frontier. Read "
+                        "continuity.md, reconcile repository evidence, create or update "
+                        ".goldilocks/ACTIVE.md and the existing debug/validation record, then resume "
+                        f"from the exact next test. {usage_receipt_gate()}"
+                    )
             else:
                 system_message = (
                     f"Goldilocks recovery required: read {ledger}, reconcile repository state, "
-                    "and resume from Exact next action."
+                    f"and resume from Exact next action. {usage_receipt_gate()}"
                 )
             output = {
                 "continue": True,
