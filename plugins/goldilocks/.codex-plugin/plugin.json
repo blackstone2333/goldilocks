@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.4.5+codex.20260730192842",
-  "description": "A Direct-first adaptive workflow and quality-control layer for any executable work.",
+  "version": "0.4.2+codex.20260807073348",
+  "description": "A Direct-first Superpowers replacement that loads project workflow only when a concrete trigger earns it.",
   "author": {
     "name": "Charles Roc"
   },
@@ -19,25 +19,22 @@
     "minimalism",
     "superpowers-compatible",
     "artifact-production",
-    "presentations",
-    "documents",
-    "spreadsheets",
-    "research"
+    "presentations"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Goldilocks",
-    "shortDescription": "Adaptive workflow; Direct when enough",
-    "longDescription": "Provides a thin, domain-agnostic Goldilocks router plus optional alignment, planning, debugging, continuity, delegation, and verification. Any executable work may enter; clear work exits to Direct, while durable, risky, or genuinely decomposable work loads only the capability whose trigger is present.",
+    "shortDescription": "Direct by default; structure only when earned",
+    "longDescription": "Provides a thin Goldilocks router plus optional brainstorming, planning, debugging, testing, continuity, delegation, and verification capabilities. Clear work exits to Direct without loading workflow references; durable, risky, or genuinely parallel work loads only the capability whose trigger is present.",
     "developerName": "Charles Roc",
-    "category": "Productivity",
+    "category": "Developer Tools",
     "capabilities": [
       "Interactive",
       "Read",
       "Write"
     ],
     "defaultPrompt": [
-      "Default to Direct; route any executable work through no more Goldilocks structure than the outcome earns.",
+      "Default to Direct; load no Goldilocks engine unless a concrete trigger changes the outcome.",
       "Use continuity for long work, deliberate verification for high-risk work, and delegation only when ready units have net benefit.",
       "Keep Lead on intent and integration; give Fast complete contracts and Standard only bounded domain judgment."
     ],

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "goldilocks",
-  "description": "Goldilocks: a Direct-first, Superpowers-compatible adaptive workflow for any executable work.",
+  "description": "Goldilocks: a Direct-first, Superpowers-compatible project workflow that stays out of clear tasks.",
   "owner": {
     "name": "Charles Roc"
   },
@@ -9,8 +9,8 @@
     {
       "name": "goldilocks",
       "source": "./plugins/goldilocks",
-      "description": "Direct by default; structure, continuity, delegation, and verification only when earned.",
-      "version": "0.4.5",
+      "description": "Direct by default; planning, memory, testing, and agent teams only when earned.",
+      "version": "0.4.2",
       "author": {
         "name": "Charles Roc"
       },

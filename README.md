@@ -11,77 +11,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="Version 0.4.5">
+  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="Version 0.4.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks is a lean, adaptive replacement for Superpowers and a token-efficient AI agent workflow for Codex, Claude Code, and other Skills-compatible agents. It keeps the workflow capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
-
-In the v0.4.1 certified Direct A/B, both paths passed 114/114 external checks while Goldilocks used 11.5% fewer processing tokens and 10.9% less cumulative time; official GPT-5.6 Sol Standard token cost was 6.3% lower. These are measured results on the tested coding fixtures, not a claim of universal superiority.
+Goldilocks is a lean, adaptive replacement for Superpowers. It keeps the workflow capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
 
 > Use the minimum process that preserves the quality, safety, authorization, and acceptance floor.
 
 Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; cheaper workers receive complete, independently verifiable contracts.
-
-Goldilocks is domain-agnostic: any executable work may enter the router, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. It chooses how much workflow and coordination the task earns; specialist Skills still own domain-specific production. When decomposition is worthwhile, unit boundaries keep rework local. Short or inseparable creative work may therefore remain entirely Direct.
-
-## Install
-
-Do not enable Goldilocks and Superpowers together.
-
-### Ask an AI to install it
-
-Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
-
-```text
-Install the latest Goldilocks from https://github.com/blackstone2333/goldilocks. Detect this agent's platform first: prefer the native plugin installation documented in the repository when supported; otherwise install Goldilocks globally as a compatible Skill. Do not enable Goldilocks and Superpowers together. Before any Hook approval, explain what the requested Hooks do and ask me to confirm; do not approve unrelated permissions. After installation, verify the installed version and availability, then tell me whether a new conversation is required. Do not modify unrelated configuration.
-```
-
-### Any Skills-compatible agent
-
-```bash
-npx skills add blackstone2333/goldilocks
-```
-
-For a global Codex Skill install:
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` when supported by the installer.
-
-### Native Codex plugin
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks
-codex plugin add goldilocks@goldilocks-local
-```
-
-#### Hook authorization is expected
-
-The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
-
-- `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
-- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory. A stopped worker is not marked successful until Lead reruns acceptance and `record_routing_outcome.py` closes it as verified pass or fail; only an evidence hash is retained.
-- `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
-
-If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, and update notices will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
-
-### Native Claude Code plugin
-
-```bash
-claude plugin marketplace add blackstone2333/goldilocks
-claude plugin install goldilocks@goldilocks
-```
-
-See the [installation guide](docs/installation.md) for project-local installs, updates, and removal.
-
-### Updates
-
-Repository and skills.sh installs follow the GitHub source but do not silently rewrite an active local copy. Run the matching install or upgrade command again to pick up a release. The native Codex plugin performs one quiet GitHub version check per day, stays silent when current or offline, and shows one reminder for a newer version; it never updates itself without approval. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
 
 ## What it does
 
@@ -93,8 +33,9 @@ Repository and skills.sh installs follow the GitHub source but do not silently r
 | **Orchestrate** | Worktrees, independent units, delegation, parallelism, or model routing can improve delivery | A ready dependency graph and bounded worker contracts |
 | **Prove** | Review, release, safety, integration, or several material claims need evidence | Fresh checks proportional to risk and Lead acceptance |
 | **Evolve** | A useful new idea, reusable execution pattern, or Skill improvement appears | Deferred idea or verified lesson without scope creep |
+| **Artifacts** | The user explicitly requests a multi-unit structured deliverable | One Artifact Contract, replaceable units, one integration owner, global QA |
 
-These are internal workflow engines, not six separate public Skills. The single `goldilocks` router loads only the relevant engine and adds another only when facts cross its boundary.
+This is the complete workflow surface, not seven separate public Skills. The single `goldilocks` router loads only the relevant internal engine and adds another only when facts cross its boundary.
 
 ## How it decides
 
@@ -107,6 +48,7 @@ flowchart TD
     B -- "Multi-stage work" --> F["Build"]
     B -- "Independent ready units" --> G["Orchestrate"]
     B -- "Release or higher risk" --> H["Prove"]
+    B -- "Explicit structured artifact" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"Cheapest valid owner?"}
@@ -118,6 +60,7 @@ flowchart TD
     K --> N
     L --> N
     M --> N
+    I --> N
     H --> N
     N --> O["Lead integrates and accepts"]
     O --> P{"Will the knowledge matter later?"}
@@ -132,11 +75,11 @@ The invariant is final quality, not process volume or who typed the code. Goldil
 
 The root router is under 300 words. If there is no material decision, unknown cause, continuity need, external risk, or useful ready work to delegate, Goldilocks exits before loading a workflow reference. It inspects task-local facts, makes the smallest coherent change, and runs the smallest check that would fail if the result were wrong.
 
-An existing hook adds a 26-word communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
+An existing hook adds a compact communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety, ambiguity, or an explicit request for detail requires it. It reduces narration without turning the agent into a caveman persona or suppressing necessary evidence.
 
-The same Hook now places a compact zero-cost gate before specialist Skills. Pure conversation skips it; clear executable work stays Direct without loading the full router; material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`. A local audit records only prompt and workspace hashes, session/turn identifiers, and timestamps so activation can be verified without retaining prompt content.
+## Defect work is not a black box
 
-Repeated failures earn persistence without turning every task into paperwork. On the second user-confirmed recurrence in the same session and workspace, Goldilocks requires one live `.goldilocks/ACTIVE.md` frontier plus the project's existing debug or validation record. Symptom, evidence, disproven attempts, **Do not repeat**, the exact next test, and related commits survive compaction. Unverified fixes stay out of the changelog; only freshly verified user-visible release changes enter it. Resume and compaction hooks recover unresolved continuity debt even if the frontier was not created on the previous turn.
+After repairing a defect, Goldilocks reports three distinct items: the evidence-backed cause—or explicitly says it is still unknown—the fix, and fresh verification. This exception applies to Lead and delegated worker handoffs, so lean output cannot hide why a change was needed. Users can ask for a deeper explanation of the root cause, trigger conditions, repair mechanism, or verification at any time.
 
 ## Continuity without document spam
 
@@ -169,14 +112,11 @@ Fast means low residual discretion after decomposition, not a small original tas
 
 ### Codex model routes
 
-**Fast baseline → Luna · Code quota specialist → Spark · Standard → Terra**
+**Coding → Spark · General → Luna**
 
-- Fast starts with `gpt-5.6-luna` for focused coding, tests, exploration, routing, extraction, automation, and bounded content production.
-- `gpt-5.3-codex-spark` remains the preferred text-only code specialist when its separate Pro allowance is available and a deterministic batch repays startup cost.
-- Standard starts with `gpt-5.6-terra` when bounded work still needs material domain judgment or local integration. Low-risk, objectively checkable Standard-boundary work may probe Luna once before upgrading to Terra.
-- Lead still owns architecture, Critical work, shared decisions, and final integration. Local evidence overrides the seed registry.
-
-The July 31, 2026 OpenAI price change makes Luna one tenth of Terra and four percent of Sol at standard short-context token rates; Codex plan estimates likewise allow roughly ten times as many Luna messages as Terra messages. Price never bypasses the quality, authority, modality, or tool gates. See the [dated routing update](docs/model-routing-update-2026-07-31.md).
+- Fast **coding** starts with `gpt-5.3-codex-spark`, especially when its separately metered Codex channel lowers opportunity cost.
+- Fast **general non-coding** starts with `gpt-5.6-luna` for bounded copy, summaries, content units, and similar work.
+- Standard and Lead use the best available model that clears the task-specific quality floor; local evidence overrides the seed registry.
 
 Goldilocks prefers a native, explicitly supported host model. When native Spark or Luna is unavailable but the local Codex CLI exposes it, `dispatch_codex_worker.py` uses `codex exec` with the chosen model and a complete contract. The default `project` profile preserves repository rules while isolating unrelated global plugins, Apps, MCP servers, Skills, and Hooks. Explicit `inherit` is available when a contract names a required user capability. Fast loses delegation authority, not ordinary execution tools.
 
@@ -188,12 +128,31 @@ The initial model seed is advisory, not a permanent leaderboard:
 
 | Role | Starting candidates | Boundary |
 |---|---|---|
-| Fast baseline | GPT-5.6 Luna; other verified low-cost production models | Complete contract, low residual discretion, decisive acceptance |
-| Fast coding specialist | GPT-5.3-Codex-Spark; Muse Spark; other verified coding models | Text-only deterministic batch where the separate channel repays startup |
-| Standard | GPT-5.6 Terra; Luna for a low-risk first probe; Grok; Claude Sonnet; Gemini Pro; GLM/Qwen candidates | Bounded domain judgment and local integration |
+| Fast coding | GPT-5.3-Codex-Spark; Muse Spark; GLM; other verified low-cost coding models | Complete contract, deterministic acceptance, no shared decisions |
+| Fast general | GPT-5.6 Luna; other verified general-production models | Bounded content unit, no final editorial or visual judgment |
+| Standard | GPT-5.6 Terra; Grok; Claude Sonnet; Gemini Pro; GLM/Qwen candidates | Bounded domain judgment and local integration |
 | Lead | Current host Lead model such as GPT-5.6 Sol; Claude Opus/Fable; other verified frontier models | Intent, architecture, critical decisions, combined acceptance |
 
-Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json), [current routing update](docs/model-routing-update-2026-07-31.md), and [original methodology](docs/model-routing-survey-2026-07-18.md).
+Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json) and [dated methodology](docs/model-routing-survey-2026-07-18.md).
+
+## Structured Artifacts
+
+Goldilocks can organize presentations and other explicit multi-unit deliverables without pretending to replace specialist PPT, document, spreadsheet, or video Skills.
+
+1. Lead freezes one global **Artifact Contract**: audience, outcome, structure, shared design/data rules, dependencies, integration, and acceptance.
+2. Replaceable units receive bounded contracts and may be produced with the appropriate specialist Skill.
+3. Each unit is checked independently; failed units receive **localized rework**.
+4. One integration owner assembles the canonical artifact and runs global QA.
+
+**Unit boundaries control localized rework**; they do not require one new agent per slide or section. Compatible units may share a worker session to amortize startup and context cost.
+
+The included 12-slide HSK4 one-to-one lesson is an architecture example:
+
+<p align="center">
+  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="Twelve-slide HSK4 one-to-one lesson produced with the structured-artifact profile">
+</p>
+
+See the [Artifacts design](docs/v0.4-structured-artifact-orchestration.md) and [pilot evidence](evals/results/2026-07-25-v040-structured-artifact-pilot.md).
 
 ## Evidence
 
@@ -225,8 +184,46 @@ On the eight exact cells both workflows completed, Goldilocks used 30.6% fewer t
 
 These results support replacing Superpowers; they do not establish absolute superiority across every possible workflow, model, repository, or provider. More project tests and feedback are welcome.
 
+## Install
+
+Do not enable Goldilocks and Superpowers together.
+
+### Any Skills-compatible agent
+
+```bash
+npx skills add blackstone2333/goldilocks
+```
+
+For a global Codex Skill install:
+
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
+```
+
+Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` when supported by the installer.
+
+### Native Codex plugin
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks
+codex plugin add goldilocks@goldilocks-local
+```
+
+### Native Claude Code plugin
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+See the [installation guide](docs/installation.md) for project-local installs, updates, and removal.
+
+## Updates
+
+Repository and skills.sh installs follow the GitHub source but do not silently rewrite an active local copy. Run the matching install or upgrade command again to pick up a release. The native Codex plugin performs one quiet GitHub version check per day, stays silent when current or offline, and shows one reminder for a newer version; it never updates itself without approval. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
+
 ## Status
 
-Goldilocks remains experimental at `v0.4.5`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks remains experimental at `v0.4.2`. It can better replace Superpowers, but it does not have an absolute advantage in every possible workflow. More project testing and feedback are needed, and [issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
 
 Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).

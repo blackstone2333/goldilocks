@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.4.5"
+VERSION = "0.4.2"
 
 
 def read(path: Path) -> str:
@@ -35,6 +35,10 @@ def main() -> None:
         "Do not narrate planned work",
         "delta only",
         "shortest decisive evidence",
+        "evidence-backed cause",
+        "explicitly unknown",
+        "fix and verification",
+        "expand when asked",
     )
     for phrase in required_root_phrases:
         if phrase not in root_skill:
@@ -53,9 +57,6 @@ def main() -> None:
     ):
         if phrase not in root_skill:
             failures.append(f"Goldilocks root is missing zero-cost Direct rule: {phrase}")
-    for phrase in ("any executable work", "documents", "presentations", "spreadsheets"):
-        if phrase not in root_skill:
-            failures.append(f"Goldilocks root is missing general-work trigger: {phrase}")
     if "## Minimum complete loop" in root_skill:
         failures.append("Goldilocks root still embeds a universal execution loop")
 
@@ -88,24 +89,6 @@ def main() -> None:
     for phrase in required_route_phrases:
         if phrase not in orchestrate:
             failures.append(f"orchestration is missing failure-economy rule: {phrase}")
-
-    diagnose = read(PLUGIN / "skills" / "goldilocks" / "references" / "diagnose.md")
-    continuity = read(PLUGIN / "skills" / "goldilocks" / "references" / "continuity.md")
-    retention_text = f"{diagnose}\n{continuity}"
-    for phrase in (
-        "second user-confirmed recurrence",
-        "before another patch",
-        ".goldilocks/ACTIVE.md",
-        "Do not repeat",
-    ):
-        if phrase.lower() not in retention_text.lower():
-            failures.append(f"repeated-failure retention lacks: {phrase}")
-    for phrase in (
-        "unverified fixes out of the changelog",
-        "confirmed user-visible release changes",
-    ):
-        if phrase not in continuity:
-            failures.append(f"continuity changelog boundary lacks: {phrase}")
 
     dispatcher = read(
         PLUGIN
@@ -141,60 +124,9 @@ def main() -> None:
         if "Caveman" not in body or "ADHD" not in body:
             failures.append(f"{path.name} does not explain the lean-output influence")
 
-    install_docs = {
-        ROOT / "README.md": (
-            "Ask an AI to install it",
-            "Hook authorization is expected",
-            "Goldilocks damaged the installation",
-            "GOLDILOCKS_UPDATE_CHECK=0",
-        ),
-        ROOT / "README.zh-CN.md": (
-            "让 AI 一键安装",
-            "出现 Hook 授权是正常现象",
-            "并不表示 Goldilocks 把安装环境弄坏了",
-            "GOLDILOCKS_UPDATE_CHECK=0",
-        ),
-    }
-    for path, markers in install_docs.items():
-        body = read(path)
-        for marker in markers:
-            if marker not in body:
-                failures.append(f"{path.name} lacks install trust guidance: {marker}")
-
-    readme_order = {
-        ROOT / "README.md": ("## Install", "## What it does"),
-        ROOT / "README.zh-CN.md": ("## 安装", "## 它能做什么"),
-    }
-    for path, (install_heading, capability_heading) in readme_order.items():
-        body = read(path)
-        if body.find(install_heading) > body.find(capability_heading):
-            failures.append(f"{path.name} must show installation before capabilities")
-
-    discovery_markers = {
-        ROOT / "README.md": (
-            "replacement for Superpowers",
-            "token-efficient AI agent workflow",
-            "114/114 external checks",
-            "11.5% fewer processing tokens",
-            "10.9% less cumulative time",
-        ),
-        ROOT / "README.zh-CN.md": (
-            "Superpowers 替代方案",
-            "token-efficient AI Agent 工作流",
-            "114/114 项外部检查",
-            "处理 token 少 11.5%",
-            "累计耗时少 10.9%",
-        ),
-    }
-    for path, markers in discovery_markers.items():
-        body = read(path)
-        for marker in markers:
-            if marker not in body:
-                failures.append(f"{path.name} lacks searchable evidence marker: {marker}")
-
     codex_interface = codex_manifest["interface"]
-    if codex_interface["shortDescription"] != "Adaptive workflow; Direct when enough":
-        failures.append("Codex short description does not state the general adaptive default")
+    if codex_interface["shortDescription"] != "Direct by default; structure only when earned":
+        failures.append("Codex short description does not state the thin-kernel default")
     if not codex_interface["defaultPrompt"][0].startswith("Default to Direct"):
         failures.append("Codex default prompt still biases every task toward workflow")
 
@@ -205,25 +137,22 @@ def main() -> None:
     recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")
     for phrase in (
         "MICRO_STYLE",
-        "ROUTING_GATE",
-        "CONTINUITY_GATE",
         "Lead with the result",
         "Omit work preambles",
         "Report only changed state",
         "decisive evidence",
-        "goldilocks:goldilocks",
-        "gate_injections",
-        "prompt_fingerprint",
-        "repeat_failure_signal",
-        "continuity_required",
-        "Keep unverified work out of CHANGELOG",
+        "For defects",
+        "evidence-backed cause",
+        "explicitly unknown",
+        "fix and verification",
+        "when asked",
     ):
         if phrase not in recovery:
             failures.append(f"recovery hook lacks micro-style contract: {phrase}")
 
     if failures:
         raise AssertionError("\n".join(failures))
-    print("Goldilocks v0.4.5 lean-routing contract passed.")
+    print(f"Goldilocks v{VERSION} lean-routing contract passed.")
 
 
 if __name__ == "__main__":

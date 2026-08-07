@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.4.5"
+RELEASE_VERSION = "0.4.2"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -243,9 +243,9 @@ if markdown_assets != TEMPLATE_ASSETS:
 
 if MAIN.is_file():
     main_text = MAIN.read_text(encoding="utf-8")
-    if "Direct creates no workflow continuity documents by default" not in main_text:
+    if "Direct: do not create workflow continuity documents by default" not in main_text:
         fail("main router must keep Direct work free of default continuity overhead")
-    if "normal deliverable or correctness docs remain allowed" not in main_text:
+    if "documentation is the deliverable" not in main_text:
         fail("main router must preserve Direct documentation autonomy")
     if "continuity.md" not in main_text:
         fail("main router lacks conditional continuity routing")
@@ -351,7 +351,7 @@ if MODEL_ROUTING.is_file():
         "billing channel",
         "gpt-5.3-codex-spark",
         "gpt-5.6-luna",
-        "separate Pro usage pool",
+        "separate usage limits",
         "test authoring",
         "combined verification",
         "fast__<name>",
@@ -415,7 +415,7 @@ if WORKER_SCRIPT.is_file():
 
 registry = load_json(MODEL_REGISTRY)
 if registry:
-    if registry.get("as_of") != "2026-07-31":
+    if registry.get("as_of") != "2026-07-26":
         fail("model registry must carry its evidence date")
     if len(registry.get("sources", [])) < 8:
         fail("model registry needs broad public benchmark and pricing sources")
@@ -472,8 +472,8 @@ if skill_names != expected_skill_names:
 
 main_metadata = SKILLS / "goldilocks" / "agents" / "openai.yaml"
 require_file(main_metadata)
-if main_metadata.is_file() and "allow_implicit_invocation: true" not in main_metadata.read_text(encoding="utf-8"):
-    fail("goldilocks router must allow implicit invocation for general work")
+if main_metadata.is_file() and "allow_implicit_invocation: false" not in main_metadata.read_text(encoding="utf-8"):
+    fail("goldilocks router must disable implicit invocation")
 
 if MAIN.is_file():
     main_text = MAIN.read_text(encoding="utf-8")

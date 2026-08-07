@@ -19,13 +19,7 @@ from typing import Iterator
 
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
-FAST_MODELS = {
-    "luna": LUNA_MODEL,
-    "spark-coding": SPARK_MODEL,
-    # Backward-compatible aliases from Goldilocks <= 0.4.4.
-    "general": LUNA_MODEL,
-    "coding": SPARK_MODEL,
-}
+FAST_MODELS = {"coding": SPARK_MODEL, "general": LUNA_MODEL}
 TASK_NAME_PATTERN = re.compile(r"^fast__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
@@ -34,8 +28,8 @@ CAPABILITY_PROFILES = ("project", "minimal", "inherit")
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(
         description=(
-            "Run a complete Fast execution contract with Luna by default, or use Spark's "
-            "separate coding route for deterministic code batches."
+            "Run a complete Fast execution contract with Spark for coding work or Luna for "
+            "general non-coding production."
         )
     )
     value.add_argument("--workdir", required=True, type=Path, help="Assigned repository or worktree.")
@@ -44,11 +38,8 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument(
         "--work-type",
         choices=tuple(FAST_MODELS),
-        default="luna",
-        help=(
-            "luna selects the universal Fast default; spark-coding selects the separately "
-            "metered code specialist. general and coding remain compatibility aliases."
-        ),
+        default="coding",
+        help="coding selects gpt-5.3-codex-spark; general selects gpt-5.6-luna.",
     )
     value.add_argument(
         "--reasoning-effort",
@@ -214,15 +205,15 @@ def worker_environment(capabilities: str) -> Iterator[dict[str, str]]:
 
 
 def build_prompt(task_name: str, work_type: str, workdir: Path, contract: str) -> str:
-    return f"""You are a Goldilocks Fast leaf. The owner fixed the material decisions.
+    return f"""You are a Goldilocks Fast leaf with fixed material decisions.
 
-Implement and verify only the contract below in the assigned workspace.
+Implement and verify only this workspace contract.
 
 - Do not delegate, reroute, broaden scope, change shared interfaces, or take unapproved external/destructive actions.
 - Do not rerun Goldilocks routing, continuity, update checks, or task ledgers.
 - Treat listed units as one coherent batch; keep each independently checkable.
 - Preserve unrelated work and repository rules. Stop rather than guess when a material decision is missing.
-- At completion, report changed files, focused checks and results, then unresolved blockers or risks. No preamble or repeated recap.
+- Report changed files, focused checks/results, and blockers/risks. Defects add an evidence-backed CAUSE—or explicitly unknown—then the fix and verification; expand when asked. No preamble or recap.
 
 Task name: {task_name}
 Work type: {work_type}

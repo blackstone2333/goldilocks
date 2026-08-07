@@ -1,7 +1,7 @@
 {
   "name": "goldilocks",
-  "version": "0.4.5",
-  "description": "A Direct-first adaptive workflow and quality-control layer for any executable work.",
+  "version": "0.4.2",
+  "description": "A Direct-first Superpowers replacement that loads project workflow only when a concrete trigger earns it.",
   "author": {
     "name": "Charles Roc"
   },
@@ -18,9 +18,6 @@
     "multi-agent",
     "quota-aware",
     "artifact-production",
-    "presentations",
-    "documents",
-    "spreadsheets",
-    "research"
+    "presentations"
   ]
 }

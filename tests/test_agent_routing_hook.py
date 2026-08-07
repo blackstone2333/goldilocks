@@ -13,9 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "agent_routing_guard.py"
-RECORDER = ROOT / "plugins" / "goldilocks" / "scripts" / "record_routing_outcome.py"
 SPARK_MODEL = "gpt-5.3-codex-spark"
-LUNA_MODEL = "gpt-5.6-luna"
 LEAD_MODEL = "gpt-5.6-sol"
 TERRA_MODEL = "gpt-5.6-terra"
 
@@ -35,7 +33,6 @@ def run_hook(
     payload = {
         "session_id": session_id,
         "turn_id": turn_id,
-        "agent_id": agent_id,
         "cwd": str(ROOT),
         "hook_event_name": event,
         "model": model,
@@ -61,28 +58,6 @@ def run_hook(
         capture_output=True,
         check=False,
         env=env,
-    )
-
-
-def record_outcome(
-    data_dir: Path, agent_id: str, result: str, evidence: str
-) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [
-            sys.executable,
-            str(RECORDER),
-            "--data-dir",
-            str(data_dir),
-            "--agent-id",
-            agent_id,
-            "--result",
-            result,
-            "--evidence",
-            evidence,
-        ],
-        text=True,
-        capture_output=True,
-        check=False,
     )
 
 
@@ -227,15 +202,6 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         tool_input=spawn_input("fast__recursive", fork_turns="none"),
     )
     assert "spawn" in denial_reason(recursive_fast).lower()
-
-    recursive_luna = run_hook(
-        data_dir,
-        "PreToolUse",
-        model=LUNA_MODEL,
-        agent_id="luna-leaf",
-        tool_input=spawn_input("fast__recursive_luna", fork_turns="none"),
-    )
-    assert "leaf" in denial_reason(recursive_luna).lower()
 
     standard_without_model = run_hook(
         data_dir,
@@ -391,15 +357,6 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         model=TERRA_MODEL,
     )
     assert_silent(started, "matching start should stay silent")
-    recursive_recorded_fast = run_hook(
-        data_dir,
-        "PreToolUse",
-        session_id=session,
-        agent_id="stopped-agent",
-        model=TERRA_MODEL,
-        tool_input=spawn_input("fast__must_not_delegate", fork_turns="none"),
-    )
-    assert "leaf" in denial_reason(recursive_recorded_fast).lower()
     stopped = run_hook(
         data_dir,
         "SubagentStop",
@@ -419,37 +376,6 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
     assert experience["observed_completions"] == 1
     assert experience["verified_passes"] == 0
     assert experience["verified_failures"] == 0
-
-    verified = record_outcome(
-        data_dir,
-        "stopped-agent",
-        "pass",
-        "python3 tests/test_parser.py: 12 passed",
-    )
-    assert verified.returncode == 0, verified.stderr
-    assert json.loads(verified.stdout)["status"] == "recorded"
-    decision = next(
-        row for row in rows(data_dir, "decisions") if row["tool_use_id"] == "stop-decision"
-    )
-    assert decision["status"] == "verified_pass"
-    experience = next(
-        row
-        for row in rows(data_dir, "experiences")
-        if row["task_fingerprint"] == decision["task_fingerprint"]
-        and row["model"] == TERRA_MODEL
-    )
-    assert experience["verified_passes"] == 1
-    assert experience["verified_failures"] == 0
-    verification = rows(data_dir, "verifications")[-1]
-    assert verification["evidence_hash"] != "python3 tests/test_parser.py: 12 passed"
-    assert len(verification["evidence_hash"]) == 64
-
-    duplicate = record_outcome(data_dir, "stopped-agent", "pass", "same acceptance")
-    assert duplicate.returncode == 0, duplicate.stderr
-    assert json.loads(duplicate.stdout)["status"] == "already-recorded"
-    conflict = record_outcome(data_dir, "stopped-agent", "fail", "contradictory result")
-    assert conflict.returncode == 2
-    assert "already verified" in conflict.stderr
 
 
 def test_real_mismatch(data_dir: Path) -> None:
@@ -514,7 +440,7 @@ def main() -> None:
         test_real_mismatch(data_dir)
         test_unplanned_sol_soft_return(data_dir)
 
-    print("Goldilocks v0.4.5 agent routing hook contract passed.")
+    print("Goldilocks agent routing hook contract passed.")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 ---
 name: goldilocks
-description: Adaptive workflow and quality-control router for any executable work, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. Invoke implicitly or explicitly to choose Direct work, alignment, diagnosis, planning, delegation, continuity, or verification; clear tasks immediately take the Direct exit without loading another workflow reference.
+description: Use only when explicitly asked to apply Goldilocks, choose a workflow, replace Superpowers, or calibrate project process. This is a thin router; clear Direct work exits without loading another workflow Skill or reference.
 ---
 
 # Goldilocks
@@ -9,17 +9,15 @@ Default to Direct. Preserve quality, safety, authority, and acceptance; add proc
 
 ## Zero-cost gate
 
-Before loading workflow, make one check:
+Check once:
 
-- Does material product, architecture, authority, safety, irreversibility, or causality remain uncertain?
+- Does a material product, architecture, authority, safety, or irreversible decision remain?
 - Must the work survive compaction, several stages, waiting, delegation, or handoff?
-- Are there two independent ready units, or one complete worker-sized contract that can avoid substantial Lead work on a verified route?
+- Are two units ready, or can one complete Fast contract avoid substantial Lead work?
 
-Visible multi-unit implementation must read `orchestrate.md` before Lead edits; Direct remains allowed after its constant-time comparison.
+If all answers are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow documents or continuity state. Do not announce the route. Inspect task-local facts, make the smallest coherent change, and run the smallest decisive check.
 
-If all are no, take the **Direct exit**. Do not read any Goldilocks reference. Do not invoke another Goldilocks skill. Do not create workflow documents or continuity state. Do not announce the route. Inspect local facts, make the smallest coherent change, and run the smallest decisive check.
-
-Direct creates no workflow continuity documents by default; normal deliverable or correctness docs remain allowed. Only compaction, multi-stage, steering, waiting, delegation, or handoff may let [continuity.md](references/continuity.md) create `.goldilocks/ACTIVE.md`.
+Direct: do not create workflow continuity documents by default; documentation is the deliverable or correctness may still require normal docs. Only after a compaction, multi-stage, steering, waiting, delegation, or handoff trigger may [continuity.md](references/continuity.md) create `.goldilocks/ACTIVE.md`.
 
 ## Escalate one internal engine
 
@@ -33,8 +31,8 @@ Direct creates no workflow continuity documents by default; normal deliverable o
 
 Load only that engine. Add another only when facts cross its boundary.
 
-Lead owns intent, decisions, integration, and acceptance. Fast receives a complete contract and remains a leaf; Standard receives judgment.
+Lead owns intent, shared decisions, integration, and final acceptance. Fast receives a complete contract and remains a leaf; Standard receives only bounded domain judgment.
 
 ## Decision-first communication
 
-Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Expand when safety, ambiguity, or authority requires it.
+Lead with the result or decision. Do not narrate planned work, repeat visible state, or quote oversized logs. Status is delta only; use the shortest decisive evidence. Defects add the evidence-backed cause—or explicitly unknown—then the fix and verification; expand when asked, or for safety, ambiguity, or authority.

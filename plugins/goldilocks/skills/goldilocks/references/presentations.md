@@ -20,7 +20,7 @@ Several non-dependent slides may be a **batch** for one worker session, but batc
 
 Treat the slide contract as the rework boundary and the coherent content batch as the **session boundary**. For a simple **12-slide** text-led deck with one frozen storyboard and shared design system, begin with **one worker session** for all ready slide-content units; add another only when independent specialist work or measured critical-path savings repays its startup.
 
-When the packaged Codex Fast adapter is used for slide content, select Luna with `--work-type luna`. Spark is optional only for deterministic presentation-generation code or file automation, not for teaching design, narrative copy, or visual judgment.
+When the packaged Codex Fast adapter is used for slide content, select Luna with `--work-type general`. Spark remains the coding default for presentation-generation scripts or deterministic file automation, not for teaching design, narrative copy, or visual judgment.
 
 Workers produce contracted units and return evidence. Unit QA checks content accuracy, the contract, visual consistency, notes/sources, and local legibility. Rework is **localized rework**: repair only the failed slide and its direct dependency unless the global contract changed.
 

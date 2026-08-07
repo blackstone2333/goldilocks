@@ -13,8 +13,6 @@ Find the root cause before changing behavior. Diagnosis requests authorize evide
 
 Prefer existing logs, tests, traces, debuggers, profilers, and read-only queries. Add temporary instrumentation only where a boundary is otherwise opaque, and remove it unless it has lasting operational value.
 
-A second user-confirmed recurrence after an attempted fix is a hard persistence boundary. Before another patch, read [continuity.md](continuity.md), create or update `.goldilocks/ACTIVE.md`, and preserve the symptom, evidence, disproven attempts, **Do not repeat** boundary, exact next test, and related commits in the project's existing debug or validation record. Do not rely on conversation history to carry this state.
-
 ## Fix the common cause
 
 Locate all callers and affected paths before patching. Repair the earliest shared incorrect assumption or contract that explains the evidence. Avoid per-caller guards, broad rewrites, longer sleeps, retry inflation, or dependency upgrades unless the root cause specifically requires them.
@@ -28,5 +26,7 @@ When the root cause or failed attempts contain reusable, non-obvious knowledge, 
 After three failed fixes or disproven hypotheses, stop patching. Reassess the reproduction, assumptions, architecture, and worker capability; escalate to Lead judgment instead of trying a fourth speculative change or multiplying agents.
 
 If the user asked only for diagnosis, stop with the causal chain, evidence, impact, and bounded fix options. Do not mutate source, configuration, production, or external systems.
+
+After a diagnosis-driven fix, final reports the evidence-backed cause or explicitly unknown, then the fix and verification. Keep them distinct, and expand causal detail when the user asks.
 
 If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

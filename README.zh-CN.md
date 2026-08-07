@@ -11,77 +11,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.4.5-D4A72C" alt="版本 0.4.5">
+  <img src="https://img.shields.io/badge/version-0.4.2-D4A72C" alt="版本 0.4.2">
   <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
 
-Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是适用于 Codex、Claude Code 及其他兼容 Agent 的 token-efficient AI Agent 工作流。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
-
-在 v0.4.1 认证的 Direct A/B 对照中，两条路径均通过 114/114 项外部检查；Goldilocks 的处理 token 少 11.5%、累计耗时少 10.9%，按 GPT-5.6 Sol Standard 官方 token 价格计算的成本低 6.3%。这些是已测试编程任务上的实测结果，并非对所有场景都绝对领先的声明。
+Goldilocks 是一个精简、动态的 Superpowers 替代方案。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
 
 > 只使用足以维持质量、安全、授权和验收底线的流程。
 
 清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给更便宜的工作模型。
-
-Goldilocks 不限定工作领域：软件、研究、分析、文档、演示文稿、表格以及其他结构化交付物，都可以进入同一个路由器。它只决定任务值得使用多少流程和协作；具体领域的制作能力仍由专业 Skill 负责。值得拆分时，单元边界让返工保持局部。因此，短任务或不可拆分的整体创作仍可能全程保持 Direct。
-
-## 安装
-
-不要同时启用 Goldilocks 和 Superpowers。
-
-### 让 AI 一键安装
-
-把下面整段提示词复制给能够管理自身 Skill 或插件的 Codex、Claude Code、Cursor 等 Agent：
-
-```text
-请从 https://github.com/blackstone2333/goldilocks 安装最新版 Goldilocks。先识别当前 Agent 平台：支持仓库 README 所述原生插件时优先安装原生插件，否则将 Goldilocks 作为兼容 Skill 全局安装。不要同时启用 Goldilocks 和 Superpowers。出现 Hook 授权前，先向我解释所请求 Hook 的作用并征得确认，不要批准无关权限。安装后验证版本和可用状态，并告诉我是否需要新建对话才能生效。不要修改无关配置。
-```
-
-### 任意兼容 Skills 的 Agent
-
-```bash
-npx skills add blackstone2333/goldilocks
-```
-
-全局安装为 Codex Skill：
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-安装器支持时，可把 `codex` 换成 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。
-
-### Codex 原生插件
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks
-codex plugin add goldilocks@goldilocks-local
-```
-
-#### 出现 Hook 授权是正常现象
-
-Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
-
-- `recovery_reminder.py`：在专业 Skill 之前注入极小门禁，把重复失败升级为持久连续性，恢复压缩后的任务状态，并加入精简沟通约束。本地审计只保存哈希、有限的复发标志和时间，不保存提示词原文。
-- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。Worker 停止后不会被直接记为成功；Lead 重跑验收并由 `record_routing_outcome.py` 记为 verified pass 或 fail 后才闭环，系统只保留证据哈希。
-- `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
-
-如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束和更新提醒不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
-
-### Claude Code 原生插件
-
-```bash
-claude plugin marketplace add blackstone2333/goldilocks
-claude plugin install goldilocks@goldilocks
-```
-
-项目级安装、更新和卸载方法见[完整安装说明](docs/installation.zh-CN.md)。
-
-### 更新
-
-仓库和 skills.sh 安装都以 GitHub 为源，但不会静默改写本地正在使用的副本；发布新版本后，需要重新运行对应安装或升级命令。Codex 原生插件每天最多静默检查一次 GitHub：已是最新版或离线时不提示；发现新版本时只提醒一次；未经同意不会自动更新。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可关闭检查。
 
 ## 它能做什么
 
@@ -93,8 +33,9 @@ claude plugin install goldilocks@goldilocks
 | **Orchestrate** | worktree、独立单元、委派、并行或模型路由能改善交付 | 就绪依赖图和边界清晰的工作合同 |
 | **Prove** | 审查、发布、安全、集成或多个重要声明需要证据 | 与风险相称的新鲜检查和 Lead 验收 |
 | **Evolve** | 出现有价值的新想法、可复用路径或 Skill 改进 | 留存后续方向或已验证经验，不扩大当前范围 |
+| **Artifacts** | 用户明确要求制作多单元结构化产物 | 一个 Artifact Contract、可替换单元、单一集成负责人和全局 QA |
 
-这些是内部工作流引擎，不是六个独立公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的引擎；事实跨越边界时才增加第二个。
+这是一套完整能力面，不是七个公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的内部引擎；事实跨越边界时才增加第二个。
 
 ## 它如何判断
 
@@ -107,6 +48,7 @@ flowchart TD
     B -- "多阶段工作" --> F["Build"]
     B -- "存在独立就绪单元" --> G["Orchestrate"]
     B -- "发布或较高风险" --> H["Prove"]
+    B -- "明确的结构化产物" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"由谁完成最划算且可靠？"}
@@ -118,6 +60,7 @@ flowchart TD
     K --> N
     L --> N
     M --> N
+    I --> N
     H --> N
     N --> O["Lead 整合并最终验收"]
     O --> P{"这些知识以后还会有用吗？"}
@@ -132,11 +75,11 @@ flowchart TD
 
 根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会在加载任何工作流参考前直接退出。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。
 
-现有 Hook 会加入一条 26 词沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全或歧义时恢复完整说明。它减少叙述噪声，不会让模型模仿原始人说话，也不会删掉必要证据。
+现有 Hook 会加入一条精简沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全、歧义或用户明确要求详细说明时恢复完整解释。它减少叙述噪声，不会让模型模仿原始人说话，也不会删掉必要证据。
 
-同一个 Hook 现在会在专业 Skill 之前加入紧凑的零成本门禁：纯对话跳过；清晰的可执行任务保持 Direct，不加载完整路由器；出现实质不确定性、未知根因、多阶段连续性或有效拆分空间时，明确加载 `goldilocks:goldilocks`。本地审计只记录提示词与工作区哈希、会话/回合标识和时间，因此能够验证门禁是否生效，又不保留提示词内容。
+## 修复过程不再是黑盒
 
-重复失败会获得必要留存，但不会让每个任务都制造文档：同一会话和工作区中，用户第二次确认问题复发时，Goldilocks 强制维护一个 `.goldilocks/ACTIVE.md` 执行前沿，并复用项目现有的 debug 或 validation 记录。症状、证据、已排除方案、**Do not repeat**、精确下一项测试和相关提交都能跨上下文压缩保留。未经验证的修复不进入 Changelog；只有新鲜验收通过的用户可见发布变化才进入。即使上一回合没有及时创建前沿，恢复和压缩 Hook 也会继续提示尚未偿还的连续性债务。
+修复故障后，Goldilocks 会分别说明三项内容：有证据支持的原因——仍无法确定时明确说明未知——采取的修复，以及新鲜验证结果。该例外同时约束 Lead 和被委派的工作模型，精简输出不能再隐藏“为什么要这样改”。用户随时可以继续要求详细解释根因、触发条件、修复原理或验证方法。
 
 ## 连续性，但不滥造文档
 
@@ -169,14 +112,11 @@ Fast 指拆解后剩余裁量低，不代表原任务很小。多个独立就绪
 
 ### Codex 模型路由
 
-**Fast 基线 → Luna · 编程额度专才 → Spark · Standard → Terra**
+**编程 → Spark · 通用非编程 → Luna**
 
-- Fast 默认先考虑 `gpt-5.6-luna`，覆盖 focused coding、测试、探索、路由、提取、自动化和边界明确的内容生产。
-- `gpt-5.3-codex-spark` 继续作为纯文本编程专才：仅在 Pro 独立额度池可用，且确定性代码批次足以抵消启动成本时优先。
-- Standard 在仍需实质领域判断或局部整合时默认使用 `gpt-5.6-terra`；低风险、可客观验收的 Standard 边界任务可以先试一次 Luna，未过质量门槛就升级 Terra。
-- Lead 继续负责架构、Critical 工作、共享决策和最终整合；同项目同任务形态的本地证据优先于种子表。
-
-OpenAI 2026 年 7 月 31 日调价后，标准短上下文 token 价格中 Luna 只有 Terra 的十分之一、Sol 的 4%；Codex 套餐估算的 Luna 消息数也约为 Terra 的十倍。价格不能绕过质量、权限、模态和工具门槛。参见[带日期的路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)。
+- Fast **编程** 默认先考虑 `gpt-5.3-codex-spark`，尤其适合利用 Codex 独立计量通道降低机会成本。
+- Fast **通用非编程** 默认先考虑 `gpt-5.6-luna`，用于边界明确的文案、摘要、内容单元等。
+- Standard 和 Lead 选择能越过任务质量底线的最佳可用模型；同类项目的本地证据优先于种子表。
 
 Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口没有 Spark 或 Luna、但本地 Codex CLI 可以调用时，`dispatch_codex_worker.py` 会通过 `codex exec` 使用指定模型和完整合同。默认 `project` 档位保留仓库规则，同时隔离无关的全局插件、App、MCP、Skill 和 Hook；合同明确需要用户能力时可以选择 `inherit`。Fast 被关闭的是继续分派权，不是普通执行工具。
 
@@ -188,12 +128,31 @@ Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口
 
 | 角色 | 起始候选 | 边界 |
 |---|---|---|
-| Fast 基线 | GPT-5.6 Luna 及其他已验证低成本生产模型 | 完整合同、低剩余裁量、决定性验收 |
-| Fast 编程专才 | GPT-5.3-Codex-Spark、Muse Spark 及其他已验证编程模型 | 纯文本确定性批次，独立额度收益足以抵消启动成本 |
-| Standard | GPT-5.6 Terra；Luna 低风险首轮；Grok、Claude Sonnet、Gemini Pro、GLM/Qwen 候选 | 有界领域判断和局部整合 |
+| Fast 编程 | GPT-5.3-Codex-Spark、Muse Spark、GLM 及其他已验证低成本编程模型 | 完整合同、确定性验收、无共享决策 |
+| Fast 通用 | GPT-5.6 Luna 及其他已验证通用生产模型 | 边界明确的内容单元，不负责最终编辑或视觉判断 |
+| Standard | GPT-5.6 Terra、Grok、Claude Sonnet、Gemini Pro、GLM/Qwen 候选 | 有界领域判断和局部整合 |
 | Lead | 当前宿主 Lead 模型，如 GPT-5.6 Sol、Claude Opus/Fable 及其他已验证前沿模型 | 意图、架构、关键决策和组合验收 |
 
-模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)、[当前路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)和[原始方法说明](docs/model-routing-survey-2026-07-18.md)。
+模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)和[带日期的方法说明](docs/model-routing-survey-2026-07-18.md)。
+
+## 结构化 Artifacts
+
+Goldilocks 可以组织 PPT 等明确的多单元产物，但不会假装替代专业的 PPT、文档、表格或视频 Skill。
+
+1. Lead 冻结全局 **Artifact Contract**：受众、目标、结构、共享设计/数据规则、依赖、整合和验收。
+2. 可替换单元获得边界合同，并可使用相应专业 Skill 制作。
+3. 各单元独立检查，失败单元执行 **localized rework**。
+4. 单一集成负责人组装正式产物并执行全局 QA。
+
+**单元边界用于控制局部返工**；它不意味着每页 PPT 或每个章节都要新开一个 Agent。兼容单元可以共用工作会话，以摊薄启动和上下文成本。
+
+仓库里的 12 页 HSK4 一对一课程是架构样例：
+
+<p align="center">
+  <img src="evals/artifacts/v040-hsk4-network-shopping-montage.png" width="960" alt="使用结构化产物档位制作的 12 页 HSK4 一对一课程">
+</p>
+
+参见 [Artifacts 设计](docs/v0.4-structured-artifact-orchestration.zh-CN.md)和[试制证据](evals/results/2026-07-25-v040-structured-artifact-pilot.md)。
 
 ## 证据
 
@@ -225,8 +184,46 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 
 这些结果支持用 Goldilocks 替换 Superpowers，但不能证明它在所有工作流、模型、仓库或供应商上都绝对领先。欢迎继续做项目测试并反馈。
 
+## 安装
+
+不要同时启用 Goldilocks 和 Superpowers。
+
+### 任意兼容 Skills 的 Agent
+
+```bash
+npx skills add blackstone2333/goldilocks
+```
+
+全局安装为 Codex Skill：
+
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
+```
+
+安装器支持时，可把 `codex` 换成 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。
+
+### Codex 原生插件
+
+```bash
+codex plugin marketplace add blackstone2333/goldilocks
+codex plugin add goldilocks@goldilocks-local
+```
+
+### Claude Code 原生插件
+
+```bash
+claude plugin marketplace add blackstone2333/goldilocks
+claude plugin install goldilocks@goldilocks
+```
+
+项目级安装、更新和卸载方法见[完整安装说明](docs/installation.zh-CN.md)。
+
+## 更新
+
+仓库和 skills.sh 安装都以 GitHub 为源，但不会静默改写本地正在使用的副本；发布新版本后，需要重新运行对应安装或升级命令。Codex 原生插件每天最多静默检查一次 GitHub：已是最新版或离线时不提示；发现新版本时只提醒一次；未经同意不会自动更新。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可关闭检查。
+
 ## 当前状态
 
-Goldilocks 仍是实验版 `v0.4.5`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks 仍是实验版 `v0.4.2`。它能够更好地替代 Superpowers，但并非在所有可能的工作流程中都有绝对优势，因此需要更多项目的测试和反馈，[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
 
 Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。

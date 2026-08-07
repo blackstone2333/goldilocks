@@ -2,56 +2,14 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
-## 0.4.5 — 2026-07-31
+## 0.4.2 — 2026-08-07
 
-### Cheaper Fast and Standard Routing That Actually Closes
+### Causal transparency for defect work
 
-- Made GPT-5.6 Luna the universal Codex Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content production after its July 31 price and allowance change.
-- Kept GPT-5.3-Codex-Spark as the separately metered text-code specialist for deterministic coding batches, rather than treating it as the default for every coding task.
-- Made GPT-5.6 Terra the Standard baseline for bounded domain judgment and local integration. Low-risk, objectively checkable Standard-boundary work may probe Luna once before upgrading.
-- Preserved GPT-5.6 Sol for Lead, architecture, Critical work, shared decisions, final integration, and combined acceptance. Price still cannot bypass capability, tool, modality, authority, privacy, or quality gates.
-- Strengthened the zero-cost gate: visibly multi-unit implementation now performs one constant-time make-or-delegate comparison before Lead edits. Direct remains valid when briefing and review cost more.
-- Audited recent local project sessions. The root Hook was active, but recent development work did not dispatch Luna, Terra, or Spark; later children still inherited Sol. Historical records proved all three routes had worked earlier, while no worker had a Lead-verified pass recorded.
-- Added `record_routing_outcome.py` so worker stops remain observations until Lead reruns combined acceptance and closes them as `verified_pass` or `verified_fail`. The recorder is idempotent, rejects mismatched or contradictory routes, and stores only an evidence hash.
-- Extended Fast leaf enforcement to Luna and any native worker recorded as Fast, while preserving normal tools and Standard's bounded delegation role.
-- Updated the adapter to use explicit `luna` and `spark-coding` work types, with `general` and `coding` retained as compatibility aliases.
-- Refreshed the machine-readable model registry, bilingual routing note, installation guidance, and regression coverage. Older benchmark prices remain historically unchanged.
-
-## 0.4.4 — 2026-07-29
-
-### Earned Continuity for Repeated Failures
-
-- Added a hard persistence boundary on the second user-confirmed recurrence in the same session and workspace. Before another patch, Goldilocks requires one live `.goldilocks/ACTIVE.md` frontier and the project's existing debug or validation record.
-- Preserved symptom, evidence, disproven attempts, **Do not repeat**, exact next test, and related commits so compaction or handoff does not force another agent to reconstruct failed work from chat.
-- Kept documentation selective: routine Direct work still creates no workflow files, and obvious or transient failures still need no debug note.
-- Separated release history from debugging memory. Unverified fixes remain out of Changelog; freshly verified user-visible release changes may enter the repository's established Changelog, while failed attempts stay in the debug record.
-- Added privacy-preserving recurrence flags and continuity-debt state to the existing hashed gate audit, including an in-place migration from v0.4.3 databases. Prompt text is still never stored.
-- Added resume and post-compaction recovery when continuity debt exists but a previous turn failed to create the frontier.
-- Added regression coverage for Chinese repeated-failure detection, audit migration and idempotency, worker silence, continuity-debt recovery, Changelog boundaries, and no prompt retention.
-
-## 0.4.3 — 2026-07-28
-
-### Reliable Root Invocation
-
-- Fixed a real activation gap: specialist Skills could previously be selected without Goldilocks ever running its root decision gate.
-- Added a compact `UserPromptSubmit` gate before specialist Skills. Pure conversation skips it, clear work stays Direct without loading the full router, and material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`.
-- Added a privacy-preserving local audit of gate delivery. It stores session/turn identifiers, timestamps, and prompt/workspace hashes in the existing plugin database; prompt text is never retained.
-- Added unknown causality to the root gate so focused debugging cannot incorrectly fall through as clear Direct work.
-- Added regression coverage for gate injection, specialist-Skill precedence, audit idempotency, worker silence, prompt privacy, and the existing sub-300-word router budget.
-
-## 0.4.2 — 2026-07-26
-
-### General Adaptive Invocation
-
-- Broadened the single `goldilocks` trigger from explicit project-workflow requests to any executable work, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables.
-- Enabled implicit invocation while preserving the zero-cost Direct gate: clear work still loads no internal engine, creates no workflow residue, and announces no route.
-- Clarified that Goldilocks coordinates workflow and acceptance across domains; specialist Skills remain responsible for domain-specific production.
-- Kept non-coding orchestration experimental. The router may choose Direct for short, inseparable, or holistic creative work instead of forcing delegation.
-- Added a copy-paste AI installation prompt and documented why Codex may request Hook approval again after install or update, what each Hook does, its network boundary, and the effect of declining it.
-- Moved installation ahead of the capability tour so new users can act before reading the implementation details.
-- Clarified the searchable project summary with the bounded v0.4.1 Direct A/B result: 114/114 checks on both paths, 11.5% fewer processing tokens, 10.9% less cumulative time, and 6.3% lower official GPT-5.6 Sol Standard token cost.
-
-No new domain-production engine was added; this release broadens eligibility, not mandatory process.
+- Defect completions now state the evidence-backed cause, or explicitly mark it unknown, followed by the fix and fresh verification.
+- Applied the same contract to the Lead Hook, root Skill, Diagnose engine, native worker handoffs, and the packaged Codex Fast worker.
+- Preserved lean output for routine work while allowing users to request deeper explanation of root cause, trigger conditions, repair mechanism, or verification.
+- Added deterministic contracts covering every causal-reporting surface and a real Luna repair probe that succeeded without being prompted to explain.
 
 ## 0.4.1 — 2026-07-26
 

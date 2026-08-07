@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.4.5"
+VERSION = "0.4.2"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 ENTRY = SKILLS / "goldilocks" / "SKILL.md"
@@ -164,17 +164,14 @@ for manifest in [
 
 for readme_name in ["README.md", "README.zh-CN.md"]:
     readme = text(ROOT / readme_name)
-    if f"version-{VERSION}" not in readme:
-        fail(f"{readme_name} lacks the current version badge")
-    for removed_promotion in [
-        "## Structured Artifacts",
-        "## 结构化 Artifacts",
+    for marker in [
+        f"version-{VERSION}",
+        "Artifacts",
         "Artifact Contract",
         "localized rework",
-        "v040-hsk4-network-shopping-montage.png",
     ]:
-        if removed_promotion in readme:
-            fail(f"{readme_name} still promotes unproven artifact performance: {removed_promotion}")
+        if marker not in readme:
+            fail(f"{readme_name} lacks v0.4 public contract: {marker}")
 
 
 cases = []
@@ -207,9 +204,9 @@ for marker in [
 
 
 if failures:
-    print("Goldilocks v0.4.5 artifact contract failed:")
+    print(f"Goldilocks v{VERSION} artifact contract failed:")
     for failure in failures:
         print(f"- {failure}")
     sys.exit(1)
 
-print("Goldilocks v0.4.5 structured-artifact contract passed.")
+print(f"Goldilocks v{VERSION} structured-artifact contract passed.")
