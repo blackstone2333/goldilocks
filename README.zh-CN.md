@@ -188,6 +188,24 @@ Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上
 
 不要同时启用 Goldilocks 和 Superpowers。
 
+### skills.sh 发布通道
+
+[skills.sh](https://skills.sh/blackstone2333/goldilocks/goldilocks) 默认读取仓库主分支作为稳定通道，目前页面没有单独的预发布通道。`skills` CLI 支持锁定 Git Tag，因此稳定版和测试版都可以固定安装、稳定复现：
+
+稳定版 `v0.4.2`：
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.4.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+测试版 `v0.5.0-alpha.2`：
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0-alpha.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+两个通道只安装一个。下方不带版本的简短命令继续跟随主分支上的最新稳定版。
+
 ### 任意兼容 Skills 的 Agent
 
 ```bash
@@ -205,9 +223,11 @@ npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent cod
 ### Codex 原生插件
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
 codex plugin add goldilocks@goldilocks-local
 ```
+
+请在普通终端里运行这些命令，安装完成后关闭当前 Codex 任务并新建任务，再继续发送消息。Codex 会在任务启动时固定 Hook 路径；如果替换插件后仍沿用安装时的旧任务，该任务可能继续指向已经删除的旧版本缓存。
 
 ### Claude Code 原生插件
 

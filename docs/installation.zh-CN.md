@@ -19,6 +19,20 @@ Goldilocks 既可以作为跨平台 Agent Skills 安装，也可以作为 Codex 
 npx skills add blackstone2333/goldilocks
 ```
 
+### 稳定版与测试版通道
+
+skills.sh 页面没有单独的预发布通道；普通入口跟随仓库稳定主分支，固定 Git Tag 则可以复现指定通道：
+
+```bash
+# 稳定版
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.4.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+
+# Alpha 实地测试版
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0-alpha.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+两个通道只安装一个。需要重装同一版本时，重新运行对应的固定 Tag 命令；只有确实希望跟随最新稳定主分支时，才使用不带版本的仓库命令。
+
 只全局安装核心路由器：
 
 ```bash
@@ -67,11 +81,22 @@ npx skills update --global --yes
 ## Codex 原生插件
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建一个 Codex 任务，让新的 Skill 上下文生效。
+请在普通终端里运行这些命令。关闭执行或发起安装的 Codex 任务，新建任务后再继续发送消息。Codex 会在任务启动时固定插件 Hook；替换或降级插件后，旧缓存可能已经删除，但原任务仍保留旧的绝对 Hook 路径。
+
+如果消息被 `can't open file .../goldilocks/<旧版本>/scripts/...` 阻断，请在被阻断的 Codex 任务之外修复原生插件：
+
+```bash
+codex plugin remove goldilocks@goldilocks-local
+codex plugin marketplace remove goldilocks-local
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
+codex plugin add goldilocks@goldilocks-local
+```
+
+然后新建 Codex 任务，并重新检查 `/hooks`。使用 `npx skills add` 安装跨平台 Skill 不会自动删除旧的原生插件；切换安装类型时需要显式移除旧插件。
 
 ### 安静的更新感知
 
