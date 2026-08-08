@@ -19,6 +19,20 @@ Interactive installation:
 npx skills add blackstone2333/goldilocks
 ```
 
+### Stable and Alpha channels
+
+skills.sh has no separate prerelease channel UI. Its normal listing follows the repository's stable default branch, while exact Git tags provide reproducible channel selection:
+
+```bash
+# Stable
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.4.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+
+# Alpha field test
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0-alpha.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+Install only one channel. Re-run the corresponding pinned command to reinstall that exact release; use the unpinned repository command only when following the latest stable default branch is intended.
+
 Install only the core router globally:
 
 ```bash
@@ -67,11 +81,22 @@ Portable Skills do not run a background update check. This keeps activation offl
 ## Codex native plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
-Start a new Codex task after installation so the new Skill context is loaded.
+Run the commands in a normal terminal. Close the Codex task that performed or requested the installation, then start a new task before sending another prompt. Codex snapshots plugin Hooks when a task starts; replacing or downgrading the plugin can remove the old cache while that task still holds its old absolute Hook path.
+
+If a prompt is blocked with `can't open file .../goldilocks/<old-version>/scripts/...`, repair the native plugin outside the blocked Codex task:
+
+```bash
+codex plugin remove goldilocks@goldilocks-local
+codex plugin marketplace remove goldilocks-local
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
+codex plugin add goldilocks@goldilocks-local
+```
+
+Then start a new Codex task and review `/hooks` again. Installing the portable Skill with `npx skills add` does not remove an older native plugin; remove it explicitly when switching installation types.
 
 ### Quiet update awareness
 

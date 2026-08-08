@@ -188,6 +188,24 @@ These results support replacing Superpowers; they do not establish absolute supe
 
 Do not enable Goldilocks and Superpowers together.
 
+### skills.sh release channels
+
+[skills.sh](https://skills.sh/blackstone2333/goldilocks/goldilocks) follows the repository's default branch as the stable channel and does not currently expose a separate prerelease channel in its UI. The `skills` CLI supports pinned Git tags, so both channels remain reproducible:
+
+Stable `v0.4.2`:
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.4.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+Alpha `v0.5.0-alpha.2`:
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0-alpha.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+```
+
+Install only one channel. The shorter unpinned command below continues to follow the latest stable default branch.
+
 ### Any Skills-compatible agent
 
 ```bash
@@ -205,9 +223,11 @@ Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `
 ### Native Codex plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.4.2
 codex plugin add goldilocks@goldilocks-local
 ```
+
+Run these commands in a normal terminal, then close the current Codex task and start a new one before sending another prompt. Codex snapshots Hook paths when a task starts; continuing the installer task after replacing a plugin can leave that task pointing at a removed older cache.
 
 ### Native Claude Code plugin
 
