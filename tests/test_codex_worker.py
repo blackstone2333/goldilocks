@@ -205,7 +205,7 @@ Implement the bounded parser change.
         assert "fast__focused_implementation_luna" in prompt
         assert "Implement the bounded parser change" in prompt
         assert "changed files" in prompt and "checks" in prompt
-        assert "evidence-backed cause" in prompt
+        assert "evidence-backed CAUSE" in prompt
         assert "explicitly unknown" in prompt
         assert "Do not rerun Goldilocks routing" in prompt
         assert "one coherent batch" in prompt

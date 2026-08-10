@@ -67,7 +67,7 @@ reason to reconstruct old exploration.
 
 Classify after decomposition: a large unit can be Fast when discretion is low; a small security decision can remain Lead. Each contract states objective, non-goals, allowed files/domain, interfaces, dependencies, acceptance, evidence, and forbidden external/destructive actions. Give task-local paths and decisions, not conversation history. If intent or architecture remains implicit, it is not Fast-ready.
 
-Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; defects add evidence-backed `CAUSE` or explicitly unknown. Owners inspect real diffs and evidence.
+Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; for defect handoffs, add an evidence-backed `CAUSE` or explicitly mark it unknown, then the fix and verification. Expand causal detail when asked. Owners inspect real diffs and evidence.
 
 Name every child exactly `<tier>__<semantic>_<model>`: `fast__..._luna`,
 `fast__..._spark`, `standard__..._terra`, or `lead__..._sol`. The two-layer

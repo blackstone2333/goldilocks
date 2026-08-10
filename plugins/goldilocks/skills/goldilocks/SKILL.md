@@ -37,4 +37,4 @@ Load only that engine; add another only when facts cross its boundary.
 
 Standard owns one complete mutable chain, integrates any non-conflicting Fast leaf, and gets one ordinary repair plus re-verification. Fast receives a complete fixed leaf contract. Lead keeps intent, architecture, authority, safety, shared critical interfaces, and one proportional final acceptance; it does not duplicate owner exploration. Current Spark XHigh, Terra Medium, Luna Max, Night Shift, and fallback rules live in [model-routing.md](references/model-routing.md).
 
-Lead with the result or decision. Do not narrate planned work. Status is delta only; show the shortest decisive evidence. Defect handoffs state the evidence-backed cause—or explicitly unknown—fix, and verification.
+Lead with the result or decision. Do not narrate planned work. Status is delta only; show the shortest decisive evidence. Defects add the evidence-backed cause—or explicitly unknown—fix and verification; expand when asked.

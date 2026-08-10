@@ -127,13 +127,13 @@ def test_profiles_and_installer(root: Path) -> None:
     legacy_terra = (ROOT / ".git").exists()
     assert legacy_terra, "fixture requires the shipped template in repository history"
     old_terra = subprocess.run(
-        ["git", "show", "HEAD:plugins/goldilocks/agents/goldilocks-terra-engineer.toml"],
+        ["git", "show", "v0.5.0-alpha.2:plugins/goldilocks/agents/goldilocks-terra-engineer.toml"],
         cwd=ROOT,
         capture_output=True,
         check=True,
     ).stdout
     old_sol = subprocess.run(
-        ["git", "show", "HEAD:plugins/goldilocks/agents/goldilocks-sol-reviewer.toml"],
+        ["git", "show", "v0.5.0-alpha.2:plugins/goldilocks/agents/goldilocks-sol-reviewer.toml"],
         cwd=ROOT,
         capture_output=True,
         check=True,

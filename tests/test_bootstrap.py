@@ -157,7 +157,7 @@ def main() -> None:
         legacy.mkdir()
         for name in ("goldilocks-terra-engineer.toml", "goldilocks-sol-reviewer.toml"):
             old = subprocess.run(
-                ["git", "show", f"HEAD:plugins/goldilocks/agents/{name}"],
+                ["git", "show", f"v0.5.0-alpha.2:plugins/goldilocks/agents/{name}"],
                 cwd=ROOT,
                 capture_output=True,
                 check=True,

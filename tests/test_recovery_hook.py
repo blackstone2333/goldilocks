@@ -104,7 +104,8 @@ def main() -> None:
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
         assert "decisive evidence" in style_context
-        assert "For defect work" in style_context
+        assert "For defects" in style_context
+        assert "expand when asked" in style_context
         assert "evidence-backed cause" in style_context
         assert "explicitly unknown" in style_context
         assert "fix and verification" in style_context

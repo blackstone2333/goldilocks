@@ -23,7 +23,7 @@ python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --pl
 python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --yes --json
 ```
 
-如果 `approval_required` 为 `false`，直接运行下面的命令。无论哪种情况，随后都验证：
+如果 `approval_required` 为 `false`，直接运行不带 `--yes` 的 apply：
 
 ```bash
 python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --json
@@ -47,6 +47,13 @@ Bootstrap 会自动识别 Codex 及其原生插件，只会安全升级字节完
 ## Portable Skills fallback
 
 开源的 [`skills` CLI](https://github.com/vercel-labs/skills) 支持 Claude Code、Cursor、OpenCode、GitHub Copilot、Gemini CLI 等兼容宿主。在 Codex 上，仅当原生 Plugin 尚不可用或需要临时 Bootstrap 来源时使用它。
+
+[skills.sh 页面](https://skills.sh/blackstone2333/goldilocks/goldilocks)默认跟随仓库主分支作为稳定通道，目前没有单独的预发布通道。只安装一个通道。下方不锁版本的命令跟随稳定 `main`；历史 Alpha Tag 仅用于复现。若要精确锁定 portable `v0.5.0`，分别从 Tag 路径安装两个 Skill：
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0/plugins/goldilocks/skills/goldilocks --skill goldilocks
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
+```
 
 交互式安装：
 

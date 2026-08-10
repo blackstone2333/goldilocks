@@ -1,0 +1,13 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Stable",
+      "description": "The skills.sh listing follows the stable default branch. Native plugin and exact-tag installation are documented in the repository README.",
+      "skills": [
+        "goldilocks"
+      ]
+    }
+  ]
+}

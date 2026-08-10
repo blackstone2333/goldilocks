@@ -23,7 +23,7 @@ This first command is read-only. Inspect `approval_required` in its JSON result.
 python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --yes --json
 ```
 
-If `approval_required` is `false`, it runs this directly. In either case, then verify:
+If `approval_required` is `false`, run the apply step directly without `--yes`:
 
 ```bash
 python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --json
@@ -47,6 +47,13 @@ The main `goldilocks` root router does not load Bootstrap during ordinary work. 
 ## Portable Skills fallback
 
 The open-source [`skills` CLI](https://github.com/vercel-labs/skills) supports Claude Code, Cursor, OpenCode, GitHub Copilot, Gemini CLI, and other compatible hosts. On Codex, use it only when the native Plugin is not yet available or as a temporary Bootstrap source.
+
+The [skills.sh listing](https://skills.sh/blackstone2333/goldilocks/goldilocks) follows the repository's default branch as its stable channel and does not expose a separate prerelease channel. Install only one channel. The unpinned commands below follow stable `main`; historical Alpha Tags remain available only for reproduction. For an exact portable `v0.5.0` pin, install both Skills from their tagged paths:
+
+```bash
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0/plugins/goldilocks/skills/goldilocks --skill goldilocks
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.0/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
+```
 
 Interactive installation:
 

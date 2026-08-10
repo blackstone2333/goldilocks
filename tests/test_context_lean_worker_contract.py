@@ -91,7 +91,7 @@ require(
         "12-slide",
         "one worker session",
         "session boundary",
-        "--work-type luna",
+        "--work-type general",
     ],
 )
 require(

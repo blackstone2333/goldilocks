@@ -20,7 +20,7 @@ GLOBAL_GRANT_KEY = "__global__"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans/status/recaps, tangents, and "
     "long logs. Report only changed state and decisive evidence; expand for safety/ambiguity. "
-    "For defect work: evidence-backed cause—or explicitly unknown—then fix and verification."
+    "For defects: evidence-backed cause—or explicitly unknown—fix and verification; expand when asked."
 )
 ROUTING_GATE = (
     "For executable work, silently apply the Goldilocks zero-cost gate before any specialist Skill. "

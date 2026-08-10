@@ -255,7 +255,7 @@ Implement and verify only the contract below in the assigned workspace.
 - Do not rerun Goldilocks routing, continuity, update checks, or task ledgers.
 - Treat listed units as one coherent batch; keep each independently checkable.
 - Preserve unrelated work and repository rules. Stop rather than guess when a material decision is missing.
-- At completion, report changed files, focused checks and results, then unresolved blockers or risks. For defect work, report the evidence-backed cause or mark it explicitly unknown, then the fix and verification. No preamble or repeated recap.
+- At completion, report changed files, focused checks and results, then unresolved blockers or risks. Defects add an evidence-backed CAUSE or explicitly unknown, then fix and verification; expand when asked. No preamble or repeated recap.
 
 Task name: {task_name}
 Work type: {work_type}
