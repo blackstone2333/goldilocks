@@ -93,11 +93,7 @@ def main() -> None:
 
         compact_without_recovery = run_hook(nested, "PostCompact")
         assert compact_without_recovery.returncode == 0, compact_without_recovery.stderr
-        compact_usage_context = json.loads(compact_without_recovery.stdout)["systemMessage"]
-        assert "Before final" in compact_usage_context
-        assert "usage_reporter.py" in compact_usage_context
-        assert "--current" in compact_usage_context
-        assert "append nonempty Usage" in compact_usage_context
+        assert compact_without_recovery.stdout == ""
 
         no_ledger_steer = run_hook(nested, "UserPromptSubmit", data_dir=data_dir)
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
@@ -112,11 +108,8 @@ def main() -> None:
         assert "evidence-backed cause" in style_context
         assert "explicitly unknown" in style_context
         assert "fix and verification" in style_context
-        assert "Before final" in style_context
-        assert "usage_reporter.py" in style_context
-        assert "--current" in style_context
-        assert "append nonempty Usage" in style_context
-        assert "never estimate" in style_context
+        assert "Before final" not in style_context
+        assert "usage_reporter.py" not in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
         assert "goldilocks:goldilocks" in style_context
@@ -124,13 +117,27 @@ def main() -> None:
         assert "pure conversation" in style_context
         assert "Likely multi-unit work detected" not in style_context
 
+        cohesive_prompt = (
+            "Implement this single local implementation unit. Update the code, focused tests, "
+            "and concise README contract; make no architectural changes."
+        )
+        cohesive = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt=cohesive_prompt,
+            turn_id="cohesive-direct-turn",
+        )
+        cohesive_context = json.loads(cohesive.stdout)["hookSpecificOutput"]["additionalContext"]
+        assert "Likely multi-unit work detected" not in cohesive_context
+
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 "SELECT session_id, turn_id, cwd_hash, prompt_fingerprint, ledger_present, "
                 "repeat_failure_signal, continuity_required, routing_rationale_candidate, "
                 "routing_experiment_id, delegation_grant_active "
-                "FROM gate_injections"
+                "FROM gate_injections WHERE turn_id = 'test-turn'"
             ).fetchall()
         assert len(rows) == 1
         assert rows[0]["session_id"] == "test-session"
@@ -151,7 +158,7 @@ def main() -> None:
         assert repeated.returncode == 0, repeated.stderr
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 1, "the same prompt turn must produce one audit record"
+        assert count == 2, "the same prompt turn must not add another audit record"
 
         multi_unit_prompt = (
             "请完成以下开发任务：\n"
@@ -165,7 +172,7 @@ def main() -> None:
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
             )
             connection.execute(
-                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.5.0-alpha.2-exp3.2')",
+                "INSERT INTO project_grants VALUES (?, 1, 'now', NULL, '0.5.0')",
                 ("__global__",),
             )
         rationale = run_hook(
@@ -182,7 +189,8 @@ def main() -> None:
         for phrase in (
             "Likely multi-unit work detected",
             "Read route-card.md",
-            "ROUTE line",
+            "canonical ROUTE line",
+            "inside an HTML comment",
             "WRITE_READY",
             "READ_READY",
             "EXISTING",
@@ -194,6 +202,10 @@ def main() -> None:
             "create no extra proof, probe, document, test, or model call",
             "EXISTING is current host-confirmed running ownership",
             "collect finals via host wait/status",
+            "TEAM/CONCURRENCY use host-confirmed starts/active workers",
+            "never planned",
+            "capacity is ? when unknown",
+            "Root Direct exit stays silent",
             "Shared writes",
             "explicit bounded-delegation grant",
             "current official input/cached/output rates",
@@ -463,7 +475,7 @@ def main() -> None:
         assert "continuity debt" in compact_debt
         assert ".goldilocks/ACTIVE.md" in compact_debt
         assert "repository evidence" in compact_debt
-        assert "usage_reporter.py" in compact_debt
+        assert "usage_reporter.py" not in compact_debt
 
         ledger = repo / ".goldilocks" / "ACTIVE.md"
         ledger.parent.mkdir()
@@ -476,7 +488,7 @@ def main() -> None:
 
         with sqlite3.connect(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 7, "Fast workers must not inject or audit the root gate"
+        assert count == 8, "Fast workers must not inject or audit the root gate"
 
         session = run_hook(nested, "SessionStart")
         assert session.returncode == 0, session.stderr
@@ -498,7 +510,7 @@ def main() -> None:
         compact_output = json.loads(compact.stdout)
         assert "systemMessage" in compact_output
         assert str(ledger) in compact_output["systemMessage"]
-        assert "usage_reporter.py" in compact_output["systemMessage"]
+        assert "usage_reporter.py" not in compact_output["systemMessage"]
 
         hooks = json.loads((PLUGIN / "hooks" / "hooks.json").read_text(encoding="utf-8"))
         stable_command = hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
@@ -545,27 +557,8 @@ def main() -> None:
         ]
         assert "Goldilocks zero-cost gate" in stable_context
 
-        live_plugin = parent / "live-plugin"
-        live_scripts = live_plugin / "scripts"
-        live_scripts.mkdir(parents=True)
-        (live_scripts / "usage_reporter.py").write_text(
-            'print("Usage: dynamically resolved")\n', encoding="utf-8"
-        )
-        usage_command = stable_context.split("Before final: run `", 1)[1].split("`;", 1)[0]
-        assert str(PLUGIN) not in usage_command
-        assert "codex" in usage_command and "plugin" in usage_command
-        current_env = fallback_env.copy()
-        current_env["FAKE_PLUGIN_ROOT"] = str(live_plugin)
-        current = subprocess.run(
-            usage_command,
-            text=True,
-            capture_output=True,
-            check=False,
-            shell=True,
-            env=current_env,
-        )
-        assert current.returncode == 0, current.stderr
-        assert current.stdout.strip() == "Usage: dynamically resolved"
+        assert "Before final" not in stable_context
+        assert "usage_reporter.py" not in stable_context
 
     print("Goldilocks recovery hook contract passed.")
 

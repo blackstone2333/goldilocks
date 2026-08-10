@@ -1,6 +1,10 @@
 # Orchestrate
 
-Run a routing pass after planning, or check clear Direct work in constant time. Lead owns outcome and integration; Standard a bounded domain; Fast fixed-decision contracts.
+Run a routing pass after planning, or check clear Direct work in constant time. Give a
+delegated mutable chain one narrow primary owner: Standard owns its bounded domain end
+to end, while Fast receives fixed-decision leaf contracts. Lead keeps intent,
+architecture, authority, safety, shared critical interfaces, and a single proportional
+acceptance pass; it does not duplicate the owner's exploration or routine integration.
 
 ## Run the make-or-delegate check
 
@@ -11,17 +15,18 @@ Before an expensive model starts implementation, make one quick comparison:
 - Keep Direct when its weighted quota and time cost wins; Lead finishing a little faster is not enough.
 - Use Fast for a complete objective, scope, interfaces, acceptance, and prohibitions.
 - Use Standard when bounded domain judgment remains; it may contract Fast.
-- Keep Critical judgment, cross-domain interfaces, authority, and final integration with Lead.
+- Keep Critical judgment, cross-domain interfaces, authority, and final judgment with Lead.
 
 This make-or-delegate check is constant-time for clear work. Reuse verified project patterns after checking invalidators; read [execution-memory.md](execution-memory.md) only for reusable routes. Do not write a plan merely to choose Direct.
 
 ## Explain the route briefly
 
-For work that entered this engine because decomposition may help, emit one decision line before implementation:
+For work that entered this engine because decomposition may help, write one canonical
+decision line before implementation only inside an HTML comment:
 
-`ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | PLANNED_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence>`
+`<!-- ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | PLANNED_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence> -->`
 
-Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `DETAIL` is one concise sentence, never chain-of-thought.
+Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `DETAIL` is one concise sentence, never chain-of-thought. After dispatch attempts return, show one user-language receipt using actual host-confirmed successful starts/active workers for `TEAM` and `CONCURRENCY`, not planned dispatch. A Direct choice inside this engine shows its receipt immediately; the root Direct exit shows none. Keep at most three delegated items plus `+N`, use `?` for an unknown host limit, and explain fallback after a failed start.
 
 This is not a delegation quota; Direct remains valid. With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when slightly slower. Keep raw tokens and time proportionate. The grant covers bounded Fast/Standard dispatch only; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
@@ -45,11 +50,18 @@ Use the shallowest organization that shortens the critical path or reduces quota
 
 - Lead → Direct: tiny or inseparable work.
 - Lead → Fast: ready contract.
-- Lead → Standard: bounded expert judgment.
+- Lead → Standard: one bounded primary owner with expert judgment.
 - Lead → Standard → Fast: one domain with several ready units.
 - Multiple Standard advisers may investigate independently, but one owner decides; never create overlapping writers.
 
-Fast is a leaf and does not delegate. Standard may delegate Fast only within its domain; it cannot expand scope, change shared interfaces, cross authority, or claim final integration. Each layer must earn itself. Lead implements for faster Direct delivery, inseparable Critical core, shared interfaces, emergency unblocking, or worker failure after valid execution.
+Fast is a leaf and does not delegate. Standard may delegate a non-conflicting Fast leaf
+only within its domain; it cannot expand scope, change shared interfaces, or cross
+authority. The Standard owner integrates that leaf, makes one ordinary self-repair if
+focused acceptance first fails, and re-verifies it. Each layer must earn itself. Lead
+implements for faster Direct delivery, inseparable Critical core, shared interfaces,
+emergency unblocking, or only when the same acceptance still fails after that owner
+repair. A fresh-session handoff is a compact context package for the next owner, not a
+reason to reconstruct old exploration.
 
 ## Split into execution contracts
 
@@ -57,9 +69,15 @@ Classify after decomposition: a large unit can be Fast when discretion is low; a
 
 Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; defects add evidence-backed `CAUSE` or explicitly unknown. Owners inspect real diffs and evidence.
 
-Name every child `<tier>__<semantic>_<model>`: `fast__..._luna`, `fast__..._spark`, `standard__..._terra`, or `lead__..._sol`. Hooks/adapters derive the model suffix from the pinned model; callers must preserve the routing-tier prefix.
+Name every child exactly `<tier>__<semantic>_<model>`: `fast__..._luna`,
+`fast__..._spark`, `standard__..._terra`, or `lead__..._sol`. The two-layer
+organization adds no `owner` name prefix. Hooks/adapters fail closed when the tier or
+semantic prefix is missing and derive the actual model suffix from the pinned model.
 
-Keep a coherent unit and focused checks together. Workers escalate ambiguity. After one failed repair or requirement mismatch, reconsider contract or capability; after a second, stop the loop and upgrade or keep work local.
+Keep a coherent unit and focused checks together. Workers escalate ambiguity. The
+primary owner gets one ordinary repair plus re-verification; if the same acceptance
+still fails, stop the loop and upgrade, keep work local, or have Lead take the critical
+boundary rather than repeating exploration.
 
 ## Parallelize the ready graph
 
@@ -79,6 +97,11 @@ Fast means low residual discretion, Standard bounded judgment, and Lead authorit
 
 ## Integrate upward
 
-Fast returns changed files and focused evidence. Standard reviews diffs, resolves domain issues, runs checks, and returns one result. Lead reviews integration and shared boundaries, resolves conflicts, and reruns combined acceptance.
+Fast returns changed files and focused evidence. The Standard primary owner reviews
+diffs, resolves domain issues, performs its one repair/re-verification when needed,
+and returns one integrated domain result. Lead reviews shared boundaries and performs
+one proportional acceptance pass; it takes over only for critical intent, architecture,
+authority, safety, shared interfaces, or repeated acceptance failure after the owner
+repair.
 
 Agent messages are not evidence. Use the outcome recorder only after Lead acceptance so stopped work differs from `verified_pass`/`verified_fail`. Preserve adjacent ideas without following them via [evolve.md](evolve.md) when warranted. For cross-session coordination, use [continuity.md](continuity.md) and one authoritative frontier.

@@ -18,7 +18,7 @@ import route_auditor
 from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
+POLICY_VERSION = "0.5.0"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}

@@ -1,50 +1,64 @@
 # Install Goldilocks
 
-Goldilocks can be installed as portable Agent Skills or as a native Codex or Claude Code plugin.
+For Codex CLI and Desktop, Goldilocks is installed as a native Plugin by default. Portable Agent Skills are for other compatible hosts or a temporary Bootstrap source.
 
-## Install the v0.5.0 Alpha in Codex
-
-The Alpha and stable plugin share one marketplace name, so choose one rather than installing both:
+## Recommended: install stable v0.5.0 as a native Codex Plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-Start a new task and verify `v0.5.0-alpha.2` before testing. The exact Git ref keeps this install on the prerelease instead of the default stable branch.
+The exact Git ref selects the stable release. The plugin manifest is already `0.5.0`, but a local plugin cache can be older and `~/.codex/agents` can still contain only earlier Terra/Sol templates.
+
+For a first install, upgrade, or installation repair only, invoke the independent `$goldilocks-bootstrap` Skill. It is never part of ordinary task routing. From a repository checkout root, its script is:
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --plan --json
+```
+
+This first command is read-only. Inspect `approval_required` in its JSON result. If it is `true`, the Agent shows the plan and asks the user once; after approval, it runs:
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --yes --json
+```
+
+If `approval_required` is `false`, it runs this directly. In either case, then verify:
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --json
+```
+
+Then verify:
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --check --json
+```
+
+Bootstrap automatically detects Codex and its native plugin, safely upgrades only byte-exact known legacy templates, adds the missing Spark/Luna/Terra/Sol companion templates, and refuses to overwrite a different user file. Its approval is global to the host and is reused until the capability or template hashes change; it is not project-local. From an installed source, its script is `goldilocks-bootstrap/scripts/bootstrap.py`; do not guess a cache path. Use `--native-plugin-dir` only when troubleshooting an automatic-discovery failure. If Codex began with Skills only, Bootstrap can install the native plugin and all four companion agents. After a successful check, the installing Agent follows its handoff to remove Codex's duplicate portable entry and starts a new task. Other hosts remain portable and mark unsupported capabilities as skipped.
 
 ## Choose an installation
 
-- **Core router:** install only `goldilocks` for the Just-Necessary routing logic. It is self-contained and has the smallest footprint.
-- **Single Skill:** install `goldilocks`; its internal engines retain brainstorming, planning, TDD, debugging, worktrees, delegation, review, verification, branch finishing, and Skill authoring.
+- **Task router:** `goldilocks` contains the Just-Necessary routing logic and its internal workflow engines.
+- **Setup helper:** `goldilocks-bootstrap` is installed alongside it but is invoked only for first install, upgrade, or installation repair.
 
-There are no extra workflow Skills to install. Avoid enabling Goldilocks and Superpowers at the same time; overlapping workflow rules can conflict.
+The main `goldilocks` root router does not load Bootstrap during ordinary work. Avoid enabling Goldilocks and Superpowers at the same time; overlapping workflow rules can conflict.
 
-## Portable Skills installation
+## Portable Skills fallback
 
-The open-source [`skills` CLI](https://github.com/vercel-labs/skills) supports Codex, Claude Code, Cursor, OpenCode, GitHub Copilot, Gemini CLI, and many other agents.
+The open-source [`skills` CLI](https://github.com/vercel-labs/skills) supports Claude Code, Cursor, OpenCode, GitHub Copilot, Gemini CLI, and other compatible hosts. On Codex, use it only when the native Plugin is not yet available or as a temporary Bootstrap source.
 
 Interactive installation:
 
 ```bash
-npx skills add blackstone2333/goldilocks
+npx skills add blackstone2333/goldilocks --skill goldilocks goldilocks-bootstrap
 ```
 
-Install only the core router globally:
+Install both Goldilocks Skills globally:
 
 ```bash
 npx skills add blackstone2333/goldilocks \
-  --skill goldilocks \
-  --global \
-  --agent <agent> \
-  --yes
-```
-
-Install the complete suite globally:
-
-```bash
-npx skills add blackstone2333/goldilocks \
-  --skill goldilocks \
+  --skill goldilocks goldilocks-bootstrap \
   --global \
   --agent <agent> \
   --yes
@@ -54,7 +68,7 @@ Common agent IDs:
 
 | Platform | `<agent>` |
 |---|---|
-| Codex | `codex` |
+| Codex (fallback only) | `codex` |
 | Claude Code | `claude-code` |
 | Cursor | `cursor` |
 | OpenCode | `opencode` |
@@ -73,16 +87,22 @@ Update installed Skills:
 npx skills update --global --yes
 ```
 
-Portable Skills do not run a background update check. This keeps activation offline, cross-platform, and free of recurring model or network overhead. Run the update command explicitly or watch GitHub releases when proactive notification is important.
+Portable Skills do not run a background update check. This keeps activation offline, cross-platform, and free of recurring model or network overhead. Run the update command explicitly or watch GitHub releases when proactive notification is important. Codex CLI and Desktop users should return to the native Plugin after Bootstrap has completed its handoff.
 
-## Codex native plugin
+The Skills installer intentionally does not execute arbitrary post-install code. “Automatic” Bootstrap means the installing Agent invokes `$goldilocks-bootstrap` only for the setup cases above and follows its plan, approval, apply, check, and handoff; `npx` does not run it by itself. On portable or other hosts, Bootstrap reports only capabilities it can prove supported and marks the rest as `skipped`; it does not present a uniform native-plugin setup.
+
+## Codex native Plugin details
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-Start a new Codex task after installation so the new Skill context is loaded.
+This is the default Codex CLI/Desktop path. Start a new Codex task after installation so the new Skill context is loaded.
+
+### Companion agents and visible names
+
+For an upgrade, invoke `$goldilocks-bootstrap` and follow its plan, approval branch, apply, check, and handoff, then start a new task. Native child-agent names follow `<tier>__<semantic>_<model>`—for example `fast__focused_checks_spark` or `standard__draft_contract_terra`. A missing routing-tier prefix is a sign that the Goldilocks Hook or Skill was not loaded for that task; check the installed source and begin a fresh task before treating it as a routing result.
 
 ### Quiet update awareness
 
@@ -101,9 +121,15 @@ Start a new task after updating. Set `GOLDILOCKS_UPDATE_CHECK=0` in the Codex en
 
 The native plugin bundles recovery hooks for `SessionStart`, `PostCompact`, and `UserPromptSubmit`. They emit nothing unless the current workspace contains `.goldilocks/ACTIVE.md`. It also bundles a routing guard for `PreToolUse`, `SubagentStart`, and `SubagentStop`. The guard only runs around subagent activity: it blocks unclassified calls, requires an explicit host-supported model for Fast and Standard, prevents Fast from spawning, and permits full history only for an explicit Lead handoff. Concurrent route observations use a local SQLite database; ambiguous host correlation is recorded without stopping a child. A stop remains an observation until Lead reruns combined acceptance and records `verified_pass` or `verified_fail`; evidence text is hashed rather than retained. It does not edit user `config.toml` or add work to Direct tasks.
 
-When the selected Fast model is available through `codex exec` but not through native subagents, the bundled adapter routes `luna` to the universal Fast default and `spark-coding` to the separately metered deterministic code specialist. Legacy `general` and `coding` names remain compatible. Its default `project` capability profile isolates unrelated global plugins, Apps, MCP, Skills, and Hooks while retaining repository rules and the credentials/provider metadata needed to run. Use `inherit` only when a complete contract explicitly requires an installed user capability.
+The final role structure is Lead/Sol, Standard/Terra Medium as the primary owner, Fast/Spark XHigh as the deterministic coding leaf, and Economy/Luna Max for latency-tolerant cost-first general or document work. Spark does not own document prose or continuity, and Goldilocks does not reserve Spark capacity. Its default `project` capability profile isolates unrelated global plugins, Apps, MCP, Skills, and Hooks while retaining repository rules and the credentials/provider metadata needed to run. Use `inherit` only when a complete contract explicitly requires an installed user capability.
 
-Codex requires review before non-managed plugin hooks run. Use `/hooks` to inspect and trust the Goldilocks definition after installation, and review it again after an update changes the hook hash. The continuity ledger remains the source of truth if a recovery hook is disabled; routing becomes advisory rather than enforced when the routing hook is not trusted or the platform only installed portable Skills.
+Bootstrap carries Hook setup into the first new task after installation or upgrade. Choose one:
+
+- **A — Persistently trust Goldilocks (recommended):** at the startup review, verify the Goldilocks source and choose “Trust all and continue” or its persistent equivalent. Review again when the Hook definition changes.
+- **B — Bypass all enabled Hooks for one launch:** start the next task with `codex --dangerously-bypass-hook-trust`. This affects every enabled Hook, not only Goldilocks, lasts for that launch only, and does not set permanent trust.
+- **C — Do not trust yet:** decline the review. The written Skill remains available, while Hook-dependent automation does not run.
+
+Filesystem or full-access permission and Hook trust are separate boundaries, so choose them independently. Bootstrap never writes `hooks.state` or a trusted hash, changes no alias or configuration, and never represents bypass as permanent; Codex records the final click. Use `/hooks` only when the startup review did not appear or for later verification. The continuity ledger remains the source of truth if a recovery hook is disabled; routing becomes advisory rather than enforced when the routing hook is not trusted or the platform only installed portable Skills.
 
 For an additional compaction layer, copy `plugins/goldilocks/skills/goldilocks/assets/codex-compact-prompt.md` from this repository to a stable local path and point user-level `~/.codex/config.toml` at that copy:
 

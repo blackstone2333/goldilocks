@@ -2,6 +2,8 @@
 
 本文记录 Goldilocks v0.4.5 的证据和决策。它只更新当前路由，不会用新价格改写旧基准测试当时的成本。
 
+> 历史快照：v0.5.0 已用新的生产角色取代下述路由——Terra Medium 是 Standard 主负责人，Spark XHigh 是确定性编程 Fast 叶子，Luna Max 是 Economy。下方带日期的价格仍作为原始证据保留。
+
 ## 当前 OpenAI 成本关系
 
 官方标准短上下文 API 价格，单位为美元 / 100 万 token：

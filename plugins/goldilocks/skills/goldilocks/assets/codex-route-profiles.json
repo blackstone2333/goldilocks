@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "experiment": "routing-rationale-v3.2",
+  "experiment": "v0.5.0-hybrid-routing",
   "economics": {
     "registry": "model-economics.json",
     "decision": "quality gate, then billing-pool cost, elapsed-time and raw-token Pareto comparison",
@@ -27,27 +27,43 @@
     "goldilocks_spark_coder": {
       "tier": "fast",
       "model": "gpt-5.3-codex-spark",
-      "reasoning_effort": "medium",
+      "reasoning_effort": "xhigh",
       "transport": "codex-exec",
       "work_type": "spark-coding",
       "capabilities": "project",
       "sandbox": "workspace-write",
       "may_delegate": false
     },
+    "goldilocks_spark_worker": {
+      "tier": "fast",
+      "model": "gpt-5.3-codex-spark",
+      "reasoning_effort": "xhigh",
+      "transport": "native",
+      "agent_type": "goldilocks_spark_worker",
+      "may_delegate": false
+    },
     "goldilocks_luna_worker": {
       "tier": "fast",
       "model": "gpt-5.6-luna",
-      "reasoning_effort": "medium",
+      "reasoning_effort": "max",
       "transport": "codex-exec",
       "work_type": "luna",
       "capabilities": "project",
       "sandbox": "workspace-write",
       "may_delegate": false
     },
+    "goldilocks_luna_economy": {
+      "tier": "fast",
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "max",
+      "transport": "native",
+      "agent_type": "goldilocks_luna_economy",
+      "may_delegate": false
+    },
     "goldilocks_terra_engineer": {
       "tier": "standard",
       "model": "gpt-5.6-terra",
-      "reasoning_effort": "high",
+      "reasoning_effort": "medium",
       "transport": "native",
       "agent_type": "goldilocks_terra_engineer",
       "may_delegate": true

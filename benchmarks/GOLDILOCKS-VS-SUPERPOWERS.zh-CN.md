@@ -79,7 +79,7 @@ Goldilocks 在 5 个可比效率指标中领先 4 个。Superpowers 在这 8 个
 ## 两轮测试共同证明了什么
 
 - Goldilocks 的指令设计用远少于 Superpowers 的规则文本，覆盖了测试中的流程与安全场景。
-- 当前插件完成了全部测试任务，而 Superpowers 的成功交付率不到三分之一。
+- v0.2.2 插件完成了全部测试任务，而 Superpowers 的成功交付率不到三分之一。
 - 在完全相同的成功样本里，Goldilocks 的总 token、时间、工具调用和 Skill 活动更少。
 - 把失败尝试也计入交付成本后，Goldilocks 在所有测量成本维度都更低。
 

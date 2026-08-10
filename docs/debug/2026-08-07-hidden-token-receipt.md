@@ -55,14 +55,26 @@ For a completed execution whose `started_at` predates the Lead turn but whose `s
 
 The visible line is a lower-bound snapshot when earlier model checkpoints exist. On a one-call Direct answer, it is omitted rather than showing a false zero. Forcing exact post-final display would require another model turn or host UI support and is intentionally avoided.
 
+## Workflow-matrix regression
+
+The two-account workflow matrix exposed a more severe boundary: the pre-final receipt is not merely inexact in an isolated read-only execution environment; it can become the dominant task cost.
+
+The harness set `PLUGIN_DATA` to a cell audit directory outside the repository, while the model sandbox permitted writes only inside the repository and temporary directories. `current_receipt()` then opened that database with the normal `connect()` helper. That helper runs `PRAGMA journal_mode = WAL` and creates/migrates the baseline table, so a nominal read attempted to mutate the audit database and failed with `sqlite3.OperationalError: attempt to write a readonly database`.
+
+Because the developer contract required Lead to run the command and append a nonempty receipt before final, Sol treated the telemetry failure as unfinished acceptance. Across four Alpha 2 cells, the stage from the first post-acceptance reporter call through completion consumed 1,282,709 raw tokens and 452.966 seconds. The same stage consumed 1,237,892 tokens across the two aggressive complex cells; the second spent 211.017 seconds and 843,628 tokens there before the frozen 900-second timeout. Project implementation, visible tests, hidden acceptance, compile, and diff checks had already passed.
+
+This invalidates a model-visible, must-succeed telemetry obligation. Receipt collection must move to a host-side/fail-silent path: record the baseline and final totals outside Lead reasoning, emit when available, and silently omit on missing, read-only, or incompatible telemetry. The model must not inspect reporter internals, copy SQLite files, retry, or delay task acceptance to repair Usage. A third-round Receipt-only ablation should verify no more than 3% overhead relative to `v0.4.2` before this behavior enters a release.
+
 ## Do not repeat
 
 - Do not add sleeps or polling: Codex does not append the invoking call's `token_count` until the tool returns.
 - Do not run a second Lead turn merely to expose usage; that changes the usage being measured and spends more expensive tokens.
+- Do not make a visible Usage receipt a must-succeed Lead acceptance item; telemetry failure is fail-silent and never authorizes reporter/database diagnosis inside the project task.
+- Do not use the schema-migrating read-write `connect()` path for a receipt-only query in a read-only execution environment.
 - Do not estimate the missing tail or relabel a stale zero delta as actual usage.
 - Do not embed `Path(__file__)` or any versioned cache root in a command that may execute later in the turn; resolve the enabled plugin at execution time.
 - Do not fix reused agents by broadening the query and summing their cumulative totals; segment deltas are the attribution boundary.
 
 ## Status
 
-The original receipt fixes entered `v0.5.0-alpha.1`; reused-agent task-segment attribution enters `v0.5.0-alpha.2`. The documented host-ordering limitation remains.
+The original receipt fixes entered `v0.5.0-alpha.1`; reused-agent task-segment attribution entered `v0.5.0-alpha.2`. The workflow matrix proved that Alpha 2's model-visible pre-final obligation was not release-ready. Stable `v0.5.0` removes that obligation from Lead prompts and compaction recovery, then runs `usage_reporter.py` only as a five-second `Stop` Hook. Missing, read-only, or incompatible telemetry is silently omitted and never blocks task acceptance. The full Usage and Hook regression suite passed before release.

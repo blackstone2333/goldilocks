@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
+POLICY_VERSION = "0.5.0"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 MICRO_STYLE = (
@@ -31,11 +31,14 @@ ROUTING_GATE = (
     "Skip for pure conversation."
 )
 ROUTING_RATIONALE_GATE = (
-    "Likely multi-unit work detected. Read route-card.md before implementation and emit its ROUTE line "
+    "Likely multi-unit work detected. Read route-card.md before implementation and write its canonical ROUTE line "
+    "inside an HTML comment "
     "with WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, and DETAIL. EXISTING is "
     "current host-confirmed running ownership—not UI labels, idle/completed handles, artifacts, or a "
     "historical task_started; collect finals via host wait/status. PLANNED_DISPATCH is intent; Hooks "
-    "count starts. Shared writes permit reads. Direct names transfer cost. Audit is silent; create no "
+    "count starts. After attempts, show one primary-language receipt: TEAM/CONCURRENCY use host-confirmed "
+    "starts/active workers, never planned; capacity is ? when unknown. Root Direct exit stays silent. "
+    "Shared writes permit reads. Direct names transfer cost. Audit is silent; create no "
     "extra proof, probe, document, test, or model call. Name every child "
     "<tier>__<semantic>_<model>, where tier is fast, standard, or lead."
 )
@@ -95,26 +98,11 @@ EXECUTION_PATTERN = re.compile(
     r"\b(?:fix|change|implement|develop|complete|add|test|build|release|deploy)\b",
     re.IGNORECASE,
 )
-DELIVERY_STAGE_PATTERNS = (
-    re.compile(
-        r"(?:代码|实现|开发|前端|后端|客户端|服务端)|"
-        r"\b(?:code|implement|frontend|backend|client|server)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"(?:测试|验收|回归|构建)|"
-        r"\b(?:test|verify|acceptance|regression|build)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"(?:文档|教程|说明)|\b(?:docs?|documentation|guide)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"(?:发布|部署|上线|TestFlight)|"
-        r"\b(?:release|deploy|publish|testflight)\b",
-        re.IGNORECASE,
-    ),
+SINGLE_UNIT_PATTERN = re.compile(
+    r"(?:单一|单个|一个).{0,16}(?:实现|开发|任务|改动|单元)|"
+    r"\b(?:single|one)\s+(?:local\s+)?(?:cohesive\s+)?"
+    r"(?:implementation\s+)?(?:unit|task|change)\b",
+    re.IGNORECASE,
 )
 
 
@@ -141,8 +129,9 @@ def routing_rationale_signal(prompt: str) -> bool:
         return True
     if EXECUTION_PATTERN.search(prompt) and MULTI_UNIT_PHRASE_PATTERN.search(prompt):
         return True
-    stages = sum(pattern.search(prompt) is not None for pattern in DELIVERY_STAGE_PATTERNS)
-    return bool(EXECUTION_PATTERN.search(prompt) and stages >= 3)
+    if SINGLE_UNIT_PATTERN.search(prompt):
+        return False
+    return False
 
 
 def ensure_gate_schema(connection: sqlite3.Connection) -> None:
@@ -520,19 +509,6 @@ def find_ledger(cwd: Path) -> Path | None:
     return None
 
 
-def usage_receipt_gate() -> str:
-    python = "py -3" if os.name == "nt" else "python3"
-    resolver = (
-        "import json,os,runpy,subprocess;d=json.loads(subprocess.check_output("
-        "['codex','plugin','list','--json']))['installed'];"
-        "p=os.path.join(next(filter(lambda x:x['pluginId'].startswith('goldilocks@')"
-        "and x.get('enabled',True),d))['source']['path'],'scripts','usage_reporter.py');"
-        "runpy.run_path(p,run_name='__main__')"
-    )
-    command = f"{python} -c {json.dumps(resolver)} --current"
-    return f"Before final: run `{command}`; append nonempty Usage; never estimate."
-
-
 def main() -> None:
     try:
         if os.environ.get("GOLDILOCKS_WORKER") == "1":
@@ -564,7 +540,7 @@ def main() -> None:
             }
         elif event == "UserPromptSubmit":
             gate_state = record_gate(payload, cwd, ledger)
-            message = f"{MICRO_STYLE} {ROUTING_GATE} {usage_receipt_gate()}"
+            message = f"{MICRO_STYLE} {ROUTING_GATE}"
             if gate_state["routing_rationale_candidate"]:
                 message += f" {ROUTING_RATIONALE_GATE}"
                 if gate_state["delegation_grant_active"]:
@@ -589,18 +565,18 @@ def main() -> None:
         elif event == "PostCompact":
             if ledger is None:
                 if not has_continuity_debt(payload, cwd):
-                    system_message = usage_receipt_gate()
+                    return
                 else:
                     system_message = (
                         "Goldilocks continuity debt survived compaction without a task frontier. Read "
                         "continuity.md, reconcile repository evidence, create or update "
                         ".goldilocks/ACTIVE.md and the existing debug/validation record, then resume "
-                        f"from the exact next test. {usage_receipt_gate()}"
+                        "from the exact next test."
                     )
             else:
                 system_message = (
                     f"Goldilocks recovery required: read {ledger}, reconcile repository state, "
-                    f"and resume from Exact next action. {usage_receipt_gate()}"
+                    "and resume from Exact next action."
                 )
             output = {
                 "continue": True,

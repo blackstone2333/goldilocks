@@ -2,6 +2,8 @@
 
 This note records the evidence and decisions behind Goldilocks v0.4.5. It updates current routing without rewriting the prices attached to older benchmark runs.
 
+> Historical snapshot: v0.5.0 supersedes these operational roles with Terra Medium as Standard primary owner, Spark XHigh as the deterministic coding Fast leaf, and Luna Max as Economy. The dated prices below remain unchanged evidence.
+
 ## Current OpenAI economics
 
 Official standard short-context API rates, USD per 1M tokens:

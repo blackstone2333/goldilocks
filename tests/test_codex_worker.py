@@ -199,7 +199,7 @@ Implement the bounded parser change.
         assert "[features]" not in minimal_config
         assert "--ignore-rules" not in argv, "project profile must preserve repository rules"
         prompt = invocation["stdin"]
-        assert "Goldilocks Fast leaf" in prompt
+        assert "contracted Goldilocks worker" in prompt
         assert "Do not delegate" in prompt
         assert "Do not delegate, reroute, broaden scope" in prompt
         assert "fast__focused_implementation_luna" in prompt
@@ -267,6 +267,30 @@ Implement the bounded parser change.
             spark_argv.index("-m") : spark_argv.index("-m") + 2
         ]
         assert "fast__focused_implementation_spark" in json.loads(
+            probe.read_text(encoding="utf-8")
+        )["stdin"]
+
+        probe.unlink()
+        terra_standard = run_dispatcher(
+            worktree,
+            contract,
+            fake_codex,
+            probe,
+            source_home,
+            "--task-name",
+            "standard__focused_implementation",
+            "--work-type",
+            "terra-standard",
+            "--reasoning-effort",
+            "medium",
+        )
+        assert terra_standard.returncode == 0, terra_standard.stderr
+        terra_argv = json.loads(probe.read_text(encoding="utf-8"))["argv"]
+        assert ["-m", "gpt-5.6-terra"] == terra_argv[
+            terra_argv.index("-m") : terra_argv.index("-m") + 2
+        ]
+        assert 'model_reasoning_effort="medium"' in terra_argv
+        assert "standard__focused_implementation_terra" in json.loads(
             probe.read_text(encoding="utf-8")
         )["stdin"]
 
@@ -350,10 +374,10 @@ Implement the bounded parser change.
             fake_codex,
             root / "invalid-probe.json",
             source_home,
-            task_name="standard__wrong_channel",
+            task_name="lead__wrong_channel",
         )
         assert invalid.returncode == 2
-        assert "fast__" in invalid.stderr
+        assert "fast__ or standard__" in invalid.stderr
 
         empty = root / "empty.md"
         empty.write_text("\n", encoding="utf-8")

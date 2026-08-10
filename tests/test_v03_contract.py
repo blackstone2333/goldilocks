@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.5.0-alpha.2"
+RELEASE_VERSION = "0.5.0"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -22,6 +22,7 @@ HOOK_SCRIPT = PLUGIN / "scripts" / "recovery_reminder.py"
 ROUTING_HOOK_SCRIPT = PLUGIN / "scripts" / "agent_routing_guard.py"
 WORKER_SCRIPT = SKILLS / "goldilocks" / "scripts" / "dispatch_codex_worker.py"
 UPDATE_HOOK_SCRIPT = PLUGIN / "scripts" / "update_checker.py"
+AGENT_GUIDE = ROOT / "docs" / "AGENT-GUIDE.md"
 TEMPLATE_ASSETS = {
     "active-task.md",
     "artifact-contract.md",
@@ -159,6 +160,7 @@ for required in [
     CASES,
     ROOT / "docs" / "installation.md",
     ROOT / "docs" / "installation.zh-CN.md",
+    AGENT_GUIDE,
     ROOT / "CHANGELOG.md",
     ROOT / "CHANGELOG.zh-CN.md",
 ]:
@@ -200,21 +202,27 @@ for readme_name in ["README.md", "README.zh-CN.md"]:
         for command in [
             "npx skills add blackstone2333/goldilocks",
             "codex plugin marketplace add blackstone2333/goldilocks",
-            "claude plugin marketplace add blackstone2333/goldilocks",
         ]:
             if command not in readme:
                 fail(f"{readme_name} lacks installation command: {command}")
+        if "docs/AGENT-GUIDE.md" not in readme:
+            fail(f"{readme_name} lacks the Agent-facing project guide")
         badge_version = RELEASE_VERSION.replace("-", "--")
         if f"version-{badge_version}" not in readme:
             fail(f"{readme_name} lacks the {RELEASE_VERSION} version badge")
         for route_contract in [
-            "gpt-5.3-codex-spark",
-            "gpt-5.6-luna",
-            "dispatch_codex_worker.py",
-            "codex exec",
+            "Spark XHigh",
+            "Terra Medium",
+            "Luna Max",
+            "Economy",
         ]:
             if route_contract not in readme:
                 fail(f"{readme_name} lacks the dual Codex worker route: {route_contract}")
+
+for install_name in ["installation.md", "installation.zh-CN.md"]:
+    install = ROOT / "docs" / install_name
+    if "claude plugin marketplace add blackstone2333/goldilocks" not in install.read_text(encoding="utf-8"):
+        fail(f"{install_name} lacks the native Claude Code command")
 
 for changelog_name, marker in [
     ("CHANGELOG.md", "Thin Adaptive Superpowers Replacement"),
@@ -354,7 +362,7 @@ if MODEL_ROUTING.is_file():
         "gpt-5.6-luna",
         "separate Pro usage pool",
         "test authoring",
-        "combined verification",
+        "one proportional acceptance pass",
         "fast__<name>",
         "fork_turns",
         "QuotaBurn",
@@ -402,7 +410,7 @@ if WORKER_SCRIPT.is_file():
         "gpt-5.3-codex-spark",
         "gpt-5.6-luna",
         "multi_agent",
-        "Goldilocks Fast leaf",
+        "contracted Goldilocks worker",
         "Do not delegate, reroute, broaden scope",
         "--output-last-message",
     ]:
@@ -416,7 +424,7 @@ if WORKER_SCRIPT.is_file():
 
 registry = load_json(MODEL_REGISTRY)
 if registry:
-    if registry.get("as_of") != "2026-07-31":
+    if registry.get("as_of") != "2026-08-10":
         fail("model registry must carry its evidence date")
     if len(registry.get("sources", [])) < 8:
         fail("model registry needs broad public benchmark and pricing sources")
@@ -464,7 +472,7 @@ for engine in sorted(ENGINES - {"evolve"}):
 
 skill_docs = sorted(SKILLS.glob("*/SKILL.md")) if SKILLS.is_dir() else []
 skill_names = {path.parent.name for path in skill_docs}
-expected_skill_names = {"goldilocks"}
+expected_skill_names = {"goldilocks", "goldilocks-bootstrap"}
 if skill_names != expected_skill_names:
     fail(
         "visible skill set mismatch: "
@@ -483,15 +491,29 @@ if MAIN.is_file():
             fail(f"single visible router does not expose internal engine: {engine}")
     if "artifacts.md" not in main_text:
         fail("single visible router does not expose artifact orchestration")
+    if "bootstrap" in main_text.lower():
+        fail("main router must not mention the one-time Bootstrap Skill")
+    main_body = main_text.split("---", 2)[-1]
+    body_words = body_word_count(MAIN)
+    if body_words > 300:
+        fail(f"main router body exceeds 300 words: {body_words}")
+    for setup_term in ("hook", "install", "upgrade"):
+        if setup_term in main_body.lower():
+            fail(f"main router body must not contain setup term: {setup_term}")
 
-if MAIN.is_file() and word_count(MAIN) > 650:
-    fail(f"main router exceeds 650 words: {word_count(MAIN)}")
+bootstrap_entry = SKILLS / "goldilocks-bootstrap" / "SKILL.md"
+require_file(bootstrap_entry)
+if bootstrap_entry.is_file():
+    bootstrap_text = bootstrap_entry.read_text(encoding="utf-8")
+    for marker in ("installing, upgrading, or repairing", "ordinary tasks", "scripts/bootstrap.py"):
+        if marker not in bootstrap_text:
+            fail(f"one-time Bootstrap Skill lacks: {marker}")
 
 docs = skill_docs + list((SKILLS / "goldilocks" / "references").glob("*.md"))
 if docs:
     total_words = sum(word_count(path) for path in docs)
-    if total_words > 7800:
-        fail(f"capability documentation exceeds 7800 words: {total_words}")
+    if total_words > 9000:
+        fail(f"capability documentation exceeds 9000 words: {total_words}")
 
 cases = load_jsonl(CASES)
 if not 40 <= len(cases) <= 70:

@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "description": "Sanitized public summary of the frozen Goldilocks v0.5.0 release matrix.",
+  "source": {
+    "corrected_result_sha256": "fb32db2799efe4c7759cadd3a7e338c00ce23bf49dc59968efc098da8c19d93c",
+    "frozen_manifest_sha256": "4aa73e315c1d5b576c5ca5f49dba858d728d3eb5362157c918c80849a4bde415",
+    "formal_model_calls_during_offline_correction": 0,
+    "cost_label": "official known-model subtotal plus a user-authorized Luna-equivalent proxy for Spark",
+    "spark_rate_is_official": false
+  },
+  "arm_summaries": {
+    "goldilocks-v050": {
+      "tasks": {
+        "direct_control": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 146.947,
+          "raw_total_tokens": 132621,
+          "normalized_usd": 0.422859
+        },
+        "doc_handoff": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 752.209,
+          "raw_total_tokens": 944632,
+          "normalized_usd": 1.8511476
+        },
+        "parallel_units": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 324.135,
+          "raw_total_tokens": 516250,
+          "normalized_usd": 0.67557764
+        }
+      }
+    },
+    "direct": {
+      "tasks": {
+        "direct_control": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 137.376,
+          "raw_total_tokens": 114351,
+          "normalized_usd": 0.309312
+        },
+        "doc_handoff": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 500.055,
+          "raw_total_tokens": 460093,
+          "normalized_usd": 1.148769
+        },
+        "parallel_units": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 256.821,
+          "raw_total_tokens": 1054565,
+          "normalized_usd": 1.958607
+        }
+      }
+    },
+    "goldilocks-v042": {
+      "tasks": {
+        "direct_control": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 233.905,
+          "raw_total_tokens": 332205,
+          "normalized_usd": 0.630806
+        },
+        "doc_handoff": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 822.632,
+          "raw_total_tokens": 1383659,
+          "normalized_usd": 2.106448
+        },
+        "parallel_units": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 343.028,
+          "raw_total_tokens": 1651249,
+          "normalized_usd": 1.6905432
+        }
+      }
+    },
+    "superpowers-assisted": {
+      "tasks": {
+        "direct_control": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 2448.273,
+          "raw_total_tokens": 10080790,
+          "normalized_usd": 8.2141854
+        },
+        "doc_handoff": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 3601.023,
+          "raw_total_tokens": 12843017,
+          "normalized_usd": 11.9663228
+        },
+        "parallel_units": {
+          "quality_gate_passed": true,
+          "completion_state": "completed",
+          "duration_seconds": 1353.418,
+          "raw_total_tokens": 6135957,
+          "normalized_usd": 5.1799352
+        }
+      }
+    }
+  },
+  "corrections": [
+    {
+      "task": "direct_control",
+      "arm": "superpowers-assisted",
+      "model_calls": 0,
+      "reason": "semantic completion and owned workflow-artifact classification"
+    },
+    {
+      "task": "doc_handoff",
+      "arm": "superpowers-assisted",
+      "model_calls": 0,
+      "reason": "semantic completion and owned workflow-artifact classification"
+    },
+    {
+      "task": "parallel_units",
+      "arm": "superpowers-assisted",
+      "model_calls": 0,
+      "reason": "semantic completion and owned workflow-artifact classification"
+    }
+  ]
+}

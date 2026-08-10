@@ -1,7 +1,17 @@
 {
   "schema_version": 2,
-  "as_of": "2026-07-31",
-  "purpose": "Dated public-evidence seed for post-decomposition, quota-aware role routing. Refresh before consequential use.",
+  "as_of": "2026-08-10",
+  "purpose": "Dated public-evidence seed plus the locally certified v0.5.0 OpenAI role profile for post-decomposition, quota-aware routing. Refresh before consequential use.",
+  "production_profile": {
+    "as_of": "2026-08-10",
+    "scope": "Goldilocks v0.5.0 OpenAI defaults; capability, authority, privacy, modality, and acceptance remain hard gates.",
+    "lead": {"model": "gpt-5.6-sol", "role": "intent, architecture, authority, shared critical interfaces, proportional final acceptance"},
+    "standard": {"model": "gpt-5.6-terra", "reasoning_effort": "medium", "role": "primary owner for mixed implementation, bounded judgment, substantive specs, plans, debugging, handoffs, and documents"},
+    "fast": {"model": "gpt-5.3-codex-spark", "reasoning_effort": "xhigh", "role": "deterministic coding-only leaf with decisive automated acceptance", "excluded": ["document prose", "continuity records"]},
+    "economy": {"model": "gpt-5.6-luna", "reasoning_effort": "max", "role": "latency-tolerant, cost-first general or document work"},
+    "night_shift": "Use Luna Max for ordinary economy work; use Spark XHigh only for eligible urgent deterministic coding.",
+    "spark_quota": "Use the separate pool when eligible; do not reserve it. Fall back when unavailable or exhausted."
+  },
   "scoring": {
     "quality": "weighted geometric mean of task-relevant normalized evidence",
     "cost": "subscription quota-weighted usage or portable direct cost, plus retry, review, and integration, divided by probability of success",
@@ -79,21 +89,24 @@
     {
       "id": "gpt-5.3-codex-spark",
       "provider": "OpenAI",
-      "recommended_roles": ["fast-coding-specialist", "contracted-code-implementation", "mechanical-code", "test-authoring", "fixtures", "focused-code-checks"],
+      "recommended_roles": ["fast-default-programming", "fast-coding-specialist", "contracted-code-implementation", "mechanical-code", "test-authoring", "fixtures", "focused-code-checks"],
       "excluded_roles": ["architecture", "critical", "vision", "general-content-production", "final-integration"],
       "billing_channel": "ChatGPT Pro separate Codex usage pool; prefer only when quota-channel benefit and coding specialization repay startup",
       "public_metrics": {},
-      "local_evidence": {"2026-07-26_hsk4_content_batch": {"quality_score": 74, "uncached_plus_output": 22946, "duration_seconds": 55.0, "sample_size": 1}},
-      "confidence": "official-behavior-plus-one-local-boundary-probe"
+      "local_evidence": {
+        "2026-07-26_hsk4_content_batch": {"quality_score": 74, "uncached_plus_output": 22946, "duration_seconds": 55.0, "sample_size": 1},
+        "2026-08-09_complex_coding_xhigh": {"acceptance": "pass", "raw_tokens": 600737, "duration_seconds": 137.458, "sample_size": 1, "cost": "unknown-separate-pool"}
+      },
+      "confidence": "official-behavior-plus-local-boundary-and-complex-coding-probes"
     },
     {"id": "gpt-5.6-sol", "provider": "OpenAI", "recommended_roles": ["lead", "architecture", "critical", "final-integration", "combined-acceptance"], "official_pricing_2026_07_31": {"input": 5.0, "cached_input": 0.5, "output": 30.0, "unit": "USD per 1M tokens"}, "confidence": "official-pricing-and-current-codex-lead"},
     {"id": "claude-fable-5", "provider": "Anthropic", "recommended_roles": ["lead", "complex-agentic"], "public_metrics": {"aa_intelligence": 60, "aa_blended_usd_per_1m": 7.70, "aa_tokens_per_second": 65, "aa_e2e_seconds": 132.16, "terminal_bench_2_1_accuracy": 83.8, "terminal_bench_total_cost": 552.67, "example_value": 79.8}, "confidence": "medium"},
     {"id": "gpt-5.5", "provider": "OpenAI", "recommended_roles": ["lead", "complex-agentic"], "public_metrics": {"aa_intelligence": 55, "aa_blended_usd_per_1m": 4.35, "aa_tokens_per_second": 67, "aa_e2e_seconds": 72.62, "terminal_bench_2_1_accuracy": 83.1, "terminal_bench_total_cost": 2059.19, "example_value": 61.8}, "confidence": "medium"},
     {"id": "grok-4.5", "provider": "xAI", "recommended_roles": ["standard", "agentic-value"], "public_metrics": {"aa_intelligence": 54, "aa_blended_usd_per_1m": 1.35, "aa_tokens_per_second": 90, "aa_e2e_seconds": 17.74, "terminal_bench_2_1_accuracy": 79.3, "terminal_bench_total_cost": 134.09, "terminal_bench_hack_rate": -9.0, "example_value": 100.0}, "confidence": "medium-with-hack-penalty"},
     {"id": "claude-opus-4.8", "provider": "Anthropic", "recommended_roles": ["lead", "review", "complex-agentic"], "public_metrics": {"aa_intelligence": 56, "aa_blended_usd_per_1m": 3.85, "aa_tokens_per_second": 58, "aa_e2e_seconds": 45.91, "terminal_bench_2_1_accuracy": 78.9, "terminal_bench_total_cost": 286.94, "example_value": 91.3}, "confidence": "medium"},
-    {"id": "gpt-5.6-terra", "provider": "OpenAI", "recommended_roles": ["standard-default", "domain-owner", "worker-coordination", "bounded-judgment", "repo-implementation"], "official_pricing_2026_07_31": {"input": 2.0, "cached_input": 0.2, "output": 12.0, "unit": "USD per 1M tokens"}, "public_metrics": {"aa_intelligence": 55, "aa_blended_usd_per_1m": 2.17, "aa_tokens_per_second": 136, "aa_e2e_seconds": 141.16, "terminal_bench_2_1_accuracy": 78.4, "terminal_bench_total_cost": 421.15, "example_value": 73.9}, "confidence": "high-for-codex"},
+    {"id": "gpt-5.6-terra", "provider": "OpenAI", "recommended_roles": ["standard-default", "primary-owner", "mixed-implementation", "substantive-documents", "worker-coordination", "bounded-judgment", "repo-implementation"], "official_pricing_2026_07_31": {"input": 2.0, "cached_input": 0.2, "output": 12.0, "unit": "USD per 1M tokens"}, "public_metrics": {"aa_intelligence": 55, "aa_blended_usd_per_1m": 2.17, "aa_tokens_per_second": 136, "aa_e2e_seconds": 141.16, "terminal_bench_2_1_accuracy": 78.4, "terminal_bench_total_cost": 421.15, "example_value": 73.9}, "local_evidence": {"2026-08-09_complex_coding_medium": {"acceptance": "pass", "raw_tokens": 241689, "duration_seconds": 249.043, "official_cost_usd": 0.212937, "sample_size": 1}}, "confidence": "high-for-codex-plus-local-complex-coding-probe"},
     {"id": "muse-spark-1.1", "provider": "Meta", "recommended_roles": ["fast", "standard", "agentic-value"], "public_metrics": {"aa_intelligence": 51, "aa_blended_usd_per_1m": 0.78, "aa_tokens_per_second": 110, "aa_e2e_seconds": 24.10, "terminal_bench_2_1_accuracy": 76.2, "terminal_bench_total_cost": 198.05, "example_value": 94.0}, "confidence": "medium"},
-    {"id": "gpt-5.6-luna", "provider": "OpenAI", "recommended_roles": ["fast-default", "focused-coding", "tests", "exploration", "routing", "extraction", "automation", "standard-low-risk-probe", "bounded-content", "high-volume"], "excluded_roles": ["architecture", "critical", "trust-boundary", "final-visual-judgment", "final-integration"], "official_pricing_2026_07_31": {"input": 0.2, "cached_input": 0.02, "output": 1.2, "unit": "USD per 1M tokens"}, "public_metrics": {"aa_intelligence": 51, "aa_blended_usd_per_1m": 0.87, "aa_tokens_per_second": 187, "aa_e2e_seconds": 83.47, "terminal_bench_2_1_accuracy": 75.7, "terminal_bench_total_cost": 241.45, "example_value": 79.9}, "local_evidence": {"2026-07-26_hsk4_content_batch": {"quality_score": 96, "uncached_plus_output": 10876, "duration_seconds": 74.6, "sample_size": 1}}, "confidence": "high-for-codex-plus-one-local-content-probe"},
+    {"id": "gpt-5.6-luna", "provider": "OpenAI", "recommended_roles": ["economy-default", "latency-tolerant-general", "document-work", "night-shift", "cost-first", "high-volume"], "excluded_roles": ["default-fast-coding", "architecture", "critical", "trust-boundary", "final-visual-judgment", "final-integration"], "official_pricing_2026_07_31": {"input": 0.2, "cached_input": 0.02, "output": 1.2, "unit": "USD per 1M tokens"}, "public_metrics": {"aa_intelligence": 51, "aa_blended_usd_per_1m": 0.87, "aa_tokens_per_second": 187, "aa_e2e_seconds": 83.47, "terminal_bench_2_1_accuracy": 75.7, "terminal_bench_total_cost": 241.45, "example_value": 79.9}, "local_evidence": {"2026-07-26_hsk4_content_batch": {"quality_score": 96, "uncached_plus_output": 10876, "duration_seconds": 74.6, "sample_size": 1}, "2026-08-09_complex_coding_max": {"acceptance": "pass", "raw_tokens": 1449579, "duration_seconds": 1275.764, "official_cost_usd": 0.122976, "sample_size": 1}}, "confidence": "high-for-codex-plus-local-content-and-complex-coding-probes"},
     {"id": "claude-sonnet-5", "provider": "Anthropic", "recommended_roles": ["standard", "review"], "public_metrics": {"aa_intelligence": 53, "aa_blended_usd_per_1m": 1.54, "aa_tokens_per_second": 86, "aa_e2e_seconds": 199.71, "terminal_bench_2_1_accuracy": 74.6, "terminal_bench_total_cost": 288.18, "example_value": 70.6}, "confidence": "medium"},
     {"id": "gemini-3-pro", "provider": "Google", "recommended_roles": ["standard", "multilingual"], "public_metrics": {"terminal_bench_2_1_accuracy": 73.9, "terminal_bench_total_cost": 224.44}, "confidence": "medium-low-missing-current-price-row"},
     {"id": "glm-5.1", "provider": "Z.ai", "recommended_roles": ["fast", "standard-value"], "public_metrics": {"aa_intelligence": 40, "aa_blended_usd_per_1m": 0.90, "aa_tokens_per_second": 62, "aa_e2e_seconds": 70.79, "terminal_bench_2_1_accuracy": 58.7, "terminal_bench_total_cost": 277.14, "example_value": 52.2}, "confidence": "medium"},

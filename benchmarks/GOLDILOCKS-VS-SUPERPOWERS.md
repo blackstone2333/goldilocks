@@ -79,7 +79,7 @@ Charging every attempt—including failures—and dividing by successful deliver
 ## What the two tests prove
 
 - The instruction design covered the tested workflow and safety scenarios with much less rule text than Superpowers.
-- The current plugin delivered every tested task while Superpowers delivered fewer than one third.
+- The v0.2.2 plugin delivered every tested task while Superpowers delivered fewer than one third.
 - On identical successful cells, Goldilocks was leaner on total tokens, time, tools, and Skill activity.
 - After failed attempts are charged to delivery, Goldilocks was cheaper on every measured cost dimension.
 

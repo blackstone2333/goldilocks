@@ -1,0 +1,6 @@
+interface:
+  display_name: "Goldilocks Bootstrap"
+  short_description: "Install or repair Goldilocks"
+  default_prompt: "Use $goldilocks-bootstrap when installing, upgrading, or repairing Goldilocks."
+policy:
+  allow_implicit_invocation: true

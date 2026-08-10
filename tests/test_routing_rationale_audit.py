@@ -118,15 +118,17 @@ def main() -> None:
                 [
                     response(
                         "turn-a",
-                        "ROUTE=direct | WRITE_READY=0 | READ_READY=1 | EXISTING=0 | "
+                        "<!-- ROUTE=direct | WRITE_READY=0 | READ_READY=1 | EXISTING=0 | "
                         "PLANNED_DISPATCH=0 | LEAD=接口与验收 | "
-                        "REASON=review_cost | DETAIL=交接和复核比本地诊断更慢。",
+                        "REASON=review_cost | DETAIL=交接和复核比本地诊断更慢。 -->",
                     ),
                     response(
                         "turn-b",
-                        "ROUTE=mixed | WRITE_READY=1 | READ_READY=2 | EXISTING=1 | "
+                        "<!-- ROUTE=mixed | WRITE_READY=1 | READ_READY=2 | EXISTING=1 | "
                         "PLANNED_DISPATCH=2 | LEAD=集成 | "
-                        "REASON=parallel_gain | DETAIL=独立工作可并行。",
+                        "REASON=parallel_gain | DETAIL=独立工作可并行。 -->\n"
+                        "ROUTE=mixed | TEAM=Lead+2 workers | CONCURRENCY=2/? | "
+                        "DELEGATED=parser, tests | LEAD=integration | REASON=parallel gain | DETAIL=actual starts",
                     ),
                     json.dumps(
                         {"type": "event_msg", "payload": {"type": "user_message", "message": "secret prompt"}},

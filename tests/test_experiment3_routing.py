@@ -54,6 +54,22 @@ def test_profiles_and_installer(root: Path) -> None:
     assert profiles["goldilocks_spark_coder"]["transport"] == "codex-exec"
     assert profiles["goldilocks_spark_coder"]["model"] == "gpt-5.3-codex-spark"
     assert profiles["goldilocks_luna_worker"]["transport"] == "codex-exec"
+    assert profiles["goldilocks_spark_worker"] == {
+        "tier": "fast",
+        "model": "gpt-5.3-codex-spark",
+        "reasoning_effort": "xhigh",
+        "transport": "native",
+        "agent_type": "goldilocks_spark_worker",
+        "may_delegate": False,
+    }
+    assert profiles["goldilocks_luna_economy"] == {
+        "tier": "fast",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "max",
+        "transport": "native",
+        "agent_type": "goldilocks_luna_economy",
+        "may_delegate": False,
+    }
     assert profiles["goldilocks_terra_engineer"]["transport"] == "native"
     assert profiles["goldilocks_terra_engineer"]["may_delegate"] is True
     assert profiles["goldilocks_sol_reviewer"]["sandbox"] == "read-only"
@@ -94,7 +110,7 @@ def test_profiles_and_installer(root: Path) -> None:
     assert installed.returncode == 0, installed.stderr
     result = json.loads(installed.stdout)
     assert result["status"] == "installed"
-    assert len(result["installed"]) == 2
+    assert len(result["installed"]) == 4
     checked = command(
         str(INSTALLER), "--target-dir", str(target), "--check", "--json"
     )
@@ -105,6 +121,34 @@ def test_profiles_and_installer(root: Path) -> None:
     assert repeated.returncode == 0, repeated.stderr
     assert json.loads(repeated.stdout)["status"] == "current"
     assert before == {path.name: path.read_bytes() for path in target.iterdir()}
+
+    migration = root / "legacy-agents"
+    migration.mkdir()
+    legacy_terra = (ROOT / ".git").exists()
+    assert legacy_terra, "fixture requires the shipped template in repository history"
+    old_terra = subprocess.run(
+        ["git", "show", "HEAD:plugins/goldilocks/agents/goldilocks-terra-engineer.toml"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+    old_sol = subprocess.run(
+        ["git", "show", "HEAD:plugins/goldilocks/agents/goldilocks-sol-reviewer.toml"],
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+    (migration / "goldilocks-terra-engineer.toml").write_bytes(old_terra)
+    (migration / "goldilocks-sol-reviewer.toml").write_bytes(old_sol)
+    migrated = command(str(INSTALLER), "--target-dir", str(migration), "--json")
+    assert migrated.returncode == 0, migrated.stderr
+    migration_result = json.loads(migrated.stdout)
+    assert set(migration_result["migrated"]) == {
+        "goldilocks-terra-engineer.toml",
+        "goldilocks-sol-reviewer.toml",
+    }
+    assert len(migration_result["installed"]) == 2
+    assert command(str(INSTALLER), "--target-dir", str(migration), "--check").returncode == 0
 
     conflict = root / "conflict-agents"
     conflict.mkdir()
@@ -220,7 +264,7 @@ def test_runtime_inspector(root: Path) -> None:
             "type": "turn_context",
             "payload": {
                 "model": TERRA,
-                "effort": "high",
+                "effort": "medium",
                 "sandbox_policy": {"type": "danger-full-access"},
                 "permission_profile": {"type": "disabled"},
                 "cwd": "/fixture",
@@ -248,7 +292,7 @@ def test_runtime_inspector(root: Path) -> None:
     assert inspected.returncode == 0, inspected.stderr
     result = json.loads(inspected.stdout)
     assert result["agent_role"] == "goldilocks_terra_engineer"
-    assert result["model"] == TERRA and result["effort"] == "high"
+    assert result["model"] == TERRA and result["effort"] == "medium"
     assert result["sandbox_policy_type"] == "danger-full-access"
     assert result["permission_profile_type"] == "disabled"
     assert result["input_tokens"] == 45
@@ -313,7 +357,7 @@ def test_native_role_audit(root: Path) -> None:
                 "fork_turns": "none",
                 "agent_type": "goldilocks_terra_engineer",
                 "model": TERRA,
-                "reasoning_effort": "high",
+                "reasoning_effort": "medium",
                 "message": "Implement the bounded domain and report evidence.",
             },
         },
@@ -333,7 +377,7 @@ def test_native_role_audit(root: Path) -> None:
             "agent_id": "terra-child",
             "agent_type": "goldilocks_terra_engineer",
             "model": TERRA,
-            "reasoning_effort": "high",
+            "reasoning_effort": "medium",
             "sandbox_policy": {"type": "danger-full-access"},
             "permission_profile": {"type": "disabled"},
         },
@@ -367,9 +411,9 @@ def test_native_role_audit(root: Path) -> None:
         ).fetchone()
     assert decision["expected_agent_type"] == "goldilocks_terra_engineer"
     assert decision["expected_model"] == TERRA
-    assert decision["expected_effort"] == "high"
+    assert decision["expected_effort"] == "medium"
     assert execution["actual_agent_type"] == "goldilocks_terra_engineer"
-    assert execution["actual_effort"] == "high"
+    assert execution["actual_effort"] == "medium"
     assert execution["sandbox_policy_type"] == "danger-full-access"
     assert execution["input_tokens"] == 100
     assert execution["cached_input_tokens"] == 60
@@ -394,7 +438,7 @@ def test_native_role_audit(root: Path) -> None:
     assert missing_effort.returncode != 0 and "reasoning effort" in missing_effort.stderr
     with sqlite3.connect(data / "orchestration.db") as connection:
         connection.execute(
-            "UPDATE executions SET actual_effort = 'high', permission_profile_type = NULL "
+            "UPDATE executions SET actual_effort = 'medium', permission_profile_type = NULL "
             "WHERE agent_id = 'terra-child'"
         )
     missing_permission = command(
@@ -481,7 +525,7 @@ def test_native_role_audit(root: Path) -> None:
         ).fetchone()
     assert observed_decision["task_name"] == "standard__observed_route_terra"
     assert observed_decision["expected_agent_type"] == "goldilocks_terra_engineer"
-    assert observed_decision["expected_effort"] == "high"
+    assert observed_decision["expected_effort"] == "medium"
     assert observed_execution["correlation_confidence"] == "role_observed"
 
 

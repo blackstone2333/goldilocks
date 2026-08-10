@@ -8,7 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.5.0-alpha.2"
+VERSION = "0.5.0"
+README = ROOT / "README.md"
+README_ZH = ROOT / "README.zh-CN.md"
+AGENT_GUIDE = ROOT / "docs" / "AGENT-GUIDE.md"
+INSTALL = ROOT / "docs" / "installation.md"
+INSTALL_ZH = ROOT / "docs" / "installation.zh-CN.md"
 
 
 def read(path: Path) -> str:
@@ -64,10 +69,15 @@ def main() -> None:
     visible_skills = sorted(
         path.parent.name for path in (PLUGIN / "skills").glob("*/SKILL.md")
     )
-    if visible_skills != ["goldilocks"]:
+    if visible_skills != ["goldilocks", "goldilocks-bootstrap"]:
         failures.append(
-            f"visible Skill set is {visible_skills}; thin core must expose only goldilocks"
+            f"visible Skill set is {visible_skills}; release must expose the thin router and one-time Bootstrap only"
         )
+    bootstrap_skill = read(PLUGIN / "skills" / "goldilocks-bootstrap" / "SKILL.md")
+    if "installing, upgrading, or repairing" not in bootstrap_skill or "ordinary tasks" not in bootstrap_skill:
+        failures.append("one-time Bootstrap Skill lacks its narrow install/upgrade trigger")
+    if "bootstrap" in root_skill.lower():
+        failures.append("main Goldilocks router must not mention or trigger Bootstrap")
     for engine in (
         "align.md",
         "diagnose.md",
@@ -151,26 +161,63 @@ def main() -> None:
         if f"## {VERSION}" not in read(path):
             failures.append(f"{path.name} is missing the {VERSION} entry")
 
-    for path in (ROOT / "README.md", ROOT / "README.zh-CN.md"):
+    for path in (README, README_ZH):
         body = read(path)
         badge_version = VERSION.replace("-", "--")
         if f"version-{badge_version}" not in body:
             failures.append(f"{path.name} badge is not {VERSION}")
         if "Caveman" not in body or "ADHD" not in body:
             failures.append(f"{path.name} does not explain the lean-output influence")
+        if "docs/AGENT-GUIDE.md" not in body:
+            failures.append(f"{path.name} does not link the Agent-facing project guide")
+        if len(body.splitlines()) > 340:
+            failures.append(f"{path.name} exceeds the 340-line professional-homepage budget")
+        for marker in ("```mermaid", "PROJECT.md", ".goldilocks/", "ACTIVE.md"):
+            if marker not in body:
+                failures.append(f"{path.name} lacks professional architecture content: {marker}")
+
+    feature_markers = {
+        README: (
+            "> [!CAUTION]",
+            "Do not enable Goldilocks and Superpowers together",
+            "> [!IMPORTANT]",
+            "6 (recommended starting value)",
+            "## Reading the route receipt",
+            "## Usage",
+            "## Night Shift",
+            "docs/assets/v050-release-comparison.svg",
+        ),
+        README_ZH: (
+            "> [!CAUTION]",
+            "不要同时启用 Goldilocks 和 Superpowers",
+            "> [!IMPORTANT]",
+            "6（建议起始值）",
+            "## 看懂路由回执",
+            "## Usage 用量统计",
+            "## Night Shift 夜班模式",
+            "docs/assets/v050-release-comparison.zh-CN.svg",
+        ),
+    }
+    for path, markers in feature_markers.items():
+        body = read(path)
+        for marker in markers:
+            if marker not in body:
+                failures.append(f"{path.name} lacks v0.5.0 feature visibility: {marker}")
 
     install_docs = {
-        ROOT / "README.md": (
-            "Ask an AI to install it",
-            "Hook authorization is expected",
-            "Goldilocks damaged the installation",
+        INSTALL: (
+            "Trust all and continue",
+            "--dangerously-bypass-hook-trust",
             "GOLDILOCKS_UPDATE_CHECK=0",
         ),
-        ROOT / "README.zh-CN.md": (
-            "让 AI 一键安装",
-            "出现 Hook 授权是正常现象",
-            "并不表示 Goldilocks 把安装环境弄坏了",
+        INSTALL_ZH: (
+            "信任全部并继续",
+            "--dangerously-bypass-hook-trust",
             "GOLDILOCKS_UPDATE_CHECK=0",
+        ),
+        AGENT_GUIDE: (
+            "[features.multi_agent_v2]",
+            "max_concurrent_threads_per_session = 6",
         ),
     }
     for path, markers in install_docs.items():
@@ -180,28 +227,78 @@ def main() -> None:
                 failures.append(f"{path.name} lacks install trust guidance: {marker}")
 
     readme_order = {
-        ROOT / "README.md": ("## Install", "## What it does"),
-        ROOT / "README.zh-CN.md": ("## 安装", "## 它能做什么"),
+        README: (
+            "## Install",
+            "### Ask an AI to install it",
+            "### Codex CLI or Desktop",
+            "### Claude Code",
+            "### Other Skills-compatible hosts",
+            "## What it does",
+            "## Evidence",
+        ),
+        README_ZH: (
+            "## 安装",
+            "### 让 AI 帮你安装",
+            "### Codex CLI 或 Desktop",
+            "### Claude Code",
+            "### 其他兼容 Skills 的宿主",
+            "## 它能做什么",
+            "## 证据",
+        ),
     }
-    for path, (install_heading, capability_heading) in readme_order.items():
+    for path, headings in readme_order.items():
         body = read(path)
-        if body.find(install_heading) > body.find(capability_heading):
-            failures.append(f"{path.name} must show installation before capabilities")
+        positions = [body.find(heading) for heading in headings]
+        if any(position < 0 for position in positions) or positions != sorted(positions):
+            failures.append(
+                f"{path.name} must order AI install, Codex, Claude, portable hosts, capabilities, then evidence"
+            )
+
+    feature_order = {
+        README: (
+            "## Reading the route receipt",
+            "## Usage",
+            "## Night Shift",
+            "## Codex model routes",
+            "## Evidence",
+        ),
+        README_ZH: (
+            "## 看懂路由回执",
+            "## Usage 用量统计",
+            "## Night Shift 夜班模式",
+            "## Codex 模型路由",
+            "## 证据",
+        ),
+    }
+    for path, headings in feature_order.items():
+        body = read(path)
+        positions = [body.find(heading) for heading in headings]
+        if any(position < 0 for position in positions) or positions != sorted(positions):
+            failures.append(
+                f"{path.name} must expose receipt, Usage, Night Shift, model routes, then evidence"
+            )
 
     discovery_markers = {
-        ROOT / "README.md": (
+        README: (
+            "lean, adaptive replacement for Superpowers",
+            "v0.5.0 release matrix",
+            "took 36.79% longer",
+            "−13.67%",
+            "Superpowers",
+        ),
+        README_ZH: (
+            "精简、动态的 Superpowers 替代方案",
+            "v0.5.0 发布矩阵",
+            "累计耗时高 36.79%",
+            "−13.67%",
+            "Superpowers",
+        ),
+        AGENT_GUIDE: (
             "replacement for Superpowers",
-            "token-efficient AI agent workflow",
-            "114/114 external checks",
+            "v0.4.1 Direct A/B passed 114/114",
             "11.5% fewer processing tokens",
             "10.9% less cumulative time",
-        ),
-        ROOT / "README.zh-CN.md": (
-            "Superpowers 替代方案",
-            "token-efficient AI Agent 工作流",
-            "114/114 项外部检查",
-            "处理 token 少 11.5%",
-            "累计耗时少 10.9%",
+            "not `AGENTS.md`",
         ),
     }
     for path, markers in discovery_markers.items():
@@ -210,6 +307,9 @@ def main() -> None:
             if marker not in body:
                 failures.append(f"{path.name} lacks searchable evidence marker: {marker}")
 
+    if (ROOT / "docs" / "AGENTS.md").exists():
+        failures.append("Agent-facing project documentation must not be an auto-loaded docs/AGENTS.md")
+
     codex_interface = codex_manifest["interface"]
     if codex_interface["shortDescription"] != "Adaptive workflow; Direct when enough":
         failures.append("Codex short description does not state the general adaptive default")
@@ -217,7 +317,7 @@ def main() -> None:
         failures.append("Codex default prompt still biases every task toward workflow")
 
     guard = read(PLUGIN / "scripts" / "agent_routing_guard.py")
-    if f'POLICY_VERSION = "{VERSION}-exp3.2"' not in guard:
+    if f'POLICY_VERSION = "{VERSION}"' not in guard:
         failures.append("routing guard policy version was not advanced")
 
     recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")

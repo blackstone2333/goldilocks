@@ -2,6 +2,24 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.0 — 2026-08-11
+
+### Stable release
+
+- Promoted the cost-aware routing and companion-agent support from the 0.5.0 prerelease series to stable `v0.5.0`.
+- Finalized the public ownership structure: Sol is Lead; Terra Medium is the primary Standard owner; Spark XHigh is a deterministic coding-only Fast leaf that does not own documents or continuity; Luna Max is the latency-tolerant Economy route. Spark capacity is not reserved.
+- Clarified chain ownership: one owner carries a complete known mutable chain, Lead performs one proportional final acceptance, and a fresh handoff continues from its durable boundary rather than rebuilding prior work.
+- Published the frozen three-task release evidence as three aggregate plus nine task-level comparisons. Under aligned semantic acceptance, Goldilocks 0.5.0, Direct, Goldilocks 0.4.2, and Superpowers 6.1.1 each passed 3/3; the table also reports 0.5.0's measured 36.79% aggregate time cost versus Direct instead of hiding the slower result.
+- Split setup into the independent, one-time `goldilocks-bootstrap` Skill. Codex CLI and Desktop prefer the native Plugin; portable Skills are fallback. The main router never invokes Bootstrap during ordinary work. Bootstrap can complete a Skills-only Codex install with the native plugin and four companion agents, then hand off duplicate portable-entry cleanup, one explicit Hook-trust choice, and a new task after a successful check.
+- Localized the user-visible route receipt to the user's current language. It now reports host-confirmed team/concurrency, delegated work, retained Lead work, reason, detail, and fallback; fixed English readiness fields and reason codes remain in a hidden canonical audit record.
+- Moved Usage reporting entirely out of Lead acceptance. A five-second, fail-silent `Stop` Hook emits available per-model totals; missing or read-only telemetry is omitted without retries, reporter diagnosis, or delaying delivery.
+- Split the public documentation by audience: professional English and Chinese product pages retain the decision flow, durable-document structure, model guidance, and full release matrix; a comprehensive, evidence-dense `docs/AGENT-GUIDE.md` supports AI evaluation. The guide is deliberately not an auto-loaded `AGENTS.md`, so it adds no routine repository-instruction tax.
+- Documented reusable benchmarking lessons on harness classification, host-side telemetry, semantic acceptance, interactive workflow handling, cost accounting, and non-rerun discipline.
+
+The release evidence is limited to its frozen tasks. Spark has no public numeric rate: the published comparison cost is an authorization-normalized estimate, not an actual bill. Bootstrap never writes Hook-trust state or bypasses it; Codex records the final choice. `/hooks` is a fallback when startup review did not appear or for later verification.
+
+The prerelease entries below preserve the routing decisions made at the time; the stable v0.5.0 role structure above supersedes them.
+
 ## 0.5.0-alpha.2 — 2026-08-07
 
 ### Weighted-Cost Routing and Reused-Agent Usage

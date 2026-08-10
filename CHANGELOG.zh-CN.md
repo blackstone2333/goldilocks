@@ -2,6 +2,24 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.5.0 — 2026-08-11
+
+### 正式稳定版
+
+- 将 0.5.0 预发布系列中的成本感知路由与伴随 Agent 支持提升为稳定 `v0.5.0`。
+- 固化公开的负责人结构：Sol 为 Lead；Terra Medium 是 Standard 主负责人；Spark XHigh 是确定性纯编程 Fast 叶子，不负责文档或连续性；Luna Max 是对时延不敏感的 Economy 路线。不会为 Spark 预留额度。
+- 明确执行链负责人设计：一名负责人完成已知的完整可变链，Lead 只做一次比例终验；新会话交接从持久边界继续，不重建旧工作。
+- 将冻结的三任务版本证据公开为三条累计加九条任务级对比。对齐语义验收后，Goldilocks 0.5.0、Direct、Goldilocks 0.4.2 和 Superpowers 6.1.1 均通过 3/3；表格也如实显示 0.5.0 对 Direct 的累计耗时高 36.79%，不再隐藏较慢结果。
+- 将安装拆分为独立的一次性 `goldilocks-bootstrap` Skill。Codex CLI 和 Desktop 默认使用原生 Plugin，portable Skills 仅作 fallback；主路由绝不在普通工作中调用 Bootstrap。Bootstrap 可以为仅有 Skills 的 Codex 安装补齐原生插件和四个伴随 Agent；成功检查后会交接清理重复 portable entry、一次明确的 Hook 信任选择，并新建任务。
+- 路由回执会跟随用户当前语言显示，报告宿主确认的团队/并发、委派内容、主模型保留工作、理由、详情和回退；固定英文 readiness 字段与原因码只保留在隐藏的 canonical 审计记录中。
+- Usage 统计完全退出 Lead 验收链路；五秒、失败静默的 `Stop` Hook 只在可用时输出各模型用量，缺失或只读遥测会直接省略，不重试、不排查 reporter，也不延迟交付。
+- 按读者拆分公开文档：专业的中英文产品页保留决策流程、持久文档结构、模型建议和完整发布矩阵；另增完整、证据密集的 `docs/AGENT-GUIDE.md` 供 AI 评估。该文件刻意不命名为会被自动加载的 `AGENTS.md`，不会增加日常仓库指令开销。
+- 记录可复用的评测方法，包括 harness 分类、宿主侧遥测、语义验收、交互式工作流处理、成本核算和不自动重跑纪律。
+
+发布证据只覆盖冻结任务。Spark 没有公开数值费率：公开的比较成本是授权归一化估算，不是实际账单。Bootstrap 不会写入或绕过 Hook 信任状态，最终选择由 Codex 记录；只有启动审核未出现或需要事后复核时才使用 `/hooks`。
+
+下面的预发布条目保留当时的路由决策；以本页顶部稳定版 v0.5.0 的角色结构为准。
+
 ## 0.5.0-alpha.2 — 2026-08-07
 
 ### 加权成本路由与复用 Agent 用量统计

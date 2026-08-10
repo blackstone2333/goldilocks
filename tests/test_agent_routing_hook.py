@@ -279,6 +279,41 @@ def test_pre_tool_contract(data_dir: Path) -> None:
     )
     assert_silent(already_named, "a truthful existing suffix must not be rewritten")
 
+    missing_semantic = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input=spawn_input("fast__", fork_turns="none", model=LUNA_MODEL),
+    )
+    assert "<tier>__<semantic>_<model>" in denial_reason(missing_semantic)
+
+    native_spark = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input={
+            **spawn_input("fast__focused_patch_luna", fork_turns="none"),
+            "agent_type": "goldilocks_spark_worker",
+        },
+        tool_use_id="native-spark",
+    )
+    spark_native_update = hook_output(native_spark)["updatedInput"]
+    assert spark_native_update["task_name"] == "fast__focused_patch_spark"
+    assert spark_native_update["agent_type"] == "goldilocks_spark_worker"
+    assert "model" not in spark_native_update
+    assert "reasoning_effort" not in spark_native_update
+
+    native_luna = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input={
+            **spawn_input("fast__economy_summary_spark", fork_turns="none"),
+            "agent_type": "goldilocks_luna_economy",
+        },
+        tool_use_id="native-luna",
+    )
+    luna_native_update = hook_output(native_luna)["updatedInput"]
+    assert luna_native_update["task_name"] == "fast__economy_summary_luna"
+    assert luna_native_update["agent_type"] == "goldilocks_luna_economy"
+
     recursive_fast = run_hook(
         data_dir,
         "PreToolUse",

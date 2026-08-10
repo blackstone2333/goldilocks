@@ -7,97 +7,88 @@
 <p align="center"><strong>Not too much process. Not too little rigor. Just right.</strong></p>
 
 <p align="center">
-  <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a>
+  <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="docs/AGENT-GUIDE.md">Guide for AI agents</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0--alpha.2-D4A72C" alt="Version 0.5.0-alpha.2">
-  <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct A/B: 114 of 114 checks passed">
+  <img src="https://img.shields.io/badge/version-0.5.0-2ea44f" alt="Version 0.5.0">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks is a lean, adaptive replacement for Superpowers and a token-efficient AI agent workflow for Codex, Claude Code, and other Skills-compatible agents. It keeps the workflow capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
-
-In the v0.4.1 certified Direct A/B, both paths passed 114/114 external checks while Goldilocks used 11.5% fewer processing tokens and 10.9% less cumulative time; official GPT-5.6 Sol Standard token cost was 6.3% lower. These are measured results on the tested coding fixtures, not a claim of universal superiority.
+Goldilocks is a lean, adaptive replacement for Superpowers and a cost-aware AI agent workflow for Codex, Claude Code, and other Skills-compatible agents. It keeps the capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
 
 > Use the minimum process that preserves the quality, safety, authorization, and acceptance floor.
 
 Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; cheaper workers receive complete, independently verifiable contracts.
 
-Goldilocks is domain-agnostic: any executable work may enter the router, including software, research, analysis, documents, presentations, spreadsheets, and other structured deliverables. It chooses how much workflow and coordination the task earns; specialist Skills still own domain-specific production. When decomposition is worthwhile, unit boundaries keep rework local. Short or inseparable creative work may therefore remain entirely Direct.
+This page is written for people. If you are an AI agent evaluating the repository, read the complete [Agent guide](docs/AGENT-GUIDE.md).
 
 ## Install
 
-Do not enable Goldilocks and Superpowers together.
-
-> **Alpha field test:** this tag contains experimental cost-aware routing, model naming, routing audit, and recursive Usage receipts. For the focused stable defect-explanation fix, install `v0.4.2` from the default branch instead. Do not install both variants at once.
-
-### Install this Alpha directly in Codex
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
-codex plugin add goldilocks@goldilocks-local
-```
-
-Start a new task, review the bundled commands through `/hooks`, and persistently trust them only after confirming they belong to Goldilocks. Useful field feedback includes the task type, visible `ROUTE` line, child names/models, elapsed time, final cause/fix/verification, Usage line or its absence, and whether the result felt clearer, faster, or cheaper than Direct.
+> [!CAUTION]
+> **Do not enable Goldilocks and Superpowers together.** They both own the workflow layer; running both can duplicate prompts, Hooks, state, delegation, and review.
 
 ### Ask an AI to install it
 
-Copy this entire prompt into Codex, Claude Code, Cursor, or another agent that can manage its own Skills or plugins:
+Copy this into your current agent:
 
 ```text
-Install the Goldilocks v0.5.0-alpha.2 prerelease from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.0-alpha.2; for Codex run `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2` and then install `goldilocks@goldilocks-local`. Do not enable it with Superpowers or another Goldilocks version. Explain that this is experimental, ask once before persistently trusting its Hooks through /hooks, then verify the installed version, Hook state, and availability without changing unrelated configuration.
+Install Goldilocks v0.5.0 from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.0. Detect the host first. Use the native Plugin on Codex CLI or Desktop; use the native Plugin on Claude Code; use portable Skills on another compatible host. Do not enable Goldilocks with Superpowers. Invoke $goldilocks-bootstrap only for first install, upgrade, or repair. Show its plan, request approval only when required, then apply and check. Report unsupported host capabilities as skipped and leave unrelated configuration unchanged.
 ```
 
-### Any Skills-compatible agent
+### Codex CLI or Desktop
+
+Use the native Plugin. It provides the root gate, lifecycle Hooks, Usage reporting, update awareness, and the Sol/Terra/Spark/Luna companion agents.
 
 ```bash
-npx skills add blackstone2333/goldilocks
-```
-
-For a global Codex Skill install:
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-Replace `codex` with `claude-code`, `cursor`, `opencode`, `github-copilot`, or `gemini-cli` when supported by the installer.
-
-### Native Codex plugin
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-#### Hook authorization is expected
+Start a new task after installation.
 
-The native Codex plugin contains local command Hooks, so Codex asks for approval on first install and may ask again after an update, reinstall, or plugin-cache refresh. This is Codex re-establishing trust for an installed executable bundle; it does **not** mean Goldilocks damaged the installation.
-
-**Trusting all bundled Goldilocks Hooks is the recommended setup.** After installation, enter `/hooks` inside the interactive Codex CLI—not in the ordinary shell—verify that the commands come from Goldilocks, and choose the persistent “Trust all” or “Always allow” option (wording varies by Codex version), not “Allow once.” Trust is bound to the current Hook definition and reused by later tasks, so unchanged Hooks need approval only once. Codex may request review again when an update changes the Hook hash.
-
-- `recovery_reminder.py` gives executable prompts a tiny Goldilocks gate before specialist Skills, escalates repeated failures into durable continuity, restores compacted state, and adds the concise response contract. Its local audit stores hashes, bounded recurrence flags, and timestamps—never prompt text.
-- `agent_routing_guard.py` checks subagent routing and stores routing metadata locally in the plugin data directory. A stopped worker is not marked successful until Lead reruns acceptance and `record_routing_outcome.py` closes it as verified pass or fail; only an evidence hash is retained.
-- `update_checker.py` checks only the Goldilocks manifest on GitHub, at most once per day. It never installs an update or changes project files. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable this network check.
-- `usage_reporter.py` summarizes per-model tokens and elapsed time without another model call, including new task segments run by reused completed agents. Goldilocks reads its `--current` one-line receipt immediately before the final answer; if Codex has not written the turn's first usage checkpoint yet, it stays silent instead of falsely reporting zero.
-
-If Hook approval is declined, the Skill can still provide its written workflow, but automatic continuity reminders, routing enforcement, update notices, and token receipts will not run. Review the exact commands in [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) before approving if desired.
-
-If authorization still appears on every task, use `/hooks` to confirm that persistent trust—not one-time allowance—was selected, and check whether a startup script is reinstalling the plugin or refreshing its cache on every run.
-
-### Native Claude Code plugin
+### Claude Code
 
 ```bash
 claude plugin marketplace add blackstone2333/goldilocks
 claude plugin install goldilocks@goldilocks
 ```
 
-See the [installation guide](docs/installation.md) for project-local installs, updates, and removal.
+### Other Skills-compatible hosts
 
-### Updates
+Use the portable Skills package for Cursor, OpenCode, GitHub Copilot, Gemini CLI, and other supported hosts.
 
-Repository and skills.sh installs follow the GitHub source but do not silently rewrite an active local copy. Run the matching install or upgrade command again to pick up a release. The native Codex plugin performs one quiet GitHub version check per day, stays silent when current or offline, and shows one reminder for a newer version; it never updates itself without approval. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the check.
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks goldilocks-bootstrap
+```
+
+On Codex, portable Skills are a fallback or temporary Bootstrap source. The native Plugin is the normal installation.
+
+`goldilocks-bootstrap` is an independent one-time setup Skill. Ordinary tasks never load it. See the [installation guide](docs/installation.md) for upgrades, removal, portable global installs, and repair.
+
+<details>
+<summary>Codex Hook trust, updates, and optional concurrency</summary>
+
+After installation or upgrade, Bootstrap hands off one Hook decision on the next task:
+
+- Persistently trust the current Goldilocks Hook definition after reviewing its source.
+- Run one launch with `codex --dangerously-bypass-hook-trust`. This bypasses every enabled Hook for that launch and does not create permanent trust.
+- Decline for now. The written Skill remains available, while Hook-dependent automation stays disabled.
+
+Bootstrap never writes `hooks.state`, trusted hashes, aliases, or user configuration. Use `/hooks` when the startup review does not appear or for later verification. Set `GOLDILOCKS_UPDATE_CHECK=0` to disable the native Plugin's daily manifest check.
+
+> [!IMPORTANT]
+> **Concurrency is user-controlled.** Goldilocks only obeys the host ceiling and never edits `~/.codex/config.toml`. You may set the per-session ceiling to **6 (recommended starting value)** or higher when your Codex version, machine, task isolation, and review capacity can support it.
+
+```toml
+[features.multi_agent_v2]
+enabled = true
+max_concurrent_threads_per_session = 6
+```
+
+This is a ceiling, not a request to start that many workers. Higher is not automatically faster: shared writes, integration risk, and Lead review throughput still limit useful concurrency. Restart Codex and open a new task after changing it.
+</details>
 
 ## What it does
 
@@ -106,11 +97,12 @@ Repository and skills.sh installs follow the GitHub source but do not silently r
 | **Align** | The end state, product choice, authority, or acceptance is materially unclear | A compact decision or spec before implementation |
 | **Diagnose** | A failure exists but its cause is unknown | Reproduction, traced cause, focused fix, regression evidence |
 | **Build** | Work needs reuse decisions, a durable plan, execution stages, or deliberate TDD | The smallest useful plan and coherent implementation units |
-| **Orchestrate** | Worktrees, independent units, delegation, parallelism, or model routing can improve delivery | A ready dependency graph and bounded worker contracts |
+| **Orchestrate** | Worktrees, independent units, delegation, parallelism, or model routing can improve delivery | A ready dependency graph, one accountable owner per mutable chain, and bounded worker contracts |
 | **Prove** | Review, release, safety, integration, or several material claims need evidence | Fresh checks proportional to risk and Lead acceptance |
 | **Evolve** | A useful new idea, reusable execution pattern, or Skill improvement appears | Deferred idea or verified lesson without scope creep |
+| **Artifacts** | The user explicitly requests a multi-unit structured deliverable | One shared production contract, replaceable units, one integration owner, global QA |
 
-These are internal workflow engines, not six separate public Skills. The single `goldilocks` router loads only the relevant engine and adds another only when facts cross its boundary.
+This is the complete workflow surface, not seven separate public Skills. The single `goldilocks` router loads only the relevant internal engine and adds another only when facts cross its boundary.
 
 ## How it decides
 
@@ -123,23 +115,27 @@ flowchart TD
     B -- "Multi-stage work" --> F["Build"]
     B -- "Independent ready units" --> G["Orchestrate"]
     B -- "Release or higher risk" --> H["Prove"]
+    B -- "Explicit structured artifact" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"Cheapest valid owner?"}
     G --> J
-    J -- "Clear and faster inline" --> K["Lead implements"]
-    J -- "Complete low-discretion contract" --> L["Fast worker"]
-    J -- "Bounded domain judgment" --> M["Standard owner → optional Fast workers"]
-    C --> N["Fresh acceptance evidence"]
-    K --> N
-    L --> N
-    M --> N
-    H --> N
-    N --> O["Lead integrates and accepts"]
-    O --> P{"Will the knowledge matter later?"}
-    P -- "Yes" --> Q["Keep only useful spec, plan, handoff, debug lesson, idea, or execution pattern"]
-    P -- "No" --> R["Finish without workflow residue"]
-    Q --> R
+    J -- "Clear and faster inline" --> K["Lead / Sol implements"]
+    J -- "Bounded judgment or mixed chain" --> L["Standard owner / Terra Medium"]
+    J -- "Deterministic coding leaf" --> M["Fast / Spark XHigh"]
+    J -- "Latency-tolerant economy leaf" --> N["Economy / Luna Max"]
+    C --> O["Fresh acceptance evidence"]
+    K --> O
+    L --> O
+    M --> O
+    N --> O
+    I --> O
+    H --> O
+    O --> P["Lead integrates and accepts once"]
+    P --> Q{"Will the knowledge matter later?"}
+    Q -- "Yes" --> R["Keep only useful spec, plan, handoff, debug lesson, idea, or execution pattern"]
+    Q -- "No" --> S["Finish without workflow residue"]
+    R --> S
 ```
 
 The invariant is final quality, not process volume or who typed the code. Goldilocks will not create a spec, plan, worktree, subagent, or continuity file merely because one exists in the toolkit.
@@ -148,17 +144,17 @@ The invariant is final quality, not process volume or who typed the code. Goldil
 
 The root router is under 300 words. If there is no material decision, unknown cause, continuity need, external risk, or useful ready work to delegate, Goldilocks exits before loading a workflow reference. It inspects task-local facts, makes the smallest coherent change, and runs the smallest check that would fail if the result were wrong.
 
-An existing hook adds a compact communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety or ambiguity requires it. Defect work still reports an evidence-backed cause (or explicitly unknown), the fix, and verification, so brevity does not turn debugging into a black box.
+The native Hook adds a compact communication contract inspired by Caveman and i-have-adhd (ADHD): result first, no work preamble, changed state only, short decisive logs, and full wording whenever safety, ambiguity, or an explicit request for detail requires it. It reduces narration without turning the agent into a persona or suppressing necessary evidence.
 
-The same Hook now places a compact zero-cost gate before specialist Skills. Pure conversation skips it; clear executable work stays Direct without loading the full router; material uncertainty, unknown cause, multi-stage continuity, or useful decomposition explicitly loads `goldilocks:goldilocks`. A local audit records only prompt and workspace hashes, session/turn identifiers, and timestamps so activation can be verified without retaining prompt content.
+## Defect work is not a black box
 
-Repeated failures earn persistence without turning every task into paperwork. On the second user-confirmed recurrence in the same session and workspace, Goldilocks requires one live `.goldilocks/ACTIVE.md` frontier plus the project's existing debug or validation record. Symptom, evidence, disproven attempts, **Do not repeat**, the exact next test, and related commits survive compaction. Unverified fixes stay out of the changelog; only freshly verified user-visible release changes enter it. Resume and compaction hooks recover unresolved continuity debt even if the frontier was not created on the previous turn.
+After repairing a defect, Goldilocks reports three distinct items: the evidence-backed cause—or explicitly says it is still unknown—the fix, and fresh verification. This applies to Lead and delegated worker handoffs, so lean output cannot hide why a change was needed. Users can ask for a deeper explanation of the root cause, trigger conditions, repair mechanism, or verification at any time.
 
 ## Continuity without document spam
 
 Direct work does not create workflow documents by default, but models remain free to create documentation when documentation is the deliverable or correctness requires it. Durable state begins only when work must survive compaction, several stages, waiting, steering, delegation, or handoff.
 
-When useful, Goldilocks keeps a clean, human-readable project memory:
+Goldilocks first follows the repository's existing documentation convention. When none exists, it uses a compact, human-readable fallback:
 
 ```text
 docs/
@@ -166,54 +162,120 @@ docs/
 ├── work/               # active specs, plans, work packets, handoffs
 ├── debug/              # recurring bugs, causes, fixes, regression links
 ├── ideas.md            # valuable ideas outside the current scope
-└── CHANGELOG.md        # user-visible changes
+└── CHANGELOG.md        # verified user-visible changes
 .goldilocks/
 └── ACTIVE.md           # compact execution frontier for recovery
 ```
 
-`ACTIVE.md` records completed work, the exact next action, pending or consumed steering, repository evidence, verification, and the do-not-repeat boundary. After compaction, repository state wins over stale memory. Verified execution patterns may be reused on a similar task only after their invalidators are checked.
+`ACTIVE.md` records completed work, the exact next action, pending or consumed steering, repository evidence, verification, and the do-not-repeat boundary. After compaction, repository state wins over stale memory. A new task continues from the documents directly; it does not automatically recruit a second owner.
 
-## Company-style delegation
+## Ownership-based orchestration
 
-Goldilocks treats delegation as an economic and organizational decision:
+Goldilocks treats delegation as an economic and organizational decision, not a hierarchy every task must traverse:
 
-- **Lead** owns user intent, architecture, shared decisions, conflicts, integration, and final acceptance.
-- **Standard** owns a bounded domain where judgment remains and may turn its decisions into Fast contracts.
-- **Fast** receives a complete contract with scope, authority, inputs, interfaces, acceptance, and return evidence. Fast is a leaf.
+- **Lead / Sol** owns user intent, architecture, authority, shared critical interfaces, integration, and final acceptance.
+- **Standard owner / Terra Medium** owns one complete mutable chain when mixed implementation or bounded judgment remains. It is the project owner for that chain, not another management layer.
+- **Fast / Spark XHigh** receives a complete deterministic coding contract and returns automated evidence. It is a coding leaf.
+- **Economy / Luna Max** receives latency-tolerant, cost-first general or document work with a clear boundary.
 
-Fast means low residual discretion after decomposition, not a small original task. Several independent ready units may run in parallel; one inseparable core stays with Lead. Worker count is limited by dependencies, host capacity, isolation, integration risk, and reviewer throughput—not by an arbitrary project-size tier.
+One owner carries the known downstream chain so Lead does not repeat its exploration or routine implementation. Several independent ready units may run in parallel; one inseparable core stays Direct. Worker count is limited by dependencies, host capacity, isolation, integration risk, and reviewer throughput—not by an arbitrary project-size tier.
 
-### Codex model routes
+If an owner misses its first focused acceptance, it gets one ordinary repair and fresh verification. If it still fails or is blocked, it reports the evidence instead of silently retrying. Lead then chooses one bounded action: repair the contract, switch the owner or model, take back the unresolved slice, or stop for user authority. A failed unit is reworked locally; successful units are not restarted.
 
-**Fast baseline → Luna · Code quota specialist → Spark · Standard → Terra**
+## Reading the route receipt
 
-- Fast starts with `gpt-5.6-luna` for focused coding, tests, exploration, routing, extraction, automation, and bounded content production.
-- `gpt-5.3-codex-spark` remains the preferred text-only code specialist when its separate Pro allowance is available and a deterministic batch repays startup cost.
-- Standard starts with `gpt-5.6-terra` when bounded work still needs material domain judgment or local integration. Low-risk, objectively checkable Standard-boundary work may probe Luna once before upgrading to Terra.
-- Lead still owns architecture, Critical work, shared decisions, and final integration. Local evidence overrides the seed registry.
+The root Direct exit remains silent. Work that genuinely enters orchestration shows one short receipt in the user's language after dispatch attempts:
 
-The July 31, 2026 OpenAI price change makes Luna one tenth of Terra and four percent of Sol at standard short-context token rates; Codex plan estimates likewise allow roughly ten times as many Luna messages as Terra messages. Price never bypasses the quality, authority, modality, or tool gates. See the [dated routing update](docs/model-routing-update-2026-07-31.md).
+```text
+ROUTE=mixed | TEAM=Lead+3 workers | CONCURRENCY=3/6 | DELEGATED=tests, parser, docs | LEAD=integration and acceptance | REASON=parallel gain | DETAIL=three independent units are active
+```
 
-Alpha 2 moves those ratios into the Route Card used before Direct decisions. Shared writes block conflicting writers, not read-only work, and generic “extra tokens” is no longer enough to reject a cheaper ready unit.
+`TEAM` and `CONCURRENCY` use host-confirmed successful starts or active workers, never planned counts. `DELEGATED` names work that actually left Lead; `LEAD` names what remains. The visible `Reason` and `Detail` follow the user's language, while fixed English readiness fields and reason codes remain in a hidden canonical audit record.
 
-Goldilocks prefers a native, explicitly supported host model. When native Spark or Luna is unavailable but the local Codex CLI exposes it, `dispatch_codex_worker.py` uses `codex exec` with the chosen model and a complete contract. The default `project` profile preserves repository rules while isolating unrelated global plugins, Apps, MCP servers, Skills, and Hooks. Explicit `inherit` is available when a contract names a required user capability. Fast loses delegation authority, not ordinary execution tools.
+## Usage
 
-Delegation begins only on a verified route. A route startup failure returns to Direct or another already proven route instead of spending a Lead turn diagnosing worker transport inside the product task. Child event streams can remain outside Lead context while concise evidence flows upward.
+The native Codex Plugin adds one host-generated receipt at the end of work without another model call:
 
-The objective is not the lowest raw token count at any cost. Quality and authority are hard gates; total tokens stay bounded; among valid routes Goldilocks minimizes scarce high-multiplier usage and critical-path time.
+```text
+Goldilocks usage | Sol: in … + out …; Terra: …; Luna: …; Spark: … | total … tokens · wall …
+```
 
-The initial model seed is advisory, not a permanent leaderboard:
+It aggregates the Lead and completed native or external workers by their actual model identity, separates input, cached input, and output, and reports wall time when the host provides a usable baseline. Known third-party identities such as DeepSeek, Kimi, Qwen, or Gemini keep readable model names rather than being folded into Sol.
 
-| Role | Starting candidates | Boundary |
+Missing telemetry remains explicitly unavailable; it is never invented as zero. Portable installs can keep the written workflow, but automatic Usage depends on a host that supports the native Hook and transcript data.
+
+## Night Shift
+
+> [!IMPORTANT]
+> **Night Shift is a delivery mode, not a clock-based switch or one fixed model.** Use it when the task may take longer and saving expensive quota matters more than immediate turnaround; it can run during the day or overnight.
+
+On the frozen complex reference task, **Luna Max and Terra Medium both passed the complete quality gate**. Luna Max took **1,275.764 s vs 249.043 s**—about **5.12× the wall time (+412.27%)**—while the **official-price proxy** was **$0.122976 vs $0.212937**, or **42.25% lower**. This is a rate-based comparison estimate, not an actual bill; timing is observational on a shared provider. Luna used more Raw Tokens, so Night Shift is a latency-for-price tradeoff, not a claim of better token efficiency. See the [sanitized frozen evidence](benchmarks/TERRA-LUNA-EFFORT-EVIDENCE.md).
+
+- Ordinary cost-first general or document work starts with **Luna Max**.
+- Urgent, deterministic coding with decisive automated acceptance may use **Spark XHigh**.
+- Mixed work or bounded judgment still belongs to **Terra Medium**; architecture, authority, and final acceptance remain with **Sol**.
+- Quality, privacy, tools, model availability, and the user's deadline remain hard gates. If the preferred route is unavailable or exhausted, Goldilocks falls back without treating the failure as a successful handoff.
+
+Choose it for clear, checkpointed work that can run unattended: overnight implementation, long document batches, migrations with decisive tests, or other work where a roughly fivefold wait is acceptable to reduce priced-model spend. Keep the normal route for interactive work, uncertain requirements, tight deadlines, shared critical interfaces, or tasks that need frequent Lead decisions.
+
+Ask for `Night Shift`, `cost-first`, or `夜班模式` when you want this tradeoff explicitly.
+
+## Codex model routes
+
+The starting routes below are measured defaults, not a permanent leaderboard:
+
+| Role | Starting route | Boundary |
 |---|---|---|
-| Fast baseline | GPT-5.6 Luna; other verified low-cost production models | Complete contract, low residual discretion, decisive acceptance |
-| Fast coding specialist | GPT-5.3-Codex-Spark; Muse Spark; other verified coding models | Text-only deterministic batch where the separate channel repays startup |
-| Standard | GPT-5.6 Terra; Luna for a low-risk first probe; Grok; Claude Sonnet; Gemini Pro; GLM/Qwen candidates | Bounded domain judgment and local integration |
-| Lead | Current host Lead model such as GPT-5.6 Sol; Claude Opus/Fable; other verified frontier models | Intent, architecture, critical decisions, combined acceptance |
+| Lead | GPT-5.6 Sol | Intent, architecture, authority, safety, shared decisions, final acceptance |
+| Standard owner | GPT-5.6 Terra Medium | Mixed implementation, substantive spec/plan/debug/handoff, bounded judgment, local integration |
+| Fast coding leaf | GPT-5.3 Codex Spark XHigh | Complete deterministic coding contract, decisive automated acceptance, no shared decisions |
+| Economy leaf | GPT-5.6 Luna Max | Latency-tolerant, cost-first general or document work |
 
-Availability, tools, privacy, language, modality, and task-specific quality are hard gates. Recent results on the same repository and task shape override public rankings. See the [machine-readable registry](plugins/goldilocks/skills/goldilocks/assets/model-registry.json), [current routing update](docs/model-routing-update-2026-07-31.md), and [original methodology](docs/model-routing-survey-2026-07-18.md).
+Spark is coding-only; it does not own document prose, continuity records, architecture, authority, or final acceptance. Luna Max is the normal Economy route. Goldilocks reserves no Spark quota; unavailable or exhausted routes fall back through the same quality and authority gates.
+
+Other providers remain valid when the host verifies their capability. Availability, tools, privacy, language, modality, and the task-specific quality floor are hard gates. Recent evidence from the same repository and task shape overrides public rankings. Child names preserve the routing role and actual model suffix, for example `standard__api_migration_terra` or `fast__focused_tests_spark`.
 
 ## Evidence
+
+Quality is the first gate. Claims below are limited to frozen tasks and machine-readable evidence.
+
+### v0.5.0 release matrix
+
+The chart shows the **absolute three-task totals** for all four arms: elapsed time, Raw Tokens, and authorization-normalized cost. Exact labels are the data, lower is better, and the true linear scale preserves the real magnitude differences. Compare only within a metric. All four arms reached the corrected 3/3 quality floor.
+
+#### True linear scale
+
+<p align="center">
+  <img src="docs/assets/v050-release-comparison.svg" width="1100" alt="Absolute horizontal bar chart comparing aggregate elapsed time, Raw Tokens, and normalized cost for Goldilocks v0.5.0, Goldilocks v0.4.2, Direct, and Superpowers 6.1.1">
+</p>
+
+<details>
+<summary>Open the complete 12-row release comparison</summary>
+
+`Δ = (0.5.0 − control) / control`; a negative value means 0.5.0 is lower.
+
+| Task | Control | Quality (0.5 / control) | Time (0.5 / control; Δ) | Raw Token (0.5 / control; Δ) | Authorization-normalized cost (0.5 / control; Δ) |
+|---|---|---:|---:|---:|---:|
+| **Aggregate (three tasks)** | **Direct** | **3/3 / 3/3** | 1,223.291 / 894.252 s; **+36.79%** | 1,593,503 / 1,629,009; **−2.18%** | $2.949584 / $3.416688; **−13.67%** |
+| **Aggregate (three tasks)** | **Goldilocks 0.4.2** | **3/3 / 3/3** | 1,223.291 / 1,399.565 s; **−12.59%** | 1,593,503 / 3,367,113; **−52.67%** | $2.949584 / $4.427797; **−33.38%** |
+| **Aggregate (three tasks)** | **Superpowers 6.1.1** | **3/3 / 3/3*** | 1,223.291 / 7,402.714 s; **−83.48%** | 1,593,503 / 29,059,764; **−94.52%** | $2.949584 / $25.360443; **−88.37%** |
+| Compact control | Direct | Pass / Pass | 146.947 / 137.376 s; **+6.97%** | 132,621 / 114,351; **+15.98%** | $0.422859 / $0.309312; **+36.71%** |
+| Compact control | Goldilocks 0.4.2 | Pass / Pass | 146.947 / 233.905 s; **−37.18%** | 132,621 / 332,205; **−60.08%** | $0.422859 / $0.630806; **−32.97%** |
+| Compact control | Superpowers 6.1.1 | Pass / Pass* | 146.947 / 2,448.273 s; **−94.00%** | 132,621 / 10,080,790; **−98.68%** | $0.422859 / $8.214185; **−94.85%** |
+| Document handoff | Direct | Pass / Pass | 752.209 / 500.055 s; **+50.43%** | 944,632 / 460,093; **+105.31%** | $1.851148 / $1.148769; **+61.14%** |
+| Document handoff | Goldilocks 0.4.2 | Pass / Pass | 752.209 / 822.632 s; **−8.56%** | 944,632 / 1,383,659; **−31.73%** | $1.851148 / $2.106448; **−12.12%** |
+| Document handoff | Superpowers 6.1.1 | Pass / Pass* | 752.209 / 3,601.023 s; **−79.11%** | 944,632 / 12,843,017; **−92.64%** | $1.851148 / $11.966323; **−84.53%** |
+| Parallel units | Direct | Pass / Pass | 324.135 / 256.821 s; **+26.21%** | 516,250 / 1,054,565; **−51.05%** | $0.675578 / $1.958607; **−65.51%** |
+| Parallel units | Goldilocks 0.4.2 | Pass / Pass | 324.135 / 343.028 s; **−5.51%** | 516,250 / 1,651,249; **−68.74%** | $0.675578 / $1.690543; **−60.04%** |
+| Parallel units | Superpowers 6.1.1 | Pass / Pass* | 324.135 / 1,353.418 s; **−76.05%** | 516,250 / 6,135,957; **−91.59%** | $0.675578 / $5.179935; **−86.96%** |
+
+`*` Superpowers' corrected quality pass was established by an offline, zero-model repair of the evaluator; its original time and Token telemetry did not change.
+
+</details>
+
+All four arms reached the corrected 3/3 quality floor. Against Direct, v0.5.0 used 13.67% less authorization-normalized cost and 2.18% fewer Raw Tokens, but took 36.79% longer. Against v0.4.2 and Superpowers, it reduced time, Token use, and normalized cost on the aggregate.
+
+Spark has no public numeric rate. The normalized comparison uses official known-model pricing plus a user-authorized Luna-equivalent proxy for Spark. It is an estimate, not an invoice. Read the [release evidence](benchmarks/V050-RELEASE-EVIDENCE.md) for provenance and correction details.
 
 ### v0.4.1 Direct-path certification
 
@@ -225,11 +287,9 @@ Fresh repositories, hidden deterministic acceptance, simultaneous Direct/Goldilo
 | Moderate | 5 | 60/60 | **−30.1%** | **−13.6%** | **−20.4%** |
 | Complex | 3 | 45/45 | **−4.2%** | **−4.9%** | **−14.5%** |
 
-Across all eleven runs per arm, both paths passed **114/114** external checks. Goldilocks used 10.9% less cumulative time, 6.3% less official GPT-5.6 Sol Standard token cost, and 11.5% fewer processing tokens. This certifies the tested Direct branch; broader discovery, debugging, continuity, and delegation still benefit from more real-project feedback. Read the [report and machine-readable data](evals/results/2026-07-26-v041-direct-depth-ab.md).
+Across all eleven runs per arm, both paths passed **114/114** external checks. Goldilocks used 10.9% less cumulative time, 6.3% less official GPT-5.6 Sol Standard token cost, and 11.5% fewer processing tokens. This certifies the tested Direct branch, not every v0.5.0 orchestration path. Read the [report and machine-readable data](evals/results/2026-07-26-v041-direct-depth-ab.md).
 
-### Goldilocks vs Superpowers
-
-Goldilocks makes a narrow public claim: it is a better Superpowers replacement on the tested workflow surface.
+### Earlier Goldilocks vs Superpowers evidence
 
 | Evaluation | Goldilocks | Superpowers | Result |
 |---|---:|---:|---|
@@ -241,10 +301,20 @@ Goldilocks makes a narrow public claim: it is a better Superpowers replacement o
 
 On the eight exact cells both workflows completed, Goldilocks used 30.6% fewer total tokens, 7.7% less time, 28.6% fewer tool calls, and 66.7% less Skill activity. Read the [full head-to-head report](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.md) and [published data](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json).
 
-These results support replacing Superpowers; they do not establish absolute superiority across every possible workflow, model, repository, or provider. More project tests and feedback are welcome.
+These results support replacing Superpowers on the tested workflow surface; they do not establish absolute superiority across every workflow, model, repository, or provider.
+
+## Documentation
+
+- [Agent guide](docs/AGENT-GUIDE.md) for a comprehensive, evidence-oriented AI evaluation
+- [Installation guide](docs/installation.md) for every host path and trust boundary
+- [v0.5.0 release evidence](benchmarks/V050-RELEASE-EVIDENCE.md) for provenance and correction details
+- [Benchmarking lessons](docs/benchmarking-lessons.md) for reusable evaluation methods
+- [Goldilocks vs Superpowers](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.md) for earlier dated evidence
+- [Changelog](CHANGELOG.md) for release history
+- [Third-party notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md) for attribution
 
 ## Status
 
-Goldilocks `v0.5.0-alpha.2` is an opt-in field-test build. It can better replace Superpowers on the tested workflow surface, but its new routing and Usage behavior still needs diverse real-project feedback before a stable `v0.5.0` decision. [Issues and suggestions are welcome](https://github.com/blackstone2333/goldilocks/issues).
+Goldilocks `v0.5.0` is the stable release. Public performance claims are limited to the linked frozen evaluations.
 
-Goldilocks is MIT licensed and developed by Charles Roc and contributors. It is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail's native/reuse-first approach, Caveman, and ADHD. Those projects do not endorse Goldilocks. See [Third-Party Notices](plugins/goldilocks/THIRD_PARTY_NOTICES.md).
+MIT licensed. Developed by Charles Roc and contributors. Goldilocks is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail, Caveman, and ADHD; those projects do not endorse it.

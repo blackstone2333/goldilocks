@@ -7,97 +7,88 @@
 <p align="center"><strong>流程不过量，严谨不缺席，一切刚刚好。</strong></p>
 
 <p align="center">
-  <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a>
+  <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="docs/AGENT-GUIDE.md">给 AI Agent 的项目指南</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0--alpha.2-D4A72C" alt="版本 0.5.0-alpha.2">
-  <img src="https://img.shields.io/badge/Direct_AB-114%2F114_passed-2ea44f" alt="Direct 对照：114 项检查全部通过">
+  <img src="https://img.shields.io/badge/version-0.5.0-2ea44f" alt="版本 0.5.0">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
 
-Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是适用于 Codex、Claude Code 及其他兼容 Agent 的 token-efficient AI Agent 工作流。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
-
-在 v0.4.1 认证的 Direct A/B 对照中，两条路径均通过 114/114 项外部检查；Goldilocks 的处理 token 少 11.5%、累计耗时少 10.9%，按 GPT-5.6 Sol Standard 官方 token 价格计算的成本低 6.3%。这些是已测试编程任务上的实测结果，并非对所有场景都绝对领先的声明。
+Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 Codex、Claude Code 和其他兼容 Skills 宿主的成本感知型 AI Agent 工作流。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
 
 > 只使用足以维持质量、安全、授权和验收底线的流程。
 
 清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给更便宜的工作模型。
 
-Goldilocks 不限定工作领域：软件、研究、分析、文档、演示文稿、表格以及其他结构化交付物，都可以进入同一个路由器。它只决定任务值得使用多少流程和协作；具体领域的制作能力仍由专业 Skill 负责。值得拆分时，单元边界让返工保持局部。因此，短任务或不可拆分的整体创作仍可能全程保持 Direct。
+本页面写给人类读者。需要让 AI Agent 全面评估仓库时，请直接交给它[项目指南](docs/AGENT-GUIDE.md)。
 
 ## 安装
 
-不要同时启用 Goldilocks 和 Superpowers。
+> [!CAUTION]
+> **不要同时启用 Goldilocks 和 Superpowers。** 两者都会接管工作流层；同时启用可能造成提示、Hook、状态、委派和审查重复。
 
-> **Alpha 实地测试：** 本标签包含仍在观察的成本感知路由、模型命名、路由审查和递归 Usage 回执。只需要稳定的故障解释修复时，请从默认分支安装 `v0.4.2`；两个版本不要同时安装。
+### 让 AI 帮你安装
 
-### 在 Codex 中直接安装本 Alpha
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
-codex plugin add goldilocks@goldilocks-local
-```
-
-安装后新建任务，在 `/hooks` 中核对命令确实来自 Goldilocks，再决定是否持久信任。有效反馈包括：任务类型、可见 `ROUTE` 行、子智能体名称与模型、耗时、最终的原因/修复/验证、Usage 行或未出现的情况，以及相对 Direct 是否更清晰、更快或更省。
-
-### 让 AI 一键安装
-
-把下面整段提示词复制给能够管理自身 Skill 或插件的 Codex、Claude Code、Cursor 等 Agent：
+把下面这段直接发给你正在使用的 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.0-alpha.2 预发布版，必须锁定 Git ref v0.5.0-alpha.2；Codex 依次运行 `codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2` 和安装 `goldilocks@goldilocks-local`。不要与 Superpowers 或其他 Goldilocks 版本同时启用。先说明这是实验版，只问我一次是否愿意在 /hooks 中持久信任其 Hooks，最后验证安装版本、Hook 状态和可用性，不要修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.0，并锁定 Git ref v0.5.0。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
 ```
 
-### 任意兼容 Skills 的 Agent
+### Codex CLI 或 Desktop
+
+优先安装原生 Plugin。它会带上根门禁、生命周期 Hook、Usage 统计、更新检查，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。
 
 ```bash
-npx skills add blackstone2333/goldilocks
-```
-
-全局安装为 Codex Skill：
-
-```bash
-npx skills add blackstone2333/goldilocks --skill goldilocks --global --agent codex --yes
-```
-
-安装器支持时，可把 `codex` 换成 `claude-code`、`cursor`、`opencode`、`github-copilot` 或 `gemini-cli`。
-
-### Codex 原生插件
-
-```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-#### 出现 Hook 授权是正常现象
+安装完成后新建任务。
 
-Codex 原生插件包含本地命令 Hook，因此首次安装时会要求授权；升级、重新安装或刷新插件缓存后，也可能再次询问。这是 Codex 对新的可执行插件副本重新建立信任，并不表示 Goldilocks 把安装环境弄坏了。
-
-**推荐完全信任 Goldilocks 自带的全部 Hook。** 安装完成后，在 Codex CLI 的交互界面中输入 `/hooks`（不是在普通 shell 中执行），检查命令来源确实属于 Goldilocks，然后选择持久的“信任全部”或“始终允许”（具体文字随 Codex 版本而异），不要选择“仅本次允许”。该信任会绑定当前 Hook 定义并供后续任务复用；定义不变时只需完成一次，不应每个任务重复询问。插件更新改变 Hook 哈希后，Codex 出于安全原因可能要求重新审核。
-
-- `recovery_reminder.py`：在专业 Skill 之前注入极小门禁，把重复失败升级为持久连续性，恢复压缩后的任务状态，并加入精简沟通约束。本地审计只保存哈希、有限的复发标志和时间，不保存提示词原文。
-- `agent_routing_guard.py`：检查子智能体路由，并把路由元数据保存在插件本地数据目录。Worker 停止后不会被直接记为成功；Lead 重跑验收并由 `record_routing_outcome.py` 记为 verified pass 或 fail 后才闭环，系统只保留证据哈希。
-- `update_checker.py`：每天最多访问一次 GitHub，只检查 Goldilocks 清单版本；不会自动安装更新，也不会修改项目文件。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭这项联网检查。
-- `usage_reporter.py`：无需额外调用模型即可汇总本轮各模型的 token 和耗时，也能计算复用已完成子智能体后产生的新任务段。Goldilocks 会在最终回答前读取 `--current` 单行回执；若 Codex 尚未写入本轮首个统计检查点则保持静默，不会误报 0。
-
-如果拒绝 Hook 授权，Skill 的文字工作流仍可使用，但自动连续性提醒、路由约束、更新提醒和 token 回执不会运行。授权前也可以直接查看 [`hooks/hooks.json`](plugins/goldilocks/hooks/hooks.json) 中的准确命令。
-
-如果每个任务仍反复弹出授权，先用 `/hooks` 确认选择的是持久信任而非仅允许一次，并检查启动脚本是否在每次运行时重新安装插件或刷新插件缓存。
-
-### Claude Code 原生插件
+### Claude Code
 
 ```bash
 claude plugin marketplace add blackstone2333/goldilocks
 claude plugin install goldilocks@goldilocks
 ```
 
-项目级安装、更新和卸载方法见[完整安装说明](docs/installation.zh-CN.md)。
+### 其他兼容 Skills 的宿主
 
-### 更新
+Cursor、OpenCode、GitHub Copilot、Gemini CLI 等宿主使用 portable Skills。
 
-仓库和 skills.sh 安装都以 GitHub 为源，但不会静默改写本地正在使用的副本；发布新版本后，需要重新运行对应安装或升级命令。Codex 原生插件每天最多静默检查一次 GitHub：已是最新版或离线时不提示；发现新版本时只提醒一次；未经同意不会自动更新。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可关闭检查。
+```bash
+npx skills add blackstone2333/goldilocks --skill goldilocks goldilocks-bootstrap
+```
+
+Codex 中的 portable Skills 仅作为 fallback 或临时 Bootstrap 来源，日常使用仍应安装原生 Plugin。
+
+`goldilocks-bootstrap` 是独立的一次性安装 Skill，普通任务不会加载。升级、卸载、全局 portable 安装和修复流程见[完整安装说明](docs/installation.zh-CN.md)。
+
+<details>
+<summary>Codex Hook 信任、更新检查与可选并发配置</summary>
+
+安装或升级后，Bootstrap 会在下一个新任务交接一次 Hook 选择：
+
+- 审核来源后，持久信任当前 Goldilocks Hook 定义。
+- 使用 `codex --dangerously-bypass-hook-trust` 仅绕过一次。它会影响本次启动中的全部已启用 Hook，不会形成永久信任。
+- 暂不信任。文字 Skill 仍可使用，依赖 Hook 的自动化保持关闭。
+
+Bootstrap 不会写入 `hooks.state`、trusted hash、alias 或用户配置。启动审核未出现或需要事后检查时使用 `/hooks`。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭原生 Plugin 的每日版本检查。
+
+> [!IMPORTANT]
+> **并发数量由用户控制。** Goldilocks 只遵守宿主上限，绝不会修改 `~/.codex/config.toml`。你可以把单任务子线程上限设置为 **6（建议起始值）**；当 Codex 版本、机器性能、任务隔离和审核能力都足够时，也可以继续提高。
+
+```toml
+[features.multi_agent_v2]
+enabled = true
+max_concurrent_threads_per_session = 6
+```
+
+这只是上限，不代表每次都会创建这么多子智能体。更高也不一定更快：共享写入、整合风险和 Lead 的审核吞吐仍会限制有效并发。修改后重启 Codex 并新建任务。
+</details>
 
 ## 它能做什么
 
@@ -106,11 +97,12 @@ claude plugin install goldilocks@goldilocks
 | **Align** | 终局、产品选择、权限或验收存在实质不确定性 | 开工前形成紧凑决策或 spec |
 | **Diagnose** | 已知有故障，但原因未知 | 复现、定位根因、聚焦修复、回归证据 |
 | **Build** | 需要复用判断、持久计划、分阶段执行或有意识的 TDD | 最小必要计划和连贯执行单元 |
-| **Orchestrate** | worktree、独立单元、委派、并行或模型路由能改善交付 | 就绪依赖图和边界清晰的工作合同 |
+| **Orchestrate** | worktree、独立单元、委派、并行或模型路由能改善交付 | 就绪依赖图、每条可变链唯一负责人和边界清晰的工作合同 |
 | **Prove** | 审查、发布、安全、集成或多个重要声明需要证据 | 与风险相称的新鲜检查和 Lead 验收 |
 | **Evolve** | 出现有价值的新想法、可复用路径或 Skill 改进 | 留存后续方向或已验证经验，不扩大当前范围 |
+| **Artifacts** | 用户明确要求制作多单元结构化产物 | 一个共享生产合同、可替换单元、单一集成负责人和全局 QA |
 
-这些是内部工作流引擎，不是六个独立公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的引擎；事实跨越边界时才增加第二个。
+这是一套完整能力面，不是七个公开 Skill。唯一的 `goldilocks` 路由器只加载当前需要的内部引擎；事实跨越边界时才增加第二个。
 
 ## 它如何判断
 
@@ -123,23 +115,27 @@ flowchart TD
     B -- "多阶段工作" --> F["Build"]
     B -- "存在独立就绪单元" --> G["Orchestrate"]
     B -- "发布或较高风险" --> H["Prove"]
+    B -- "明确的结构化产物" --> I["Artifacts"]
     D --> F
     E --> F
     F --> J{"由谁完成最划算且可靠？"}
     G --> J
-    J -- "直接做更快" --> K["Lead 实现"]
-    J -- "完整、低裁量合同" --> L["Fast 工作成员"]
-    J -- "仍有局部专业判断" --> M["Standard 负责人 → 可再派 Fast"]
-    C --> N["新鲜验收证据"]
-    K --> N
-    L --> N
-    M --> N
-    H --> N
-    N --> O["Lead 整合并最终验收"]
-    O --> P{"这些知识以后还会有用吗？"}
-    P -- "会" --> Q["只保留有用的 spec、plan、handoff、debug 经验、idea 或执行路径"]
-    P -- "不会" --> R["完成，不留下流程垃圾"]
-    Q --> R
+    J -- "直接做更快" --> K["Lead / Sol 实现"]
+    J -- "混合链或仍有有界判断" --> L["Standard 主负责人 / Terra Medium"]
+    J -- "确定性纯编程叶子" --> M["Fast / Spark XHigh"]
+    J -- "不赶时间的经济叶子" --> N["Economy / Luna Max"]
+    C --> O["新鲜验收证据"]
+    K --> O
+    L --> O
+    M --> O
+    N --> O
+    I --> O
+    H --> O
+    O --> P["Lead 整合并只做一次最终验收"]
+    P --> Q{"这些知识以后还会有用吗？"}
+    Q -- "会" --> R["只保留有用的 spec、plan、handoff、debug 经验、idea 或执行路径"]
+    Q -- "不会" --> S["完成，不留下流程垃圾"]
+    R --> S
 ```
 
 不变的是最终质量，而不是流程数量，也不是谁亲手写代码。Goldilocks 不会因为工具箱里有 spec、plan、worktree、子智能体或连续性文档，就强行创建它们。
@@ -148,17 +144,17 @@ flowchart TD
 
 根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会在加载任何工作流参考前直接退出。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。
 
-现有 Hook 会加入一条紧凑沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全或歧义时恢复完整说明。故障任务仍必须交代有证据支持的原因（或明确说明尚未确认）、修复方式和验证结果，避免为了简洁把调试变成黑盒。
+原生 Hook 会加入一条精简沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全、歧义或用户明确要求详细说明时恢复完整解释。它减少叙述噪声，不会让模型扮演某种人设，也不会删掉必要证据。
 
-同一个 Hook 现在会在专业 Skill 之前加入紧凑的零成本门禁：纯对话跳过；清晰的可执行任务保持 Direct，不加载完整路由器；出现实质不确定性、未知根因、多阶段连续性或有效拆分空间时，明确加载 `goldilocks:goldilocks`。本地审计只记录提示词与工作区哈希、会话/回合标识和时间，因此能够验证门禁是否生效，又不保留提示词内容。
+## 修复过程不再是黑盒
 
-重复失败会获得必要留存，但不会让每个任务都制造文档：同一会话和工作区中，用户第二次确认问题复发时，Goldilocks 强制维护一个 `.goldilocks/ACTIVE.md` 执行前沿，并复用项目现有的 debug 或 validation 记录。症状、证据、已排除方案、**Do not repeat**、精确下一项测试和相关提交都能跨上下文压缩保留。未经验证的修复不进入 Changelog；只有新鲜验收通过的用户可见发布变化才进入。即使上一回合没有及时创建前沿，恢复和压缩 Hook 也会继续提示尚未偿还的连续性债务。
+修复故障后，Goldilocks 会分别说明三项内容：有证据支持的原因——仍无法确定时明确说明未知——采取的修复，以及新鲜验证结果。该要求同时约束 Lead 和被委派的工作模型，精简输出不能再隐藏“为什么要这样改”。用户随时可以继续要求详细解释根因、触发条件、修复原理或验证方法。
 
 ## 连续性，但不滥造文档
 
 Direct 默认不创建流程文档，但当文档本身是交付物或正确性确实需要时，模型仍可自主建文档。只有任务需要跨越上下文压缩、多阶段、等待、用户中途引导、委派或交接时，才启用持久状态。
 
-需要时，Goldilocks 使用清爽、方便人类和其他 Agent 接手的项目记忆：
+Goldilocks 优先沿用项目本身的文档约定。没有现成约定时，使用清爽、方便人类和其他 Agent 接手的项目记忆：
 
 ```text
 docs/
@@ -166,85 +162,159 @@ docs/
 ├── work/               # 当前 spec、plan、工作包和 handoff
 ├── debug/              # 可复发 bug、根因、解法和回归链接
 ├── ideas.md            # 当前范围之外的好想法
-└── CHANGELOG.md        # 用户可见变化
+└── CHANGELOG.md        # 已验证的用户可见变化
 .goldilocks/
 └── ACTIVE.md           # 上下文恢复用的紧凑执行前沿
 ```
 
-`ACTIVE.md` 记录已完成工作、精确下一步、待处理或已消费的用户引导、仓库证据、验收情况和“不要重复”边界。上下文压缩后，以仓库状态为准，不以过期记忆为准。相似任务可以复用已验证执行路径，但必须先检查失效条件。
+`ACTIVE.md` 记录已完成工作、精确下一步、待处理或已消费的用户引导、仓库证据、验收情况和“不要重复”边界。上下文压缩后，以仓库状态为准，不以过期记忆为准。新任务直接从已有文档继续，不会自动再招聘第二个 Owner。
 
-## 公司式动态编排
+## 基于负责人的动态编排
 
-Goldilocks 把委派视为经济决策和组织决策：
+Goldilocks 把委派视为经济决策和组织决策，但不会让每项任务都逐层经过一套公司架构：
 
-- **Lead** 负责用户意图、架构、共享决策、冲突处理、整合和最终验收。
-- **Standard** 负责仍需判断的有界领域，并可把判断转化成 Fast 合同。
-- **Fast** 接收包含范围、权限、输入、接口、验收和返回证据的完整合同；Fast 是叶子成员。
+- **Lead / Sol** 负责用户意图、架构、权限、共享关键接口、整合和最终验收。
+- **Standard 主负责人 / Terra Medium** 在混合实现或有界判断仍然存在时，承接一条完整可变链。它是这条链的项目负责人，不是新增管理层。
+- **Fast / Spark XHigh** 接收可决定性验收的完整纯编程合同，并返回自动化证据；它是编程叶子。
+- **Economy / Luna Max** 接收边界明确、不赶时间、成本优先的通用或文档工作。
 
-Fast 指拆解后剩余裁量低，不代表原任务很小。多个独立就绪单元可以并行；不可分割的核心仍由 Lead 处理。并发数量取决于依赖、宿主容量、隔离条件、集成风险和审核吞吐，而不是僵硬的项目规模分级。
+一名负责人完成一条已知的完整后续链路，Lead 不重复它的探索和常规实现。多个独立就绪单元可以并行；不可分割的核心保持 Direct。并发数量取决于依赖、宿主容量、隔离条件、集成风险和审核吞吐，而不是僵硬的项目规模分级。
 
-### Codex 模型路由
+负责人第一次未通过聚焦验收时，可以进行一次常规修复并重新验证；仍未通过或已经阻塞时，必须上报原因和证据，不能静默重试。Lead 随后只做一个有边界的决定：修正合同、更换负责人或模型、收回未解决部分，或者因为需要用户授权而停止。失败单元局部返工，已经通过的单元不重新开始。
 
-**Fast 基线 → Luna · 编程额度专才 → Spark · Standard → Terra**
+## 看懂路由回执
 
-- Fast 默认先考虑 `gpt-5.6-luna`，覆盖 focused coding、测试、探索、路由、提取、自动化和边界明确的内容生产。
-- `gpt-5.3-codex-spark` 继续作为纯文本编程专才：仅在 Pro 独立额度池可用，且确定性代码批次足以抵消启动成本时优先。
-- Standard 在仍需实质领域判断或局部整合时默认使用 `gpt-5.6-terra`；低风险、可客观验收的 Standard 边界任务可以先试一次 Luna，未过质量门槛就升级 Terra。
-- Lead 继续负责架构、Critical 工作、共享决策和最终整合；同项目同任务形态的本地证据优先于种子表。
+根路由的 Direct 退出保持静默。任务真正进入编排并完成启动尝试后，才会按用户语言显示一条短回执：
 
-OpenAI 2026 年 7 月 31 日调价后，标准短上下文 token 价格中 Luna 只有 Terra 的十分之一、Sol 的 4%；Codex 套餐估算的 Luna 消息数也约为 Terra 的十倍。价格不能绕过质量、权限、模态和工具门槛。参见[带日期的路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)。
+```text
+路由=混合｜团队=主模型+3 个子智能体｜并发=3/6｜委派=测试、解析、文档核对｜主模型=整合与验收｜理由=并行收益｜详情=三个独立单元已经启动
+```
 
-Alpha 2 把这些比例前移到 Direct 决策前必读的 Route Card。共享写入只阻止冲突写入，不阻止只读工作；笼统的“会多费 token”也不足以拒绝更便宜的就绪单元。
+团队和并发只使用宿主确认的成功启动或活跃数量，不拿计划数冒充；委派说明真正交出去的工作，主模型说明仍由 Lead 保留的工作。面向用户的“理由”和“详情”跟随用户语言，完整 readiness 字段和固定英文原因码则保留在隐藏的 canonical 审计记录中。
 
-Goldilocks 优先使用宿主明确支持的原生模型。当原生协作接口没有 Spark 或 Luna、但本地 Codex CLI 可以调用时，`dispatch_codex_worker.py` 会通过 `codex exec` 使用指定模型和完整合同。默认 `project` 档位保留仓库规则，同时隔离无关的全局插件、App、MCP、Skill 和 Hook；合同明确需要用户能力时可以选择 `inherit`。Fast 被关闭的是继续分派权，不是普通执行工具。
+## Usage 用量统计
 
-只有验证过的路由才会开始委派。路由启动失败时，立即回到 Direct 或另一条已验证路径，不在产品任务中消耗 Lead 回合调试工作模型的传输层。子任务事件流可留在 Lead 上下文之外，只向上汇报简洁证据。
+Codex 原生 Plugin 会在工作结束时直接生成一条宿主侧用量回执，不额外调用模型：
 
-目标不是不惜代价压低原始 token。质量和权限是硬门槛，总 token 必须受控；在合格路径之间，再尽量降低高倍率模型额度和关键路径时间。
+```text
+Goldilocks usage | Sol: in … + out …; Terra: …; Luna: …; Spark: … | total … tokens · wall …
+```
 
-初始模型种子只供参考，不是永久排行榜：
+它会按真实模型身份汇总 Lead、原生子智能体和外部 Worker，分别统计输入、缓存输入、输出，并在宿主能取得有效基线时显示总耗时。DeepSeek、Kimi、Qwen、Gemini 等第三方模型只要宿主提供真实身份，也会保留可读名称，不会全部算到 Sol 下面。
 
-| 角色 | 起始候选 | 边界 |
+拿不到的遥测会明确保持 unavailable，绝不会伪装成 0。portable Skills 仍能保留文字工作流，但自动 Usage 依赖宿主支持原生 Hook 和会话数据。
+
+## Night Shift 夜班模式
+
+> [!IMPORTANT]
+> **Night Shift 是一种交付模式，不是按时间自动切换，也不固定等于某个模型。** 当任务可以多跑一会、节省高价额度比立刻完成更重要时使用；白天可以开，真正过夜也可以。
+
+在同一项冻结复杂任务里，**Luna Max 和 Terra Medium 都通过了完整质量验收**。Luna Max 用时 **1,275.764 秒，对 Terra Medium 的 249.043 秒**，约为 **5.12 倍（慢 412.27%）**；按官方费率计算的**价格代理估算**是 **$0.122976 对 $0.212937**，约低 **42.25%**。这不是实际账单；共享服务商下的时间也只作为观察值。Luna 使用的 Raw Token 更多，所以 Night Shift 是“用等待换低价”，不是 Token 效率更高。完整证据见[脱敏冻结证据](benchmarks/TERRA-LUNA-EFFORT-EVIDENCE.zh-CN.md)。
+
+- 普通的成本优先通用或文档工作，先考虑 **Luna Max**。
+- 有明确自动验收、又比较赶时间的确定性编程，可以使用 **Spark XHigh**。
+- 混合工作或有界判断仍交给 **Terra Medium**；架构、权限和最终验收仍由 **Sol** 负责。
+- 质量、隐私、工具、模型可用性和用户截止时间始终是硬门槛。首选路线不可用或额度耗尽时，Goldilocks 会回退，不会把失败启动冒充成成功委派。
+
+适合选择它的，是边界清楚、有检查点、可以无人值守的任务：过夜开发、长文档批处理、带决定性测试的迁移，或者其他能够接受约五倍等待、希望降低高价模型支出的工作。交互频繁、需求仍不确定、截止时间紧、涉及共享关键接口，或中途需要 Lead 频繁决策时，继续使用正常路线。
+
+希望明确使用这条路线时，可以直接说 `Night Shift`、`成本优先` 或 `夜班模式`。
+
+## Codex 模型路由
+
+下面是实测后的起始建议，不是永久排行榜：
+
+| 角色 | 起始路线 | 边界 |
 |---|---|---|
-| Fast 基线 | GPT-5.6 Luna 及其他已验证低成本生产模型 | 完整合同、低剩余裁量、决定性验收 |
-| Fast 编程专才 | GPT-5.3-Codex-Spark、Muse Spark 及其他已验证编程模型 | 纯文本确定性批次，独立额度收益足以抵消启动成本 |
-| Standard | GPT-5.6 Terra；Luna 低风险首轮；Grok、Claude Sonnet、Gemini Pro、GLM/Qwen 候选 | 有界领域判断和局部整合 |
-| Lead | 当前宿主 Lead 模型，如 GPT-5.6 Sol、Claude Opus/Fable 及其他已验证前沿模型 | 意图、架构、关键决策和组合验收 |
+| Lead | GPT-5.6 Sol | 意图、架构、权限、安全、共享决策和最终验收 |
+| Standard 主负责人 | GPT-5.6 Terra Medium | 混合实现、实质 spec/plan/debug/handoff、有界判断和本域整合 |
+| Fast 编程叶子 | GPT-5.3 Codex Spark XHigh | 完整确定性编程合同、决定性自动验收、无共享决策 |
+| Economy 叶子 | GPT-5.6 Luna Max | 不赶时间、成本优先的通用或文档工作 |
 
-模型可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目同任务形态的近期结果优先于公开排名。参见[机器可读种子表](plugins/goldilocks/skills/goldilocks/assets/model-registry.json)、[当前路由更新](docs/model-routing-update-2026-07-31.zh-CN.md)和[原始方法说明](docs/model-routing-survey-2026-07-18.md)。
+Spark 只负责纯编程，不负责文档正文、连续性记录、架构、权限或最终验收。Luna Max 是默认 Economy 路线。Goldilocks 不为 Spark 预留额度；路线不可用或额度耗尽时，按同一套质量与权限门槛回退。
+
+其他供应商模型也可以参与，但必须先由宿主确认能力。可用性、工具、隐私、语言、模态和任务质量底线都是硬门槛；同项目、同任务形态的近期结果优先于公开排名。子智能体名称保留路由角色和真实模型后缀，例如 `standard__api_migration_terra`、`fast__focused_tests_spark`。
 
 ## 证据
+
+质量是第一道门槛。下面的结论只覆盖冻结任务和可复核的机器证据。
+
+### v0.5.0 发布矩阵
+
+这张柱状图展示四组方案在三项任务中的**绝对累计值**：耗时、Raw Token 和授权归一化成本。数字标签就是真实数据，越短越好；真实线性比例完整保留实际量级差异。只在同一项指标内比较。四组方案都达到修正后的 3/3 质量门槛。
+
+#### 真实线性刻度
+
+<p align="center">
+  <img src="docs/assets/v050-release-comparison.zh-CN.svg" width="1100" alt="Goldilocks v0.5.0、Goldilocks v0.4.2、Direct 和 Superpowers 6.1.1 的累计耗时、Raw Token 与归一化成本绝对值横向柱状图">
+</p>
+
+<details>
+<summary>展开完整 12 行发布对比</summary>
+
+`Δ = (0.5.0 − 对照) / 对照`，负值代表 0.5.0 更低。
+
+| 任务 | 对照 | 质量（0.5 / 对照） | 耗时（0.5 / 对照；Δ） | Raw Token（0.5 / 对照；Δ） | 授权归一化成本（0.5 / 对照；Δ） |
+|---|---|---:|---:|---:|---:|
+| **综合（三项累计）** | **Direct** | **3/3 / 3/3** | 1,223.291 / 894.252 s；**+36.79%** | 1,593,503 / 1,629,009；**−2.18%** | $2.949584 / $3.416688；**−13.67%** |
+| **综合（三项累计）** | **Goldilocks 0.4.2** | **3/3 / 3/3** | 1,223.291 / 1,399.565 s；**−12.59%** | 1,593,503 / 3,367,113；**−52.67%** | $2.949584 / $4.427797；**−33.38%** |
+| **综合（三项累计）** | **Superpowers 6.1.1** | **3/3 / 3/3*** | 1,223.291 / 7,402.714 s；**−83.48%** | 1,593,503 / 29,059,764；**−94.52%** | $2.949584 / $25.360443；**−88.37%** |
+| 紧凑控制 | Direct | 通过 / 通过 | 146.947 / 137.376 s；**+6.97%** | 132,621 / 114,351；**+15.98%** | $0.422859 / $0.309312；**+36.71%** |
+| 紧凑控制 | Goldilocks 0.4.2 | 通过 / 通过 | 146.947 / 233.905 s；**−37.18%** | 132,621 / 332,205；**−60.08%** | $0.422859 / $0.630806；**−32.97%** |
+| 紧凑控制 | Superpowers 6.1.1 | 通过 / 通过* | 146.947 / 2,448.273 s；**−94.00%** | 132,621 / 10,080,790；**−98.68%** | $0.422859 / $8.214185；**−94.85%** |
+| 文档交接 | Direct | 通过 / 通过 | 752.209 / 500.055 s；**+50.43%** | 944,632 / 460,093；**+105.31%** | $1.851148 / $1.148769；**+61.14%** |
+| 文档交接 | Goldilocks 0.4.2 | 通过 / 通过 | 752.209 / 822.632 s；**−8.56%** | 944,632 / 1,383,659；**−31.73%** | $1.851148 / $2.106448；**−12.12%** |
+| 文档交接 | Superpowers 6.1.1 | 通过 / 通过* | 752.209 / 3,601.023 s；**−79.11%** | 944,632 / 12,843,017；**−92.64%** | $1.851148 / $11.966323；**−84.53%** |
+| 并行单元 | Direct | 通过 / 通过 | 324.135 / 256.821 s；**+26.21%** | 516,250 / 1,054,565；**−51.05%** | $0.675578 / $1.958607；**−65.51%** |
+| 并行单元 | Goldilocks 0.4.2 | 通过 / 通过 | 324.135 / 343.028 s；**−5.51%** | 516,250 / 1,651,249；**−68.74%** | $0.675578 / $1.690543；**−60.04%** |
+| 并行单元 | Superpowers 6.1.1 | 通过 / 通过* | 324.135 / 1,353.418 s；**−76.05%** | 516,250 / 6,135,957；**−91.59%** | $0.675578 / $5.179935；**−86.96%** |
+
+`*` Superpowers 的修正后质量通过由离线、零模型的裁判修复确认；原始耗时和 Token 遥测没有变化。
+
+</details>
+
+四组方案都达到修正后的 3/3 质量门槛。与 Direct 相比，v0.5.0 的授权归一化成本低 13.67%、Raw Token 少 2.18%，但累计耗时高 36.79%；与 v0.4.2 和 Superpowers 相比，它在综合数据上同时降低了耗时、Token 和折算成本。
+
+Spark 没有公开数值费率。统一比较采用官方已知模型价格，加上用户授权的 Luna-equivalent Spark 代理。它是估算值，不是实际账单。数据来源和修正规则见 [v0.5.0 发布证据](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md)。
 
 ### v0.4.1 Direct 路径认证
 
 测试使用全新仓库、模型不可见的固定外部验收、Direct/Goldilocks 同波并行、排除预热，并由 GPT-5.6 Sol high 完成简单、中度、复杂三种编程任务。
 
-| 场景 | 每组次数 | 每组验收 | 中位耗时 | 中位官方 API 成本 | 中位处理 token |
+| 场景 | 每组次数 | 每组验收 | 中位耗时 | 中位官方 API 成本 | 中位处理 Token |
 |---|---:|---:|---:|---:|---:|
 | 简单 | 3 | 9/9 | **−2.6%** | **−24.3%** | **−13.8%** |
 | 中度 | 5 | 60/60 | **−30.1%** | **−13.6%** | **−20.4%** |
 | 复杂 | 3 | 45/45 | **−4.2%** | **−4.9%** | **−14.5%** |
 
-每组共 11 次运行，两条路径都通过 **114/114** 项外部检查。Goldilocks 累计耗时低 10.9%，按 GPT-5.6 Sol Standard 官方 token 价格计算的成本低 6.3%，处理 token 低 11.5%。这证明当前 Direct 分支在这些任务上有效；发现需求、debug、长期连续性和委派仍需要更多真实项目反馈。参见[报告和机器可读数据](evals/results/2026-07-26-v041-direct-depth-ab.md)。
+每组共 11 次运行，两条路径都通过 **114/114** 项外部检查。Goldilocks 累计耗时低 10.9%，按 GPT-5.6 Sol Standard 官方 Token 价格计算的成本低 6.3%，处理 Token 少 11.5%。这只认证对应的 Direct 冻结任务，不代表 v0.5.0 的所有编排路径。参见[报告和机器可读数据](evals/results/2026-07-26-v041-direct-depth-ab.md)。
 
-### Goldilocks 对 Superpowers
-
-Goldilocks 只提出一个克制的公开结论：在已测试工作流表面上，它是更好的 Superpowers 替代方案。
+### 更早的 Goldilocks 对 Superpowers 证据
 
 | 测试 | Goldilocks | Superpowers | 结果 |
 |---|---:|---:|---|
 | 8 场景指令压力测试 | **98.9/100** | 79.2/100 | Goldilocks 领先 8/8，规则文本少 86.2% |
 | Three Bears 成功交付 | **27/27** | 8/27 | Goldilocks 保持 100% 实测安全 |
-| 每次成功交付总 token | **112,285** | 289,333 | Goldilocks −61.2% |
+| 每次成功交付总 Token | **112,285** | 289,333 | Goldilocks −61.2% |
 | 每次成功交付耗时 | **143.2 秒** | 361.3 秒 | Goldilocks −60.4% |
 | 每次成功交付 Skill 活动 | **1.1** | 10.9 | Goldilocks −89.8% |
 
-在双方都成功的 8 个完全相同单元里，Goldilocks 总 token 少 30.6%、耗时少 7.7%、工具调用少 28.6%、Skill 活动少 66.7%。参见[完整正面对照报告](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)和[公开数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)。
+在双方都成功的 8 个完全相同单元里，Goldilocks 总 Token 少 30.6%、耗时少 7.7%、工具调用少 28.6%、Skill 活动少 66.7%。参见[完整正面对照报告](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)和[公开数据](benchmarks/three_bears/results/data/2026-07-18-terra-low-full/head-to-head.json)。
 
-这些结果支持用 Goldilocks 替换 Superpowers，但不能证明它在所有工作流、模型、仓库或供应商上都绝对领先。欢迎继续做项目测试并反馈。
+这些结果支持在已测试工作流表面上用 Goldilocks 替代 Superpowers，但不能证明它在所有工作流、模型、仓库或供应商上都绝对领先。
+
+## 文档入口
+
+- [给 AI Agent 的项目指南](docs/AGENT-GUIDE.md)：完整能力、边界、证据等级和审计文件地图
+- [安装说明](docs/installation.zh-CN.md)：所有宿主路径与信任边界
+- [v0.5.0 发布证据](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md)：数据来源与修正规则
+- [评测经验](docs/benchmarking-lessons.zh-CN.md)：可复用的测试方法
+- [Goldilocks 对 Superpowers](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)：更早且带日期的正面对照
+- [更新记录](CHANGELOG.zh-CN.md)：版本历史
+- [第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)：来源与致谢
 
 ## 当前状态
 
-Goldilocks `v0.5.0-alpha.2` 是自愿安装的实地测试版本。它在已测试工作流表面上能够更好地替代 Superpowers，但新增路由和 Usage 行为仍需更多真实项目反馈，再决定是否发布稳定 `v0.5.0`。[欢迎提出意见](https://github.com/blackstone2333/goldilocks/issues)。
+Goldilocks `v0.5.0` 是稳定版。所有公开性能结论均限定在已链接的冻结评测范围内。
 
-Goldilocks 采用 MIT 许可证，由 Charles Roc 和贡献者开发。它是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail 原生/复用优先理念、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。详见[第三方声明](plugins/goldilocks/THIRD_PARTY_NOTICES.md)。
+MIT 许可证。由 Charles Roc 和贡献者开发。Goldilocks 是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。

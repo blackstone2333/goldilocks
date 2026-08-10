@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.5.0-alpha.2"
+VERSION = "0.5.0"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 ENTRY = SKILLS / "goldilocks" / "SKILL.md"
@@ -56,7 +56,7 @@ for required in [
 entry = text(ENTRY)
 for marker in [
     "name: goldilocks",
-    "Explicit multi-unit artifact production",
+    "Multi-unit artifacts",
     "artifacts.md",
 ]:
     if marker not in entry:

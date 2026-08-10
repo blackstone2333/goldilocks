@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import tempfile
@@ -13,9 +14,22 @@ from pathlib import Path
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "agents"
 TEMPLATE_FILES = (
+    "goldilocks-spark-worker.toml",
+    "goldilocks-luna-economy.toml",
     "goldilocks-terra-engineer.toml",
     "goldilocks-sol-reviewer.toml",
 )
+
+# Only these byte-exact, previously shipped templates may be replaced during an
+# upgrade.  A user edit, even one with the same semantic TOML meaning, is a conflict.
+LEGACY_TEMPLATE_DIGESTS = {
+    "goldilocks-terra-engineer.toml": {
+        "7aa50cf57f7784bb9ad1093f5862dd019147b9f871dca9bcf19c5cafd7882f8c",
+    },
+    "goldilocks-sol-reviewer.toml": {
+        "966d4258e284da8e3e00b12d2367fd98f84f3b45f4b33d61f2401ece7ad2fa62",
+    },
+}
 
 
 def parser() -> argparse.ArgumentParser:
@@ -42,7 +56,13 @@ def classify(template: Path, destination: Path) -> str:
     if destination.is_symlink() or not destination.is_file():
         return "unsafe"
     try:
-        return "current" if destination.read_bytes() == template.read_bytes() else "conflict"
+        content = destination.read_bytes()
+        if content == template.read_bytes():
+            return "current"
+        digest = hashlib.sha256(content).hexdigest()
+        if digest in LEGACY_TEMPLATE_DIGESTS.get(template.name, set()):
+            return "legacy"
+        return "conflict"
     except OSError:
         return "unreadable"
 
@@ -66,6 +86,30 @@ def install_missing(template: Path, destination: Path) -> None:
             pass
 
 
+def replace_legacy(template: Path, destination: Path) -> None:
+    """Atomically replace a preflighted byte-exact legacy template."""
+    descriptor, raw_stage = tempfile.mkstemp(
+        prefix=".goldilocks-agent-", dir=str(destination.parent)
+    )
+    stage = Path(raw_stage)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(template.read_bytes())
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(stage, 0o644)
+        # Re-check immediately before replacement so a user edit observed during
+        # installation remains protected rather than being silently overwritten.
+        if classify(template, destination) != "legacy":
+            raise ValueError(f"agent destination changed during migration: {destination}")
+        os.replace(stage, destination)
+    finally:
+        try:
+            stage.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def run(target: Path, check_only: bool) -> dict[str, object]:
     expanded = target.expanduser()
     target = Path(os.path.abspath(expanded if expanded.is_absolute() else Path.cwd() / expanded))
@@ -82,15 +126,19 @@ def run(target: Path, check_only: bool) -> dict[str, object]:
     states = {
         template.name: classify(template, target / template.name) for template in templates
     }
-    invalid = {name: state for name, state in states.items() if state not in {"current", "missing"}}
+    invalid = {
+        name: state
+        for name, state in states.items()
+        if state not in {"current", "missing", "legacy"}
+    }
     if invalid:
         details = ", ".join(f"{name}={state}" for name, state in sorted(invalid.items()))
         raise ValueError(f"refusing to overwrite or follow existing agent files: {details}")
 
     if check_only:
-        missing = [name for name, state in states.items() if state != "current"]
-        if missing:
-            raise ValueError("companion agents are not installed exactly: " + ", ".join(missing))
+        outdated = [name for name, state in states.items() if state != "current"]
+        if outdated:
+            raise ValueError("companion agents are not installed exactly: " + ", ".join(outdated))
         return {"status": "current", "target": str(target), "agents": states}
 
     target.mkdir(parents=True, exist_ok=True)
@@ -98,10 +146,15 @@ def run(target: Path, check_only: bool) -> dict[str, object]:
         raise ValueError(f"agent target changed during preflight: {target}")
 
     installed: list[str] = []
+    migrated: list[str] = []
     for template in templates:
         destination = target / template.name
         current_state = classify(template, destination)
         if current_state == "current":
+            continue
+        if current_state == "legacy":
+            replace_legacy(template, destination)
+            migrated.append(template.name)
             continue
         if current_state != "missing":
             raise ValueError(f"agent destination changed during preflight: {destination}")
@@ -117,9 +170,10 @@ def run(target: Path, check_only: bool) -> dict[str, object]:
     if any(state != "current" for state in final.values()):
         raise ValueError("post-install exactness check failed")
     return {
-        "status": "installed" if installed else "current",
+        "status": "installed" if installed or migrated else "current",
         "target": str(target),
         "installed": installed,
+        "migrated": migrated,
         "agents": final,
     }
 

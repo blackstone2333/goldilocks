@@ -28,11 +28,22 @@ Portable fallback:
 
 Execution memory may refine time, failure, review, and retry estimates but never bypass a hard gate. Record uncached input, cached input, output, billing pool, price snapshot, elapsed time, retries, and integrated defects when available.
 
+## Transfer the whole mutable chain
+
+Evaluate delegation across every known stage that can still change the deliverable, not only the first ready unit. A spec, plan, debug note, or handoff is useful evidence, but durable documentation alone does not repay worker startup and Lead review.
+
+Delegate staged mixed work only when one worker contract can own the complete known mutable execution chain through decisive acceptance. If Lead must implement a later known stage, repeat substantial exploration, or reconstruct worker context, include that work in the route comparison and default to Direct. Do not split one tightly coupled chain merely to create a cheaper first phase.
+
 ## Assign roles
 
 - Fast: fixed decisions, low residual discretion, deterministic acceptance; it remains a leaf.
-- Standard: bounded domain judgment; it may contract Fast inside that domain.
-- Lead: intent, architecture, Critical work, shared interfaces, conflicts, combined verification, and final judgment.
+- Standard: bounded domain judgment and the narrow primary owner of its complete known
+  mutable execution chain. It may contract a non-conflicting Fast leaf, then integrates
+  it, performs one ordinary repair, and re-verifies before escalation.
+- Lead: intent, architecture, Critical work, shared interfaces, authority/safety
+  boundaries, conflicts, one proportional acceptance pass, and final judgment. It does
+  not repeat owner exploration, and takes the chain back only for those boundaries or a
+  repeated acceptance failure after the owner's repair.
 
 Cheaper workers receive clearer contracts and checks, not a lower quality target. Standard escalates shared decisions.
 
@@ -40,24 +51,40 @@ Cheaper workers receive clearer contracts and checks, not a lower quality target
 
 Resolve `../assets/codex-route-profiles.json`:
 
-- `goldilocks_spark_coder`: external Spark Fast for deterministic coding/tests.
-- `goldilocks_luna_worker`: external Luna Fast for low-discretion general work.
-- `goldilocks_terra_engineer`: native Terra/High Standard; it may contract Fast.
+- `goldilocks_spark_worker`: native Spark XHigh Fast for deterministic coding/tests.
+- `goldilocks_luna_economy`: native Luna Max Fast for latency-tolerant low-discretion
+  general or document work.
+- `goldilocks_terra_engineer`: native Terra Medium Standard for mixed implementation, durable documentation, and bounded judgment; it may contract Fast.
 - `goldilocks_sol_reviewer`: fresh native Sol/High requested-read-only review.
+
+`goldilocks_spark_coder` and `goldilocks_luna_worker` remain packaged external-adapter
+fallback profiles for non-native hosts.
 
 Install native templates with `../../../scripts/install_agents.py`, then start a new task. The installer never edits `config.toml` or overwrites a differing file. Requested read-only is not proof of OS isolation; use `../../../scripts/inspect_agent_runtime.py --record` when runtime evidence is incomplete.
 
-Cache visibility is not route readiness. Confirm the model on the native host. Name spawns `fast__<name>_<model>`, `standard__<name>_<model>`, or `lead__<name>_<model>` and set `fork_turns` explicitly. The Hook derives `_luna`, `_spark`, `_terra`, or `_sol` from the selected model:
+Cache visibility is not route readiness. Confirm the model on the native host. Name
+spawns exactly `fast__<name>_<model>`, `standard__<name>_<model>`, or
+`lead__<name>_<model>`; do not add an `owner` name prefix. Set `fork_turns` explicitly.
+The Hook fails closed for a missing tier/semantic prefix and derives `_luna`, `_spark`,
+`_terra`, or `_sol` from the selected model:
 
 - Fast: normally `none` plus a task-local contract.
 - Standard: `none` or at most four relevant turns.
 - Only a justified full-history Lead handoff may use `all`; it inherits Lead model and reasoning.
 
-Native Fast/Standard require explicit host-supported models and cannot silently inherit Lead. Fast cannot delegate. The Hook accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; an unplanned Sol child is told to return immediately because `SubagentStart` cannot cancel it. Ambiguous concurrent or nested starts remain unverifiable rather than false mismatches.
+Native Fast/Standard require explicit host-supported models and cannot silently inherit
+Lead. Use the installed native `goldilocks_spark_worker` and
+`goldilocks_luna_economy` when their host supports them; otherwise use the external
+adapter fallback below. Fast cannot delegate. The Hook accepts `Agent`, `spawn_agent`,
+and `collaboration.spawn_agent`; an unplanned Sol child is told to return immediately
+because `SubagentStart` cannot cancel it. Ambiguous concurrent or nested starts remain
+unverifiable rather than false mismatches.
 
 ## External Fast adapter
 
-Use `gpt-5.6-luna` as the universal Fast baseline for focused coding, tests, exploration, extraction, routing, automation, and bounded content. Use `gpt-5.3-codex-spark` instead for text-only deterministic coding batches when its separate pool is available and startup cost is repaid. Use `gpt-5.6-terra` as the OpenAI Standard baseline when domain judgment or cross-file coordination remains. Exclude architecture, Critical work, trust boundaries, final visual judgment, and final integration from Fast.
+Use `gpt-5.3-codex-spark` at XHigh for deterministic coding-only batches with decisive automated acceptance when its separate pool is available and startup cost is repaid. Spark is ineligible for pure documents, human-facing prose, or continuity records. Use `gpt-5.6-terra` at Medium for mixed implementation plus substantive spec, plan, debug, or handoff writing, and for bounded domain judgment or cross-file coordination. Use `gpt-5.6-luna` at Max for latency-tolerant, cost-first general or document work. Exclude architecture, Critical work, trust boundaries, final visual judgment, and final integration from Fast or Economy.
+
+Night Shift is a delivery mode. Ordinary economy Night Shift uses Luna Max; urgent deterministic coding may use Spark XHigh. Spark has no reserve floor: use it when task-feasible, then fall back to Terra Medium, Luna Max, or Direct according to the work shape when unavailable or exhausted.
 
 For an eligible external contract, resolve `../scripts/dispatch_codex_worker.py`:
 
@@ -71,7 +98,7 @@ python3 <dispatch-script> \
   --reasoning-effort medium
 ```
 
-Use `--work-type spark-coding` only for a qualifying batch; `general` and `coding` remain compatibility aliases. The adapter calls `codex exec`, pins model/effort/sandbox, forbids danger-full-access, sends the contract on stdin, disables further delegation, and propagates failure without silent fallback.
+Use `--work-type spark-coding --reasoning-effort xhigh` only for a qualifying coding-only batch. Use `--work-type luna --reasoning-effort max` for Economy/Night Shift general work. `general` and `coding` remain compatibility aliases. The adapter calls `codex exec`, pins model/effort/sandbox, forbids danger-full-access, sends the contract on stdin, disables further delegation, and propagates failure without silent fallback.
 
 The adapter derives the visible model suffix; callers may pass only the semantic base name.
 

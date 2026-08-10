@@ -16,14 +16,16 @@ AUDITOR = ROOT / "plugins" / "goldilocks" / "scripts" / "route_auditor.py"
 HOOKS = ROOT / "plugins" / "goldilocks" / "hooks" / "hooks.json"
 
 
-def append_route(path: Path, turn_id: str, timestamp: str, line: str) -> None:
+def append_route(
+    path: Path, turn_id: str, timestamp: str, line: str, receipt: str = ""
+) -> None:
     record = {
         "timestamp": timestamp,
         "type": "response_item",
         "payload": {
             "type": "message",
             "role": "assistant",
-            "content": [{"type": "output_text", "text": line}],
+            "content": [{"type": "output_text", "text": f"<!-- {line} -->\n{receipt}"}],
             "internal_chat_message_metadata_passthrough": {"turn_id": turn_id},
         },
     }
@@ -202,6 +204,8 @@ def main() -> None:
             "ROUTE=mixed | WRITE_READY=1 | READ_READY=1 | EXISTING=1 | "
             "PLANNED_DISPATCH=2 | LEAD=接口与验收 | REASON=parallel_gain | "
             "DETAIL=两个独立单元并行，Lead 负责集成。",
+            "ROUTE=mixed | TEAM=Lead+1 workers | CONCURRENCY=1/? | "
+            "DELEGATED=parser | LEAD=integration | REASON=parallel gain | DETAIL=actual start only",
         )
         second = run(data, transcript, "turn-b")
         assert second.returncode == 0, second.stderr

@@ -15,17 +15,18 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
+POLICY_VERSION = "0.5.0"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 TRANSCRIPT_TAIL_BYTES = 16 * 1024 * 1024
-ROUTE_LINE = re.compile(
-    r"^ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
+ROUTE_FIELDS = (
+    r"ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
     r"WRITE_READY=(\d+)\s*\|\s*READ_READY=(\d+)\s*\|\s*"
     r"EXISTING=(\d+)\s*\|\s*"
     r"(?:PLANNED_DISPATCH|NEW_DISPATCH)=(\d+)\s*\|\s*"
-    r"LEAD=(.*?)\s*\|\s*REASON=([a-z_]+)\s*\|\s*DETAIL=(.+?)\s*$",
-    re.MULTILINE,
+    r"LEAD=(.*?)\s*\|\s*REASON=([a-z_]+)\s*\|\s*DETAIL=(.+?)"
 )
+ROUTE_LINE = re.compile(rf"^{ROUTE_FIELDS}$")
+CANONICAL_ROUTE_COMMENT = re.compile(rf"<!--\s*({ROUTE_FIELDS})\s*-->", re.DOTALL)
 DIRTY_TREE = re.compile(
     r"(?:脏工作树|未提交(?:改动|修改)|dirty\s+(?:worktree|tree)|uncommitted\s+changes)",
     re.IGNORECASE,
@@ -115,8 +116,8 @@ def latest_route(
         if record_turn != turn_id:
             continue
         timestamp = parse_timestamp(record.get("timestamp"))
-        for match in ROUTE_LINE.finditer(text):
-            found = (match.group(0), timestamp or datetime.now(timezone.utc))
+        for match in CANONICAL_ROUTE_COMMENT.finditer(text):
+            found = (match.group(1), timestamp or datetime.now(timezone.utc))
     return found
 
 

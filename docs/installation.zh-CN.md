@@ -1,50 +1,64 @@
 # 安装 Goldilocks
 
-Goldilocks 既可以作为跨平台 Agent Skills 安装，也可以作为 Codex 或 Claude Code 原生插件安装。
+对 Codex CLI 和 Desktop，Goldilocks 默认以原生 Plugin 安装。portable Agent Skills 用于其他兼容宿主，或作为临时 Bootstrap 来源。
 
-## 在 Codex 中安装 v0.5.0 Alpha
-
-Alpha 与稳定版共用同一个市场名称，因此二选一安装，不要同时启用：
+## 推荐：在 Codex 中以原生 Plugin 安装稳定版 v0.5.0
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0-alpha.2
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建任务，并在测试前确认版本是 `v0.5.0-alpha.2`。命令锁定了准确 Git ref，不会误装默认稳定分支。
+该命令锁定稳定版 Git ref。插件 manifest 已是 `0.5.0`，但本地插件缓存可能仍较旧，`~/.codex/agents` 也可能只保留旧的 Terra/Sol 模板。
+
+仅在首次安装、升级或安装修复时调用独立的 `$goldilocks-bootstrap` Skill；它绝不进入普通任务路由。在仓库 checkout 根目录中，它的脚本是：
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --plan --json
+```
+
+这条命令只读。检查 JSON 结果中的 `approval_required`。如果它为 `true`，Agent 展示计划后只向用户确认一次；获得同意后运行：
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --yes --json
+```
+
+如果 `approval_required` 为 `false`，直接运行下面的命令。无论哪种情况，随后都验证：
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --apply --json
+```
+
+随后验证：
+
+```bash
+python3 plugins/goldilocks/skills/goldilocks-bootstrap/scripts/bootstrap.py --check --json
+```
+
+Bootstrap 会自动识别 Codex 及其原生插件，只会安全升级字节完全匹配的已知旧模板，补齐 Spark/Luna/Terra/Sol 伴随 Agent 模板；遇到不同的用户文件会拒绝覆盖。它的授权记录是宿主级全局复用，直到能力或模板哈希变化才失效，不是项目级记录。在已安装 source 中，脚本为 `goldilocks-bootstrap/scripts/bootstrap.py`，不要猜测缓存路径。仅在自动识别失败的故障排查中使用 `--native-plugin-dir`。若 Codex 最初只安装了 Skill，Bootstrap 可以补装原生插件和全部四个伴随 Agent。检查成功后，安装 Agent 按 handoff 清理 Codex 的重复 portable entry 并新建任务。其他宿主保持 portable，未支持能力标记为 skipped。
 
 ## 选择安装方式
 
-- **核心路由器：** 只安装 `goldilocks`，获得 Just-Necessary 动态流程判断，体积和上下文开销最小，可独立工作。
-- **唯一 Skill：** 安装 `goldilocks`；它的内部引擎继续提供头脑风暴、计划、TDD、调试、worktree、委派、审查、验证、分支收尾和 Skill 编写。
+- **任务路由器：** `goldilocks` 提供 Just-Necessary 动态流程判断及其内部工作流引擎。
+- **安装助手：** `goldilocks-bootstrap` 与它一起安装，但只在首次安装、升级或安装修复时调用。
 
-现在不需要安装任何额外工作流 Skill。同时也不建议并行启用 Goldilocks 与 Superpowers，两套重叠的工作流规则可能发生冲突。
+主 `goldilocks` 根路由不会在普通工作中加载 Bootstrap。同时也不建议并行启用 Goldilocks 与 Superpowers，两套重叠的工作流规则可能发生冲突。
 
-## 跨平台 Skills 安装
+## Portable Skills fallback
 
-开源的 [`skills` CLI](https://github.com/vercel-labs/skills) 支持 Codex、Claude Code、Cursor、OpenCode、GitHub Copilot、Gemini CLI 等大量 Agent。
+开源的 [`skills` CLI](https://github.com/vercel-labs/skills) 支持 Claude Code、Cursor、OpenCode、GitHub Copilot、Gemini CLI 等兼容宿主。在 Codex 上，仅当原生 Plugin 尚不可用或需要临时 Bootstrap 来源时使用它。
 
 交互式安装：
 
 ```bash
-npx skills add blackstone2333/goldilocks
+npx skills add blackstone2333/goldilocks --skill goldilocks goldilocks-bootstrap
 ```
 
-只全局安装核心路由器：
+全局安装两个 Goldilocks Skill：
 
 ```bash
 npx skills add blackstone2333/goldilocks \
-  --skill goldilocks \
-  --global \
-  --agent <agent> \
-  --yes
-```
-
-全局安装完整套件：
-
-```bash
-npx skills add blackstone2333/goldilocks \
-  --skill goldilocks \
+  --skill goldilocks goldilocks-bootstrap \
   --global \
   --agent <agent> \
   --yes
@@ -54,7 +68,7 @@ npx skills add blackstone2333/goldilocks \
 
 | 平台 | `<agent>` |
 |---|---|
-| Codex | `codex` |
+| Codex（仅 fallback） | `codex` |
 | Claude Code | `claude-code` |
 | Cursor | `cursor` |
 | OpenCode | `opencode` |
@@ -73,16 +87,22 @@ npx skills add blackstone2333/goldilocks --list
 npx skills update --global --yes
 ```
 
-纯 Skill 安装不会在后台检查更新，因此启用过程保持离线、跨平台，也不会持续增加模型或网络开销。需要主动获知更新时，请定期执行更新命令或订阅 GitHub Releases。
+纯 Skill 安装不会在后台检查更新，因此启用过程保持离线、跨平台，也不会持续增加模型或网络开销。需要主动获知更新时，请定期执行更新命令或订阅 GitHub Releases。Codex CLI 和 Desktop 用户在 Bootstrap handoff 完成后应回到原生 Plugin。
 
-## Codex 原生插件
+出于安全考虑，Skills 安装器不会自行执行任意 postinstall 代码。“自动” Bootstrap 指安装 Agent 仅在上述安装场景调用 `$goldilocks-bootstrap`，并完成它的计划、授权、应用、检查和 handoff；`npx` 本身不会执行它。在 portable 或其他宿主上，Bootstrap 只报告它能够证明支持的能力，其余能力明确标为 `skipped`，不会伪装成统一的原生插件配置。
+
+## Codex 原生 Plugin 说明
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
-安装后新建一个 Codex 任务，让新的 Skill 上下文生效。
+这是 Codex CLI/Desktop 的默认路径。安装后新建一个 Codex 任务，让新的 Skill 上下文生效。
+
+### 伴随 Agent 与可见名称
+
+升级时调用 `$goldilocks-bootstrap`，按其计划、授权分支、应用、检查和 handoff 执行，再新建任务。原生子 Agent 的名称规范为 `<tier>__<semantic>_<model>`，例如 `fast__focused_checks_spark` 或 `standard__draft_contract_terra`。如果名称缺少路由层级前缀，说明该任务的 Goldilocks Hook 或 Skill 没有加载；先检查已安装 source 并新建任务，再把它当作路由结果。
 
 ### 安静的更新感知
 
@@ -101,9 +121,15 @@ codex plugin add goldilocks@goldilocks-local
 
 原生插件为 `SessionStart`、`PostCompact` 和 `UserPromptSubmit` 附带恢复 Hook。只有当前工作区存在 `.goldilocks/ACTIVE.md` 时才会输出提醒，否则完全静默。它还为 `PreToolUse`、`SubagentStart` 和 `SubagentStop` 附带路由守卫。守卫只在子智能体活动时运行：阻止未分级派发，要求 Fast 与 Standard 显式选择宿主支持的模型，禁止 Fast 继续创建子智能体，并且只允许明确的 Lead 交接继承完整历史。并发路由观察写入本地 SQLite；宿主关联不唯一时只记录歧义，不会误停子任务。子任务停止仍只是观察，Lead 重跑组合验收并记录 `verified_pass` 或 `verified_fail` 后才算闭环；验收证据只保存哈希，不保留原文。它不会修改用户级 `config.toml`，也不会给 Direct 任务增加流程。
 
-当所选 Fast 模型可由 `codex exec` 使用、但原生子智能体通道没有提供时，打包的适配器会把 `luna` 交给通用 Fast 默认模型，把 `spark-coding` 交给独立计量的确定性编程专才；旧的 `general` 和 `coding` 名称继续兼容。默认 `project` 能力档位会隔离无关的全局插件、App、MCP、Skill 和 Hook，同时保留项目规则及运行所需的认证/供应商信息；只有完整合同明确需要已安装的用户能力时才使用 `inherit`。
+最终角色结构为 Lead/Sol、作为主负责人的 Standard/Terra Medium、确定性编程叶子的 Fast/Spark XHigh，以及负责对时延不敏感的成本优先通用或文档工作的 Economy/Luna Max。Spark 不负责文档正文或连续性，Goldilocks 也不为 Spark 预留额度。默认 `project` 能力档位会隔离无关的全局插件、App、MCP、Skill 和 Hook，同时保留项目规则及运行所需的认证/供应商信息；只有完整合同明确需要已安装的用户能力时才使用 `inherit`。
 
-Codex 会要求用户审核非托管插件 Hook；安装后可用 `/hooks` 查看并信任 Goldilocks 定义，插件更新导致 Hook 哈希变化时需要重新审核。恢复 Hook 被禁用时，连续性账本仍是唯一事实源；路由 Hook 未获信任或平台只安装了跨平台 Skill 时，模型路由只保留指导作用，无法强制执行。
+Bootstrap 会把 Hook setup 带入安装或升级后的第一个新任务。请选择其一：
+
+- **A — 持久信任 Goldilocks（推荐）：** 启动审核出现时核对 Goldilocks 来源，选择“信任全部并继续”或等效的持久选项。Hook 定义变化时再次审核。
+- **B — 仅本次绕过全部已启用 Hook：** 下一次任务以 `codex --dangerously-bypass-hook-trust` 启动。它影响所有已启用 Hook，不只 Goldilocks，只对该次启动有效，且不会设为永久信任。
+- **C — 暂不信任：** 拒绝审核。文字 Skill 仍可使用，但依赖 Hook 的自动化不会运行。
+
+文件系统/完全访问权限和 Hook 信任是两套边界，应分别选择。Bootstrap 绝不会写入 `hooks.state` 或 trusted hash、不改 alias 或配置，也不把 bypass 说成永久设置；最终点击由 Codex 记录。只有启动审核未出现或需要事后复核时，才使用 `/hooks`。恢复 Hook 被禁用时，连续性账本仍是唯一事实源；路由 Hook 未获信任或平台只安装了跨平台 Skill 时，模型路由只保留指导作用，无法强制执行。
 
 如需额外加强压缩摘要，可从仓库复制 `plugins/goldilocks/skills/goldilocks/assets/codex-compact-prompt.md` 到稳定的本地路径，并在用户级 `~/.codex/config.toml` 中指向该副本：
 

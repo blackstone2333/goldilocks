@@ -274,9 +274,9 @@ def main() -> None:
     assert "Stop" in hooks
     user_commands = json.dumps(hooks["UserPromptSubmit"], ensure_ascii=False)
     stop_commands = json.dumps(hooks["Stop"], ensure_ascii=False)
-    assert "usage_reporter.py" in user_commands
+    assert "usage_reporter.py" not in user_commands
     assert "usage_reporter.py" in stop_commands
-    print("Goldilocks per-turn usage receipt contract passed.")
+    print("Goldilocks host-side Stop usage receipt contract passed.")
 
 
 if __name__ == "__main__":

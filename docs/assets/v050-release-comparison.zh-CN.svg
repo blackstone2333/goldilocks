@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700" role="img" aria-labelledby="title description">
+  <title id="title">Goldilocks v0.5.0 发布版汇总：绝对指标</title>
+  <desc id="description">一个冻结三任务汇总矩阵，比较四个方案的耗时、原始 Token 与归一化成本。每个指标列各用自己的真实线性刻度，越低越好，标签是精确绝对累计值。</desc>
+  <style>
+    .surface { fill: #f6f8fa; stroke: #d0d7de; }
+    .title { fill: #1f2328; font: 700 30px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .subtitle { fill: #57606a; font: 400 16px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .head { fill: #1f2328; font: 700 17px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .scale { fill: #57606a; font: 400 13px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .row { fill: #1f2328; font: 600 16px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .value { fill: #1f2328; font: 600 14px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    .inverse { fill: #ffffff; }
+    .track { fill: #eaeef2; }
+    .rule { stroke: #d0d7de; stroke-width: 1; }
+    .time { fill: #0969da; }
+    .token { fill: #8250df; }
+    .cost { fill: #1a7f37; }
+    .note { fill: #57606a; font: 400 14px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  </style>
+  <rect class="surface" x="0.5" y="0.5" width="1399" height="699" rx="12"/>
+  <text class="title" x="56" y="62">v0.5.0 发布版汇总 — 绝对指标</text>
+  <text class="subtitle" x="56" y="92">冻结的三任务汇总 · 越低越好 · 真实线性刻度 · 数字标签为绝对累计值</text>
+
+  <text class="head" x="350" y="150">耗时</text>
+  <text class="scale" x="350" y="173">0 — 7,402.714 s</text>
+  <text class="head" x="690" y="150">原始 Token</text>
+  <text class="scale" x="690" y="173">0 — 29,059,764</text>
+  <text class="head" x="1030" y="150">归一化成本</text>
+  <text class="scale" x="1030" y="173">0 — $25.360443</text>
+  <line class="rule" x1="56" y1="190" x2="1344" y2="190"/>
+
+  <text class="row" x="56" y="233">Goldilocks v0.5.0</text>
+  <rect class="track" x="350" y="210" width="280" height="30" rx="5"/>
+  <rect class="time" x="350" y="210" width="46.27" height="30" rx="5"/>
+  <text class="value" x="404" y="231">1,223.291 s</text>
+  <rect class="track" x="690" y="210" width="280" height="30" rx="5"/>
+  <rect class="token" x="690" y="210" width="15.35" height="30" rx="5"/>
+  <text class="value" x="713" y="231">1,593,503</text>
+  <rect class="track" x="1030" y="210" width="300" height="30" rx="5"/>
+  <rect class="cost" x="1030" y="210" width="34.89" height="30" rx="5"/>
+  <text class="value" x="1073" y="231">$2.949584</text>
+
+  <line class="rule" x1="56" y1="270" x2="1344" y2="270"/>
+  <text class="row" x="56" y="313">Goldilocks v0.4.2</text>
+  <rect class="track" x="350" y="290" width="280" height="30" rx="5"/>
+  <rect class="time" x="350" y="290" width="52.94" height="30" rx="5"/>
+  <text class="value" x="411" y="311">1,399.565 s</text>
+  <rect class="track" x="690" y="290" width="280" height="30" rx="5"/>
+  <rect class="token" x="690" y="290" width="32.44" height="30" rx="5"/>
+  <text class="value" x="731" y="311">3,367,113</text>
+  <rect class="track" x="1030" y="290" width="300" height="30" rx="5"/>
+  <rect class="cost" x="1030" y="290" width="52.38" height="30" rx="5"/>
+  <text class="value" x="1091" y="311">$4.427797</text>
+
+  <line class="rule" x1="56" y1="350" x2="1344" y2="350"/>
+  <text class="row" x="56" y="393">Direct</text>
+  <rect class="track" x="350" y="370" width="280" height="30" rx="5"/>
+  <rect class="time" x="350" y="370" width="33.82" height="30" rx="5"/>
+  <text class="value" x="392" y="391">894.252 s</text>
+  <rect class="track" x="690" y="370" width="280" height="30" rx="5"/>
+  <rect class="token" x="690" y="370" width="15.70" height="30" rx="5"/>
+  <text class="value" x="714" y="391">1,629,009</text>
+  <rect class="track" x="1030" y="370" width="300" height="30" rx="5"/>
+  <rect class="cost" x="1030" y="370" width="40.42" height="30" rx="5"/>
+  <text class="value" x="1079" y="391">$3.416688</text>
+
+  <line class="rule" x1="56" y1="430" x2="1344" y2="430"/>
+  <text class="row" x="56" y="473">Superpowers 6.1.1</text>
+  <rect class="track" x="350" y="450" width="280" height="30" rx="5"/>
+  <rect class="time" x="350" y="450" width="280" height="30" rx="5"/>
+  <text class="value inverse" x="621" y="471" text-anchor="end">7,402.714 s</text>
+  <rect class="track" x="690" y="450" width="280" height="30" rx="5"/>
+  <rect class="token" x="690" y="450" width="280" height="30" rx="5"/>
+  <text class="value inverse" x="961" y="471" text-anchor="end">29,059,764</text>
+  <rect class="track" x="1030" y="450" width="300" height="30" rx="5"/>
+  <rect class="cost" x="1030" y="450" width="300" height="30" rx="5"/>
+  <text class="value inverse" x="1321" y="471" text-anchor="end">$25.360443</text>
+
+  <line class="rule" x1="56" y1="514" x2="1344" y2="514"/>
+  <text class="note" x="56" y="550">每个指标各用自己的真实线性刻度：value / column max；仅在同列内比较。</text>
+  <text class="note" x="56" y="579">数字标签为精确绝对累计值。归一化成本以 Spark 的 Luna-equivalent proxy 计入；它是授权归一化估算，并非账单。</text>
+  <text class="note" x="56" y="624">方法说明：冻结的三任务汇总。结果仅为描述性结果，并不构成普遍性能保证。</text>
+</svg>

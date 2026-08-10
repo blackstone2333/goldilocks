@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
-VERSION = "0.5.0-alpha.2"
-EXPERIMENT_POLICY = "0.5.0-alpha.2-exp3.2"
+VERSION = "0.5.0"
+EXPERIMENT_POLICY = "0.5.0"
 
 
 def read(path: Path) -> str:
@@ -63,9 +63,11 @@ def main() -> None:
 
     routing = read(SKILL / "references" / "model-routing.md")
     for marker in (
-        "gpt-5.6-luna` as the universal Fast baseline",
-        "gpt-5.3-codex-spark` instead",
-        "gpt-5.6-terra` as the OpenAI Standard baseline",
+        "gpt-5.3-codex-spark` at XHigh",
+        "gpt-5.6-terra` at Medium",
+        "gpt-5.6-luna` at Max",
+        "Spark is ineligible for pure documents",
+        "Night Shift is a delivery mode",
         "record_routing_outcome.py",
         "verified_pass",
         "verified_fail",
@@ -100,9 +102,29 @@ def main() -> None:
         "<tier>__<semantic>_<model>",
         "why Fast is ineligible",
         "missing native Luna role",
+        "inside an HTML comment",
+        "host-confirmed successful starts/active workers",
+        "at most three delegated items plus `+N`",
     ):
         if marker not in orchestrate:
             failures.append(f"routing-rationale experiment lacks: {marker}")
+
+    route_card = read(SKILL / "references" / "route-card.md")
+    for marker in (
+        "user's primary language",
+        "canonical comment or both languages",
+        "ROUTE=mixed | TEAM=Lead+3 workers",
+        "路由=混合｜团队=主模型+3 个子智能体",
+        "主模型更快",
+        "共享写入面",
+        "审核成本",
+        "并行收益",
+        "额度收益",
+        "host-confirmed successful starts",
+        "never `PLANNED_DISPATCH`",
+    ):
+        if marker not in route_card:
+            failures.append(f"localized route receipt lacks: {marker}")
 
     dispatcher = read(SKILL / "scripts" / "dispatch_codex_worker.py")
     for marker in (
@@ -131,7 +153,7 @@ def main() -> None:
             failures.append(f"outcome recorder lacks: {marker}")
 
     registry = json.loads(read(SKILL / "assets" / "model-registry.json"))
-    if registry["as_of"] != "2026-07-31":
+    if registry["as_of"] != "2026-08-10":
         failures.append("model registry date was not refreshed")
     current = registry.get("current_openai_pricing", {})
     expected_prices = {

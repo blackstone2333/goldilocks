@@ -30,41 +30,42 @@ from model_naming import model_name_suffix, visible_task_name  # noqa: E402
 
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
+TERRA_MODEL = "gpt-5.6-terra"
 FAST_MODELS = {
     "luna": LUNA_MODEL,
+    "terra-standard": TERRA_MODEL,
     "spark-coding": SPARK_MODEL,
     # Backward-compatible aliases from Goldilocks <= 0.4.4.
     "general": LUNA_MODEL,
     "coding": SPARK_MODEL,
 }
-TASK_NAME_PATTERN = re.compile(r"^fast__[a-z0-9][a-z0-9_-]*$")
+TASK_NAME_PATTERN = re.compile(r"^(?:fast|standard)__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
-POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
+POLICY_VERSION = "0.5.0"
 
 
 def parser() -> argparse.ArgumentParser:
     value = argparse.ArgumentParser(
         description=(
-            "Run a complete Fast execution contract with Luna by default, or use Spark's "
-            "separate coding route for deterministic code batches."
+            "Run one complete Goldilocks worker contract with Luna, Terra, or Spark."
         )
     )
     value.add_argument("--workdir", required=True, type=Path, help="Assigned repository or worktree.")
-    value.add_argument("--task-name", required=True, help="A fast__-prefixed routing name.")
+    value.add_argument("--task-name", required=True, help="A fast__- or standard__-prefixed routing name.")
     value.add_argument("--task-file", required=True, type=Path, help="UTF-8 execution contract.")
     value.add_argument(
         "--work-type",
         choices=tuple(FAST_MODELS),
         default=None,
         help=(
-            "luna selects the universal Fast default; spark-coding selects the separately "
-            "metered code specialist. general and coding remain compatibility aliases."
+            "luna selects Economy/Fast, terra-standard selects bounded Standard, and "
+            "spark-coding selects the separate-pool coding specialist."
         ),
     )
     value.add_argument(
         "--reasoning-effort",
-        choices=("low", "medium", "high", "xhigh"),
+        choices=("low", "medium", "high", "xhigh", "max"),
         default=None,
         help="Use low for mechanical work; raise only when the contract needs it.",
     )
@@ -246,7 +247,7 @@ def worker_environment(capabilities: str) -> Iterator[dict[str, str]]:
 
 
 def build_prompt(task_name: str, work_type: str, workdir: Path, contract: str) -> str:
-    return f"""You are a Goldilocks Fast leaf. The owner fixed the material decisions.
+    return f"""You are a contracted Goldilocks worker. The owner fixed the material decisions.
 
 Implement and verify only the contract below in the assigned workspace.
 
@@ -318,11 +319,11 @@ def resolve_audit_dir(explicit: Path | None) -> Path | None:
 def route_role(work_type: str, profile_name: str | None = None) -> str:
     if profile_name:
         return profile_name
-    return (
-        "goldilocks_spark_coder"
-        if work_type in {"spark-coding", "coding"}
-        else "goldilocks_luna_worker"
-    )
+    if work_type == "terra-standard":
+        return "goldilocks_terra_engineer"
+    if work_type in {"spark-coding", "coding"}:
+        return "goldilocks_spark_coder"
+    return "goldilocks_luna_worker"
 
 
 def authorization_active(root: Path | None, model: str, billing_channel: str) -> bool:
@@ -700,7 +701,7 @@ def main() -> int:
 
     requested_task_name = args.task_name.strip().lower()
     if not TASK_NAME_PATTERN.fullmatch(requested_task_name):
-        fail(arguments, "task-name must start with fast__ and contain only letters, digits, _ or -")
+        fail(arguments, "task-name must start with fast__ or standard__ and contain only letters, digits, _ or -")
 
     workdir = args.workdir.expanduser().resolve()
     if not workdir.is_dir():

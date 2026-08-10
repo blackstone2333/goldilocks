@@ -18,15 +18,15 @@ import model_economics as economics
 
 
 DEFAULT_EXPERIMENT = "routing-rationale-v3.2"
-ROUTE_LINE = re.compile(
-    r"^ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
+ROUTE_FIELDS = (
+    r"ROUTE=(direct|fast|standard|mixed)\s*\|\s*"
     r"WRITE_READY=(\d+)\s*\|\s*READ_READY=(\d+)\s*\|\s*"
     r"EXISTING=(\d+)\s*\|\s*"
     r"(?:PLANNED_DISPATCH|NEW_DISPATCH)=(\d+)\s*\|\s*"
-    r"LEAD=(.*?)\s*\|\s*REASON=([a-z_]+)\s*\|\s*DETAIL=(.+?)\s*$",
-    re.MULTILINE,
+    r"LEAD=(.*?)\s*\|\s*REASON=([a-z_]+)\s*\|\s*DETAIL=(.+?)"
 )
-ANY_ROUTE_LINE = re.compile(r"^ROUTE=(?:direct|fast|standard|mixed)\b.*$", re.MULTILINE)
+ROUTE_LINE = re.compile(rf"^{ROUTE_FIELDS}$")
+CANONICAL_ROUTE_COMMENT = re.compile(rf"<!--\s*({ROUTE_FIELDS})\s*-->", re.DOTALL)
 
 
 def default_database() -> Path:
@@ -502,7 +502,7 @@ def load_decisions(paths: Iterable[Path], candidate_ids: set[str]) -> dict[str, 
                     turn_id, message = assistant_text(record)
                     if turn_id not in candidate_ids:
                         continue
-                    lines = ANY_ROUTE_LINE.findall(message)
+                    lines = [match.group(1) for match in CANONICAL_ROUTE_COMMENT.finditer(message)]
                     if not lines:
                         continue
                     bucket = decisions.setdefault(turn_id, [])

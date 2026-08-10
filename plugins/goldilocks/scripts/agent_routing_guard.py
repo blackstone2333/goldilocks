@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_name_suffix, visible_task_name
 
 
-POLICY_VERSION = "0.5.0-alpha.2-exp3.2"
+POLICY_VERSION = "0.5.0"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
@@ -31,6 +31,7 @@ ROUTE_PREFIXES = {
     "standard__": "standard",
     "lead__": "lead",
 }
+SEMANTIC_NAME_PATTERN = re.compile(r"[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?")
 ROUTE_PROFILES_FILE = (
     Path(__file__).resolve().parent.parent
     / "skills"
@@ -89,6 +90,38 @@ def rewrite_visible_task_name(tool_input: dict[str, Any], model: str) -> dict[st
         str(tool_input.get("task_name") or ""), model
     )
     return rewritten
+
+
+def has_strict_visible_task_name(task_name: str, model: str) -> bool:
+    """Require `<tier>__<semantic>_<actual-model-suffix>` after normalization."""
+    normalized = task_name.strip().lower()
+    tier = classify(normalized)
+    if tier is None:
+        return False
+    prefix = next(prefix for prefix, value in ROUTE_PREFIXES.items() if value == tier)
+    suffix = model_name_suffix(model)
+    ending = f"_{suffix}"
+    if not suffix or not normalized.endswith(ending):
+        return False
+    semantic = normalized[len(prefix) : -len(ending)]
+    return bool(semantic and SEMANTIC_NAME_PATTERN.fullmatch(semantic))
+
+
+def canonical_visible_task_name(
+    tool_input: dict[str, Any], model: str
+) -> dict[str, Any] | None:
+    rewritten = rewrite_visible_task_name(tool_input, model)
+    if not has_strict_visible_task_name(str(rewritten.get("task_name") or ""), model):
+        return None
+    return rewritten
+
+
+def deny_invalid_visible_name() -> None:
+    deny(
+        "Goldilocks requires every visible child name to be exactly "
+        "<tier>__<semantic>_<model>. Use a nonempty lowercase semantic name; "
+        "the Hook derives the actual model suffix."
+    )
 
 
 def valid_fork_turns(tier: str, raw_value: object) -> tuple[bool, str]:
@@ -393,7 +426,10 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 f"remove the conflicting {requested_effort} override."
             )
             return
-        rewritten = rewrite_visible_task_name(tool_input, expected_model)
+        rewritten = canonical_visible_task_name(tool_input, expected_model)
+        if rewritten is None:
+            deny_invalid_visible_name()
+            return
         rewritten.pop("model", None)
         rewritten.pop("reasoning_effort", None)
         rewritten.pop("service_tier", None)
@@ -429,7 +465,10 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 "or Spark is unavailable, use the packaged dispatch_codex_worker.py adapter."
             )
             return
-        rewritten = rewrite_visible_task_name(tool_input, requested_model)
+        rewritten = canonical_visible_task_name(tool_input, requested_model)
+        if rewritten is None:
+            deny_invalid_visible_name()
+            return
         record_plan(
             payload,
             rewritten,
@@ -454,7 +493,10 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         if not inherited_model:
             deny("Goldilocks could not identify the parent Lead model for the full-history handoff.")
             return
-        rewritten = rewrite_visible_task_name(tool_input, inherited_model)
+        rewritten = canonical_visible_task_name(tool_input, inherited_model)
+        if rewritten is None:
+            deny_invalid_visible_name()
+            return
         rewritten.pop("model", None)
         rewritten.pop("reasoning_effort", None)
         rewritten.pop("service_tier", None)
@@ -479,7 +521,10 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         )
         return
 
-    rewritten = rewrite_visible_task_name(tool_input, requested_model)
+    rewritten = canonical_visible_task_name(tool_input, requested_model)
+    if rewritten is None:
+        deny_invalid_visible_name()
+        return
     record_plan(
         payload,
         rewritten,
