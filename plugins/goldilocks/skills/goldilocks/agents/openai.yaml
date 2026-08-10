@@ -6,4 +6,4 @@ interface:
   brand_color: "#D4A72C"
   default_prompt: "Use $goldilocks to choose and execute the smallest workflow that preserves full quality."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
