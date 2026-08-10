@@ -1,6 +1,6 @@
 ---
 name: goldilocks
-description: Use only when explicitly asked to apply Goldilocks, choose a workflow, replace Superpowers, or calibrate project process. This is a thin router; clear Direct work exits without loading another workflow Skill or reference.
+description: Invoke implicitly before any executable software-development or project task to choose the smallest quality-preserving workflow across Direct work, diagnosis, planning, delegation, continuity, and verification; clear tasks immediately exit Direct.
 ---
 
 # Goldilocks
