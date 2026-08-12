@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.1-2ea44f" alt="版本 0.5.1">
+  <img src="https://img.shields.io/badge/version-0.5.2-2ea44f" alt="版本 0.5.2">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
@@ -34,7 +34,7 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 C
 把下面这段直接发给你正在使用的 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.1，并锁定 Git ref v0.5.1。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.2，并锁定 Git ref v0.5.2。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
 ```
 
 ### Codex CLI 或 Desktop
@@ -42,7 +42,7 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 C
 优先安装原生 Plugin。它会带上根门禁、生命周期 Hook、Usage 统计、更新检查，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -322,6 +322,6 @@ Spark 没有公开数值费率。统一比较采用官方已知模型价格，�
 
 ## 当前状态
 
-Goldilocks `v0.5.1` 是稳定版。[最终质量合格的对比](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)中两组都通过，但相对已发布 v0.5.0 是 Pareto 取舍：wall −10.997%、输出 −13.624%；Raw Token +39.777%、官方 USD +15.727%、工具调用 +33.333%。所有公开性能结论均限定在已链接的冻结评测范围内。
+Goldilocks `v0.5.2` 是稳定版。这是针对 Python 3.9 上合法重复 `[[skills.config]]` TOML array-of-tables 的 Bootstrap 兼容性补丁，不宣称性能变化。[v0.5.1 最终质量合格的对比](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)仍作为历史证据保留，并维持其原有 Pareto 边界。
 
 MIT 许可证。由 Charles Roc 和贡献者开发。Goldilocks 是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。

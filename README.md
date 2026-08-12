@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.1-2ea44f" alt="Version 0.5.1">
+  <img src="https://img.shields.io/badge/version-0.5.2-2ea44f" alt="Version 0.5.2">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
@@ -34,7 +34,7 @@ This page is written for people. If you are an AI agent evaluating the repositor
 Copy this into your current agent:
 
 ```text
-Install Goldilocks v0.5.1 from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.1. Detect the host first. Use the native Plugin on Codex CLI or Desktop; use the native Plugin on Claude Code; use portable Skills on another compatible host. Do not enable Goldilocks with Superpowers. Invoke $goldilocks-bootstrap only for first install, upgrade, or repair. Show its plan, request approval only when required, then apply and check. Report unsupported host capabilities as skipped and leave unrelated configuration unchanged.
+Install Goldilocks v0.5.2 from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.5.2. Detect the host first. Use the native Plugin on Codex CLI or Desktop; use the native Plugin on Claude Code; use portable Skills on another compatible host. Do not enable Goldilocks with Superpowers. Invoke $goldilocks-bootstrap only for first install, upgrade, or repair. Show its plan, request approval only when required, then apply and check. Report unsupported host capabilities as skipped and leave unrelated configuration unchanged.
 ```
 
 ### Codex CLI or Desktop
@@ -42,7 +42,7 @@ Install Goldilocks v0.5.1 from https://github.com/blackstone2333/goldilocks usin
 Use the native Plugin. It provides the root gate, lifecycle Hooks, Usage reporting, update awareness, and the Sol/Terra/Spark/Luna companion agents.
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -322,6 +322,6 @@ These results support replacing Superpowers on the tested workflow surface; they
 
 ## Status
 
-Goldilocks `v0.5.1` is the stable release. Its [final quality-valid comparison](benchmarks/V051-RELEASE-EVIDENCE.md) passed both arms, but is a Pareto tradeoff against published v0.5.0: wall −10.997% and output −13.624%; raw tokens +39.777%, official USD +15.727%, and tool calls +33.333%. Public performance claims are limited to the linked frozen evaluations.
+Goldilocks `v0.5.2` is the stable release. It is a Bootstrap compatibility patch for valid repeated `[[skills.config]]` TOML array-of-tables on Python 3.9; it makes no performance claim. The [v0.5.1 final quality-valid comparison](benchmarks/V051-RELEASE-EVIDENCE.md) remains historical evidence, with its original Pareto limits.
 
 MIT licensed. Developed by Charles Roc and contributors. Goldilocks is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail, Caveman, and ADHD; those projects do not endorse it.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "experiment": "v0.5.1-hybrid-routing",
+  "experiment": "v0.5.2-hybrid-routing",
   "economics": {
     "registry": "model-economics.json",
     "decision": "quality gate, then billing-pool cost, elapsed-time and raw-token Pareto comparison",

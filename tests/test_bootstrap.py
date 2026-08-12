@@ -325,6 +325,115 @@ def main() -> None:
             )
         )["experience"] == "full"
 
+        # A normal user configuration may repeat an array-of-tables header.
+        # That is valid TOML, not a duplicate table declaration.  Bootstrap must
+        # preserve it byte-for-byte, recognize its four own registrations, and
+        # behave the same through Python 3.9's bundled Tomli fallback.
+        array_target, array_config = root / "array-agents", root / "array-config.toml"
+        array_config_text = (
+            'model = "gpt-5.6-sol"\n'
+            "[features.multi_agent_v2]\n"
+            "enabled = true\n\n"
+            "[[skills.config]]\n"
+            'name = "first-user-skill"\n'
+            'enabled = true\n\n'
+            'agents = ["x"]\n'
+            "[skills.config.options]\n"
+            'scope = "first"\n\n'
+            "[[skills.config]]\n"
+            'name = "second-user-skill"\n'
+            'enabled = false\n'
+            'agents = ["y"]\n'
+            "[skills.config.options]\n"
+            'scope = "second"\n\n'
+        )
+        declarations = bootstrap_module().role_declarations(array_target, array_config)
+        for role, fields in declarations.items():
+            array_config_text += (
+                f"[agents.{role}]\n"
+                f"description = {json.dumps(fields['description'])}\n"
+                f"config_file = {json.dumps(fields['config_file'])}\n"
+            )
+        array_config.write_text(array_config_text, encoding="utf-8")
+        for force_fallback in (False, True):
+            array_module = bootstrap_module()
+            saved_tomllib = array_module.tomllib
+            if force_fallback:
+                array_module.tomllib = None
+            try:
+                decoded, preserved_raw = array_module.read_config(array_config)
+                states, _ = array_module.classify_registration_data(array_target, array_config, decoded)
+                assert preserved_raw == array_config_text
+                assert len(decoded["skills"]["config"]) == 2
+                assert [entry["options"]["scope"] for entry in decoded["skills"]["config"]] == ["first", "second"]
+                assert [entry["agents"] for entry in decoded["skills"]["config"]] == [["x"], ["y"]]
+                assert set(states.values()) == {"current"}
+            finally:
+                array_module.tomllib = saved_tomllib
+        array_plan = output(
+            command(
+                "--plan", "--json", "--host", "codex", "--target-dir", str(array_target),
+                "--config-file", str(array_config), "--state-dir", str(root / "array-state"),
+                env=trusted_environment,
+            )
+        )
+        assert set(array_plan["registrations"].values()) == {"current"}
+
+        # The same legal repeated array form must not interfere with bounded
+        # append: retain all user TOML and add only missing owned role tables.
+        bounded_target, bounded_config = root / "bounded-agents", root / "bounded-config.toml"
+        one_role = "goldilocks_spark_worker"
+        bounded_declarations = bootstrap_module().role_declarations(bounded_target, bounded_config)
+        bounded_config_text = array_config_text.split(f"[agents.{one_role}]", 1)[0]
+        bounded_config_text += (
+            f"[agents.{one_role}]\n"
+            f"description = {json.dumps(bounded_declarations[one_role]['description'])}\n"
+            f"config_file = {json.dumps(bounded_declarations[one_role]['config_file'])}\n"
+        )
+        bounded_config.write_text(bounded_config_text, encoding="utf-8")
+        bounded = output(
+            command(
+                "--apply", "--yes", "--json", "--host", "codex", "--target-dir", str(bounded_target),
+                "--config-file", str(bounded_config), "--state-dir", str(root / "bounded-state"),
+                env=trusted_environment,
+            )
+        )
+        assert set(bounded["registered"]) == {
+            "goldilocks_luna_economy", "goldilocks_terra_engineer", "goldilocks_sol_reviewer",
+        }
+        bounded_text = bounded_config.read_text(encoding="utf-8")
+        assert bounded_text.startswith(bounded_config_text)
+        assert bounded_text.count("[[skills.config]]") == 2
+        assert output(
+            command(
+                "--check", "--json", "--host", "codex", "--target-dir", str(bounded_target),
+                "--config-file", str(bounded_config), "--state-dir", str(root / "bounded-state"),
+                env=trusted_environment,
+            )
+        )["status"] == "current"
+
+        # General TOML structure is owned by the actual decoder, so repeated
+        # ordinary tables still fail closed without depending on scanner text.
+        duplicate_normal_config = root / "duplicate-normal-table.toml"
+        duplicate_normal_config.write_text(
+            "[features.multi_agent_v2]\nenabled = true\n"
+            "[features.multi_agent_v2]\nenabled = false\n",
+            encoding="utf-8",
+        )
+        for force_fallback in (False, True):
+            duplicate_module = bootstrap_module()
+            saved_tomllib = duplicate_module.tomllib
+            if force_fallback:
+                duplicate_module.tomllib = None
+            try:
+                try:
+                    duplicate_module.read_config(duplicate_normal_config)
+                    raise AssertionError("duplicate normal table must fail closed")
+                except ValueError as error:
+                    assert "invalid TOML" in str(error)
+            finally:
+                duplicate_module.tomllib = saved_tomllib
+
         # Semantic TOML parsing recognizes a quoted role-table key, then preserves
         # that exact raw table while appending only the other declarations.
         quoted_target, quoted_config = root / "quoted-agents", root / "quoted-config.toml"
@@ -717,7 +826,7 @@ print(module.discover_native_plugin('codex') or '')
         assert partial_plan["native_plugin"] == "absent"
         assert partial_plan["hook_trust_handoff"]["status"] == "skipped"
         assert partial_plan["plugin_actions"] == [
-            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.5.1", "--json"],
+            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.5.2", "--json"],
             ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
         ]
         assert partial_plan["portable_cleanup"]["executed_by_bootstrap"] is False
@@ -739,7 +848,7 @@ print(module.discover_native_plugin('codex') or '')
         assert upgraded["experience"] == "full" and upgraded["status"] == "installed"
         assert [row["command"] for row in upgraded["plugin_action_results"]] == partial_plan["plugin_actions"]
         calls = (root / "codex.log").read_text(encoding="utf-8")
-        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.5.1 --json" in calls
+        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.5.2 --json" in calls
         assert "plugin add goldilocks@goldilocks-local --json" in calls
         assert "npx" not in calls
         assert output(

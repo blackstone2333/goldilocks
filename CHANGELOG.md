@@ -2,6 +2,13 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.2 — 2026-08-12
+
+### Bootstrap compatibility patch
+
+- Fixed the Python 3.9 Bootstrap TOML validation path to accept a valid repeated `[[skills.config]]` array-of-tables while preserving fail-closed, zero-write behavior for duplicate ordinary tables, nonstandard agent declarations, and conflicting configuration.
+- Bootstrap still does not modify Hook trust automatically; that decision remains with the host and user.
+
 ## 0.5.1 — 2026-08-12
 
 ### Native visibility, safe setup, and measured defaults

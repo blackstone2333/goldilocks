@@ -26,7 +26,7 @@ requires a verified native plugin, all four exact templates, and all four exact 
 registrations; template files alone are only a partial setup. A full pack reuses Hooks,
 usage, and update facilities; `/hooks` remains user review required and Bootstrap never
 invents a trusted hash. A portable-only Codex plan is `experience=partial`: its initial
-plan visibly includes the locked v0.5.1
+plan visibly includes the locked v0.5.2
 marketplace and plugin actions, which run only after the first `--yes`. Failure leaves
 the portable Skill and installed agents intact as partial; Bootstrap never self-removes.
 Apply returns a newly read final state, not its old plan: a registration-only repair is

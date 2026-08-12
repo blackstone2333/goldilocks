@@ -426,8 +426,11 @@ def parse_agent_tables(raw: str) -> dict[str, dict[str, str | None]]:
     """
 
     tables: dict[str, dict[str, str | None]] = {}
+    # ``current`` is the complete current TOML context, including array-table
+    # elements.  It is only used to protect Bootstrap's top-level ``agents``
+    # namespace; general TOML validity belongs to tomllib/Tomli below.
     current: list[str] | None = None
-    seen_tables: set[tuple[str, ...]] = set()
+    seen_agent_roles: set[str] = set()
     multiline: str | None = None
     for line_number, line in enumerate(raw.splitlines(), 1):
         if multiline is not None:
@@ -445,19 +448,19 @@ def parse_agent_tables(raw: str) -> dict[str, dict[str, str | None]]:
                 path, array = parse_table_header(line)
             except ValueError as error:
                 raise ValueError(f"invalid TOML table header on line {line_number}") from error
-            semantic = tuple(path)
-            if semantic in seen_tables:
-                raise ValueError(f"duplicate TOML table on line {line_number}")
-            seen_tables.add(semantic)
             if path and path[0] == "agents":
                 if array:
                     raise ValueError("unsupported TOML agents array table")
                 if len(path) != 2:
                     raise ValueError("unsupported TOML agents table declaration")
-            current = None if array else path
+                role = path[1]
+                if role in seen_agent_roles:
+                    raise ValueError(f"duplicate TOML agents table on line {line_number}")
+                seen_agent_roles.add(role)
+            current = path
             if not array and len(path) == 2 and path[0] == "agents":
                 role = path[1]
-                table = tables.setdefault(role, {})
+                tables[role] = {}
             continue
         assignment = split_toml_assignment(line)
         if assignment is None:
@@ -769,7 +772,7 @@ def plugin_actions(host: str, verified_plugin: bool) -> list[list[str]]:
     return [
         [
             "codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks",
-            "--ref", "v0.5.1", "--json",
+            "--ref", "v0.5.2", "--json",
         ],
         ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
     ]

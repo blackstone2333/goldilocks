@@ -2,14 +2,14 @@
 
 对 Codex CLI 和 Desktop，Goldilocks 默认以原生 Plugin 安装。portable Agent Skills 用于其他兼容宿主，或作为临时 Bootstrap 来源。
 
-## 推荐：在 Codex 中以原生 Plugin 安装稳定版 v0.5.1
+## 推荐：在 Codex 中以原生 Plugin 安装稳定版 v0.5.2
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.2
 codex plugin add goldilocks@goldilocks-local
 ```
 
-该命令锁定稳定版 Git ref。插件 manifest 已是 `0.5.1`，但本地插件缓存可能仍较旧，`~/.codex/agents` 也可能只保留旧的 Terra/Sol 模板。
+该命令锁定稳定版 Git ref。插件 manifest 已是 `0.5.2`，但本地插件缓存可能仍较旧，`~/.codex/agents` 也可能只保留旧的 Terra/Sol 模板。
 
 仅在首次安装、升级或安装修复时调用独立的 `$goldilocks-bootstrap` Skill；它绝不进入普通任务路由。在仓库 checkout 根目录中，它的脚本是：
 
@@ -48,11 +48,11 @@ Bootstrap 会自动识别 Codex 及其原生插件，只会安全升级字节完
 
 开源的 [`skills` CLI](https://github.com/vercel-labs/skills) 支持 Claude Code、Cursor、OpenCode、GitHub Copilot、Gemini CLI 等兼容宿主。在 Codex 上，仅当原生 Plugin 尚不可用或需要临时 Bootstrap 来源时使用它。
 
-[skills.sh 页面](https://skills.sh/blackstone2333/goldilocks/goldilocks)默认跟随仓库主分支作为稳定通道，目前没有单独的预发布通道。只安装一个通道。下方不锁版本的命令跟随稳定 `main`；历史 Alpha Tag 仅用于复现。若要精确锁定 portable `v0.5.1`，分别从 Tag 路径安装两个 Skill：
+[skills.sh 页面](https://skills.sh/blackstone2333/goldilocks/goldilocks)默认跟随仓库主分支作为稳定通道，目前没有单独的预发布通道。只安装一个通道。下方不锁版本的命令跟随稳定 `main`；历史 Alpha Tag 仅用于复现。若要精确锁定 portable `v0.5.2`，分别从 Tag 路径安装两个 Skill：
 
 ```bash
-npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.1/plugins/goldilocks/skills/goldilocks --skill goldilocks
-npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.1/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.2/plugins/goldilocks/skills/goldilocks --skill goldilocks
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.5.2/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
 ```
 
 交互式安装：
@@ -101,7 +101,7 @@ npx skills update --global --yes
 ## Codex 原生 Plugin 说明
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.1
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.2
 codex plugin add goldilocks@goldilocks-local
 ```
 

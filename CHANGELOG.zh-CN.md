@@ -2,6 +2,13 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.5.2 — 2026-08-12
+
+### Bootstrap 兼容性补丁
+
+- 修复 Python 3.9 Bootstrap TOML 校验路径：合法的重复 `[[skills.config]]` array-of-tables 现在可通过；重复普通表、非标准 agent 声明和冲突配置仍保持 fail-closed、零写入拒绝。
+- Bootstrap 仍不会自动修改 Hook 信任；该决定始终由宿主和用户作出。
+
 ## 0.5.1 — 2026-08-12
 
 ### 原生可见性、安全安装与可测量默认值

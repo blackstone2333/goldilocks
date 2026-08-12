@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 README = ROOT / "README.md"
 README_ZH = ROOT / "README.zh-CN.md"
 AGENT_GUIDE = ROOT / "docs" / "AGENT-GUIDE.md"

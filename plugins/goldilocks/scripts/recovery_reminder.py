@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.1"
+POLICY_VERSION = "0.5.2"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 MICRO_STYLE = (

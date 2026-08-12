@@ -1,4 +1,4 @@
-# Goldilocks v0.5.1: Agent Guide
+# Goldilocks v0.5.2: Agent Guide
 
 This guide is for an AI agent that has been given the Goldilocks repository and needs
 to decide—quickly but with evidence—whether to recommend, install, use, or verify it.
@@ -11,7 +11,7 @@ external/destructive action.
 
 | Project fact | Value |
 |---|---|
-| Current release | `v0.5.1` stable |
+| Current release | `v0.5.2` stable Bootstrap compatibility patch |
 | Primary host path | Native Codex Plugin |
 | Portable path | Skills-compatible hosts and temporary Bootstrap fallback |
 | Normal default | Direct, with no workflow state and one compact localized route receipt |
@@ -181,8 +181,13 @@ is explicit; it installs only the byte-verified companion templates, refuses mod
 user files, and may append only the four missing official `[agents.*]` registrations to
 `config.toml` while preserving all other settings and comments. Conflicting declarations abort
 without a write. On Codex, it prefers a valid enabled native
-plugin, otherwise can present locked v0.5.1 plugin actions. It never self-removes a
+plugin, otherwise can present locked v0.5.2 plugin actions. It never self-removes a
 portable Skill; it emits a cleanup handoff only after native plugin and agents verify.
+
+The v0.5.2 patch only restores Python 3.9 compatibility for valid repeated
+`[[skills.config]]` TOML array-of-tables. Duplicate ordinary tables, nonstandard agent
+declarations, and conflicting configuration remain rejected with no write; Bootstrap
+does not modify Hook trust automatically.
 
 Hook trust is a host decision. Bootstrap presents exactly one of three choices:
 

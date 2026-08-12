@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
-CURRENT_VERSION = "0.5.1"
+CURRENT_VERSION = "0.5.2"
 CORRECTED_RESULTS = (
     ROOT
     / "benchmarks"

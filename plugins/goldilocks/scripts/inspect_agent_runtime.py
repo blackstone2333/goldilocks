@@ -278,7 +278,7 @@ def main() -> None:
                         transport, fork_turns, status, prior_observations, planned_at, started_at,
                         stopped_at, actual_model, agent_id, correlation_confidence, policy_version
                     ) VALUES (?, ?, '', ?, ?, ?, ?, ?, '', ?, ?, ?, ?, NULL,
-                        'native', 'none', ?, 0, ?, ?, ?, ?, ?, 'posthoc_role_observed', '0.5.1')
+                        'native', 'none', ?, 0, ?, ?, ?, ?, ?, 'posthoc_role_observed', '0.5.2')
                     """,
                     (
                         decision_id, session.get("parent_thread_id"), f"posthoc:{args.thread_id}",

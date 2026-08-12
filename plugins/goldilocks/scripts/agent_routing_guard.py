@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_name_suffix, visible_task_name
 
 
-POLICY_VERSION = "0.5.1"
+POLICY_VERSION = "0.5.2"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
