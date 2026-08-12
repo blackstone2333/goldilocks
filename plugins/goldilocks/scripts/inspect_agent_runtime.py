@@ -10,8 +10,12 @@ import json
 import os
 import re
 import sqlite3
+import sys
 from pathlib import Path
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from model_naming import model_name_suffix
 
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 PROFILES = (
@@ -21,6 +25,29 @@ PROFILES = (
     / "assets"
     / "codex-route-profiles.json"
 )
+ROUTE_PREFIXES = {"fast__": "fast", "standard__": "standard", "lead__": "lead"}
+SEMANTIC_NAME = re.compile(r"[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$")
+
+
+def canonical_native_name(agent_path: object, profile: dict[str, object]) -> str:
+    """Return a rollout's independently visible canonical native task name.
+
+    Native ``SubagentStart`` can arrive before the host has supplied its path.
+    This deliberately accepts the later rollout only when it contains the exact
+    route name implied by the native profile; it never guesses a name from role.
+    """
+    name = str(agent_path or "").rsplit("/", 1)[-1].strip().lower()
+    tier = str(profile.get("tier") or "")
+    model = str(profile.get("model") or "")
+    prefix = next((value for value, value_tier in ROUTE_PREFIXES.items() if value_tier == tier), "")
+    suffix = model_name_suffix(model)
+    ending = f"_{suffix}"
+    if not name or not prefix or not suffix or not name.startswith(prefix) or not name.endswith(ending):
+        raise ValueError("rollout agent_path is not a canonical native task name")
+    semantic = name[len(prefix) : -len(ending)]
+    if not semantic or SEMANTIC_NAME.fullmatch(semantic) is None:
+        raise ValueError("rollout agent_path is not a canonical native task name")
+    return name
 
 
 def parser() -> argparse.ArgumentParser:
@@ -146,6 +173,7 @@ def main() -> None:
         "parent_thread_id": session.get("parent_thread_id"),
         "agent_role": role,
         "agent_path": session.get("agent_path"),
+        "task_name": str(session.get("agent_path") or "").rsplit("/", 1)[-1] or None,
         "model_provider": session.get("model_provider"),
         "model": model,
         "effort": effort,
@@ -163,7 +191,7 @@ def main() -> None:
             connection.row_factory = sqlite3.Row
             execution = connection.execute(
                 """
-                SELECT execution.decision_id, decision.status
+                SELECT execution.*, decision.status
                 FROM executions AS execution
                 LEFT JOIN decisions AS decision
                     ON decision.decision_id = execution.decision_id
@@ -175,50 +203,111 @@ def main() -> None:
                 raise ValueError(
                     f"no SubagentStart audit row exists for child {args.thread_id}"
                 )
-            if not execution["decision_id"]:
-                raise ValueError(
-                    f"child {args.thread_id} is not correlated to a routing decision"
-                )
             if str(execution["status"] or "").startswith("verified_"):
                 raise ValueError(
                     f"child {args.thread_id} is already {execution['status']}; "
                     "runtime evidence is immutable after Lead verification"
                 )
-            connection.execute(
-                """
-                UPDATE executions SET actual_agent_type = ?, actual_model = ?,
-                    actual_effort = ?, sandbox_policy_type = ?,
-                    permission_profile_type = ?, input_tokens = ?,
-                    cached_input_tokens = ?, output_tokens = ? WHERE agent_id = ?
-                """,
-                (
-                    role,
-                    model,
-                    effort,
-                    sandbox,
-                    permission,
-                    usage.get("input_tokens"),
-                    usage.get("cached_input_tokens"),
-                    usage.get("output_tokens"),
-                    args.thread_id,
-                ),
-            )
             if execution["decision_id"]:
-                task_name = str(session.get("agent_path") or role).rsplit("/", 1)[-1]
-                observed_cwd = str(result["cwd"] or "")
                 connection.execute(
                     """
-                    UPDATE decisions SET actual_model = ?, task_name = ?, cwd_hash = ?,
-                        task_fingerprint = ? WHERE decision_id = ?
+                    UPDATE executions SET actual_agent_type = ?, actual_model = ?,
+                        actual_effort = ?, sandbox_policy_type = ?,
+                        permission_profile_type = ?, input_tokens = ?,
+                        cached_input_tokens = ?, output_tokens = ? WHERE agent_id = ?
+                    """,
+                    (
+                        role, model, effort, sandbox, permission,
+                        usage.get("input_tokens"), usage.get("cached_input_tokens"),
+                        usage.get("output_tokens"), args.thread_id,
+                    ),
+                )
+                connection.execute(
+                    """
+                    UPDATE decisions SET actual_model = ? WHERE decision_id = ?
                     """,
                     (
                         model,
-                        task_name,
-                        hashlib.sha256(observed_cwd.encode()).hexdigest(),
-                        hashlib.sha256(task_name.lower().encode()).hexdigest(),
                         execution["decision_id"],
                     ),
                 )
+            else:
+                # A native start may be observed before Codex includes its path
+                # and effort.  It is not reusable then.  A later rollout can
+                # repair that one narrow state only when it independently proves
+                # role, exact canonical name, parent session and native profile.
+                if expected is None:
+                    raise ValueError("child is not a recognized native Goldilocks role")
+                task_name = canonical_native_name(session.get("agent_path"), expected)
+                if execution["correlation_confidence"] not in {
+                    "name_unverified", "name_mismatch"
+                }:
+                    raise ValueError(
+                        f"child {args.thread_id} is not eligible for posthoc native correlation"
+                    )
+                if str(execution["session_id"] or "") != str(session.get("parent_thread_id") or ""):
+                    raise ValueError("rollout parent_thread_id does not match the observed parent session")
+                for field, observed in {
+                    "actual_agent_type": role,
+                    "actual_model": model,
+                    "actual_effort": effort,
+                }.items():
+                    recorded = execution[field]
+                    if recorded is not None and str(recorded) != str(observed):
+                        raise ValueError(f"observed {field} conflicts with the original child start")
+                existing = connection.execute(
+                    "SELECT decision_id FROM decisions WHERE agent_id = ?", (args.thread_id,)
+                ).fetchone()
+                if existing is not None:
+                    raise ValueError("child already has a different routing decision")
+
+                observed_cwd = str(result["cwd"] or "")
+                decision_id = f"posthoc:{args.thread_id}"
+                started_at = str(execution["started_at"] or "")
+                if not started_at:
+                    raise ValueError("observed child has no start time for posthoc correlation")
+                stopped_at = execution["stopped_at"]
+                status = "stopped" if stopped_at else "started"
+                connection.execute("BEGIN IMMEDIATE")
+                connection.execute(
+                    """
+                    INSERT INTO decisions (
+                        decision_id, session_id, turn_id, tool_use_id, cwd_hash,
+                        task_fingerprint, task_name, tier, parent_model, expected_model,
+                        expected_agent_type, expected_effort, expected_sandbox, billing_channel,
+                        transport, fork_turns, status, prior_observations, planned_at, started_at,
+                        stopped_at, actual_model, agent_id, correlation_confidence, policy_version
+                    ) VALUES (?, ?, '', ?, ?, ?, ?, ?, '', ?, ?, ?, ?, NULL,
+                        'native', 'none', ?, 0, ?, ?, ?, ?, ?, 'posthoc_role_observed', '0.5.1')
+                    """,
+                    (
+                        decision_id, session.get("parent_thread_id"), f"posthoc:{args.thread_id}",
+                        hashlib.sha256(observed_cwd.encode()).hexdigest(),
+                        hashlib.sha256(task_name.lower().encode()).hexdigest(), task_name,
+                        expected["tier"], model, role, effort,
+                        expected.get("sandbox"), status, started_at, started_at, stopped_at,
+                        model, args.thread_id,
+                    ),
+                )
+                updated = connection.execute(
+                    """
+                    UPDATE executions SET decision_id = ?, expected_model = ?,
+                        actual_model = ?, expected_agent_type = ?, actual_agent_type = ?,
+                        expected_effort = ?, actual_effort = ?, expected_sandbox = ?,
+                        sandbox_policy_type = ?, permission_profile_type = ?, input_tokens = ?,
+                        cached_input_tokens = ?, output_tokens = ?, correlation_confidence = ?
+                    WHERE agent_id = ? AND decision_id IS NULL
+                        AND correlation_confidence IN ('name_unverified', 'name_mismatch')
+                    """,
+                    (
+                        decision_id, model, model, role, role, effort, effort,
+                        expected.get("sandbox"), sandbox, permission,
+                        usage.get("input_tokens"), usage.get("cached_input_tokens"),
+                        usage.get("output_tokens"), "posthoc_role_observed", args.thread_id,
+                    ),
+                )
+                if updated.rowcount != 1:
+                    raise ValueError("child changed during posthoc native correlation")
         result["recorded"] = True
     print(json.dumps(result, sort_keys=True))
 

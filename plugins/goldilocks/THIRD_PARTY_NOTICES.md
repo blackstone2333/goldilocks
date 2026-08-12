@@ -36,3 +36,13 @@ Goldilocks is an independent implementation influenced by workflow concepts in t
 - Goldilocks adopts decision-first, bounded-step, tangent-suppression, and matter-of-fact error-shaping ideas without forcing per-turn state repetition or user handoffs.
 
 Each project is distributed under the MIT License. See its source repository for the original license and notices.
+
+## Tomli 2.0.1
+
+Bootstrap vendors Tomli 2.0.1 under
+`skills/goldilocks-bootstrap/scripts/_vendor/tomli/` solely to provide complete TOML
+validation on Python 3.9 and 3.10. Tomli is licensed under the MIT License; its exact
+license text is included at
+`skills/goldilocks-bootstrap/scripts/_vendor/tomli/LICENSE`.
+
+Source: https://github.com/hukkin/tomli/tree/2.0.1

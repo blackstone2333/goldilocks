@@ -34,7 +34,7 @@ def run_hook(
     turn_id: str = "test-turn",
     tool_use_id: str | None = None,
     reasoning_effort: str | None = None,
-    agent_type: str = "default",
+    agent_type: str | None = None,
     sandbox_policy_type: str = "danger-full-access",
     permission_profile_type: str = "disabled",
     agent_path: str | None = None,
@@ -60,11 +60,12 @@ def run_hook(
         payload.update(
             {
                 "agent_id": agent_id,
-                "agent_type": agent_type,
                 "sandbox_policy": {"type": sandbox_policy_type},
                 "permission_profile": {"type": permission_profile_type},
             }
         )
+        if agent_type is not None:
+            payload["agent_type"] = agent_type
         if reasoning_effort is not None:
             payload["reasoning_effort"] = reasoning_effort
         if agent_path is not None:
@@ -122,7 +123,10 @@ def denial_reason(result: subprocess.CompletedProcess[str]) -> str:
 
 def assert_silent(result: subprocess.CompletedProcess[str], reason: str) -> None:
     assert result.returncode == 0, result.stderr
-    assert result.stdout == "", reason
+    if result.stdout == "":
+        return
+    output = hook_output(result)
+    assert output.get("permissionDecision") == "allow" and "updatedInput" in output, reason
 
 
 def test_hook_matcher_contract() -> None:
@@ -159,6 +163,14 @@ def spawn_input(
     }
     if model is not None:
         value["model"] = model
+        fixed_roles = {
+            SPARK_MODEL: "goldilocks_spark_worker",
+            LUNA_MODEL: "goldilocks_luna_economy",
+            TERRA_MODEL: "goldilocks_terra_engineer",
+            LEAD_MODEL: "goldilocks_sol_reviewer",
+        }
+        if model in fixed_roles:
+            value["agent_type"] = fixed_roles[model]
     if reasoning_effort is not None:
         value["reasoning_effort"] = reasoning_effort
     return value
@@ -216,33 +228,50 @@ def test_pre_tool_contract(data_dir: Path) -> None:
     )
     assert "explicit model" in denial_reason(fast_without_model)
 
-    fast_terra_input = spawn_input(
-        "fast__inspect_logs",
+    terra_input = spawn_input(
+        "standard__inspect_logs",
         fork_turns="none",
         model=TERRA_MODEL,
-        reasoning_effort="low",
+        reasoning_effort="medium",
     )
     fast_terra = run_hook(
         data_dir,
         "PreToolUse",
         tool_name="collaboration.spawn_agent",
-        tool_input=fast_terra_input,
+        tool_input=terra_input,
         tool_use_id="fast-terra-explicit",
     )
     terra_rewrite = hook_output(fast_terra)["updatedInput"]
-    assert terra_rewrite["task_name"] == "fast__inspect_logs_terra"
+    assert terra_rewrite["task_name"] == "standard__inspect_logs_terra"
     recorded_fast = next(
         row for row in rows(data_dir, "decisions") if row["tool_use_id"] == "fast-terra-explicit"
     )
     assert recorded_fast["expected_model"] == TERRA_MODEL
     assert recorded_fast["fork_turns"] == "none"
-    assert recorded_fast["task_name"] == "fast__inspect_logs_terra"
+    assert recorded_fast["task_name"] == "standard__inspect_logs_terra"
+
+    generic_fixed_model = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input={
+            **spawn_input("standard__generic_terra", fork_turns="none", model=TERRA_MODEL),
+            "agent_type": "default",
+        },
+    )
+    assert "agent_type=goldilocks_terra_engineer" in denial_reason(generic_fixed_model)
+
+    suffix_cannot_select_role = run_hook(
+        data_dir,
+        "PreToolUse",
+        tool_input=spawn_input("fast__suffix_only_spark", fork_turns="none"),
+    )
+    assert "agent_type=goldilocks_spark_worker" in denial_reason(suffix_cannot_select_role)
 
     fast_spark_input = spawn_input(
         "fast__spark_when_available",
         fork_turns="none",
         model=SPARK_MODEL,
-        reasoning_effort="low",
+        reasoning_effort="xhigh",
     )
     fast_spark = run_hook(
         data_dir,
@@ -260,7 +289,7 @@ def test_pre_tool_contract(data_dir: Path) -> None:
             "fast__summarize_logs_terra",
             fork_turns="none",
             model=LUNA_MODEL,
-            reasoning_effort="low",
+            reasoning_effort="max",
         ),
         tool_use_id="fast-luna-visible-name",
     )
@@ -277,7 +306,10 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         ),
         tool_use_id="fast-luna-already-named",
     )
-    assert_silent(already_named, "a truthful existing suffix must not be rewritten")
+    already_named_update = hook_output(already_named)["updatedInput"]
+    assert already_named_update["task_name"] == "fast__already_named_luna"
+    assert already_named_update["agent_type"] == "goldilocks_luna_economy"
+    assert "model" not in already_named_update
 
     missing_semantic = run_hook(
         data_dir,
@@ -349,7 +381,9 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         ),
         tool_use_id="standard-explicit",
     )
-    assert_silent(standard, "valid explicit Standard routing should pass through")
+    standard_update = hook_output(standard)["updatedInput"]
+    assert standard_update["agent_type"] == "goldilocks_terra_engineer"
+    assert "model" not in standard_update
 
     lead = run_hook(
         data_dir,
@@ -357,13 +391,15 @@ def test_pre_tool_contract(data_dir: Path) -> None:
         model=LEAD_MODEL,
         tool_input=spawn_input(
             "lead__security_review_sol",
-            fork_turns="1",
+            fork_turns="none",
             model=LEAD_MODEL,
             reasoning_effort="high",
         ),
         tool_use_id="lead-explicit",
     )
-    assert_silent(lead, "bounded explicit Lead routing should pass through")
+    lead_update = hook_output(lead)["updatedInput"]
+    assert lead_update["agent_type"] == "goldilocks_sol_reviewer"
+    assert "model" not in lead_update
 
     lead_full_history = run_hook(
         data_dir,
@@ -411,6 +447,7 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         session_id=session,
         agent_id="spark-agent",
         model=SPARK_MODEL,
+        agent_type="goldilocks_spark_worker",
         turn_id="spark-child-turn",
     )
     assert_silent(spark_start, "Spark Start must uniquely match the Fast Spark decision A")
@@ -420,6 +457,7 @@ def test_unique_model_correlation(data_dir: Path) -> None:
         session_id=session,
         agent_id="terra-agent",
         model=TERRA_MODEL,
+        agent_type="goldilocks_terra_engineer",
         turn_id="terra-child-turn",
     )
     assert_silent(terra_start, "Terra Start must uniquely match Terra decision B")
@@ -458,7 +496,11 @@ def test_ambiguous_same_model_correlation(data_dir: Path) -> None:
         model=TERRA_MODEL,
         turn_id="ambiguous-child-turn",
     )
-    assert_silent(started, "ambiguous correlation must not emit a concrete mismatch")
+    ambiguous_context = output_json(started)["hookSpecificOutput"]["additionalContext"]
+    assert "identity/correlation violation" in ambiguous_context
+    assert "return immediately" in ambiguous_context
+    assert "result cannot be used" in ambiguous_context
+    assert "agent_type=goldilocks_terra_engineer" in ambiguous_context
     execution = next(
         row
         for row in rows(data_dir, "executions")
@@ -475,16 +517,17 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="stop-decision",
-        tool_input=spawn_input("fast__stop_target_terra", fork_turns="none", model=TERRA_MODEL),
+        tool_input=spawn_input("fast__stop_target_spark", fork_turns="none", model=SPARK_MODEL),
     )
-    assert_silent(planned, "explicit Terra Fast plan should be recorded")
+    assert_silent(planned, "explicit Spark Fast plan should be recorded")
     started = run_hook(
         data_dir,
         "SubagentStart",
         session_id=session,
         agent_id="stopped-agent",
-        model=TERRA_MODEL,
-        reasoning_effort="high",
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
     )
     assert_silent(started, "matching start should stay silent")
     recursive_recorded_fast = run_hook(
@@ -492,7 +535,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         agent_id="stopped-agent",
-        model=TERRA_MODEL,
+        model=SPARK_MODEL,
         tool_input=spawn_input("fast__must_not_delegate", fork_turns="none"),
     )
     assert "leaf" in denial_reason(recursive_recorded_fast).lower()
@@ -501,7 +544,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         "SubagentStop",
         session_id=session,
         agent_id="stopped-agent",
-        model=TERRA_MODEL,
+        model=SPARK_MODEL,
         turn_id="stop-turn",
     )
     assert_silent(stopped, "SubagentStop should stay silent")
@@ -530,7 +573,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         connection.execute(
             "UPDATE executions SET actual_model = ?, actual_effort = NULL "
             "WHERE agent_id = 'stopped-agent'",
-            (TERRA_MODEL,),
+            (SPARK_MODEL,),
         )
     missing_effort = record_outcome(
         data_dir, "stopped-agent", "pass", "must fail without observed effort"
@@ -563,7 +606,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
 
     with sqlite3.connect(data_dir / "orchestration.db") as connection:
         connection.execute(
-            "UPDATE executions SET permission_profile_type = 'disabled' "
+            "UPDATE executions SET permission_profile_type = 'disabled', actual_effort = 'xhigh' "
             "WHERE agent_id = 'stopped-agent'"
         )
 
@@ -583,7 +626,7 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
         row
         for row in rows(data_dir, "experiences")
         if row["task_fingerprint"] == decision["task_fingerprint"]
-        and row["model"] == TERRA_MODEL
+        and row["model"] == SPARK_MODEL
     )
     assert experience["verified_passes"] == 1
     assert experience["verified_failures"] == 0
@@ -606,9 +649,9 @@ def test_real_mismatch(data_dir: Path) -> None:
         "PreToolUse",
         session_id=session,
         tool_use_id="mismatch-decision",
-        tool_input=spawn_input("fast__focused_tests_terra", fork_turns="none", model=TERRA_MODEL),
+        tool_input=spawn_input("standard__focused_tests_terra", fork_turns="none", model=TERRA_MODEL),
     )
-    assert_silent(planned, "explicit Terra Fast plan should be recorded")
+    assert_silent(planned, "explicit Terra Standard plan should be recorded")
     mismatch = run_hook(
         data_dir,
         "SubagentStart",
@@ -641,24 +684,283 @@ def test_unplanned_sol_immediate_return(data_dir: Path) -> None:
     assert "Fast/Standard" in context
     assert "return immediately" in context.lower()
 
+    masquerading_standard = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="masquerading-sol-session",
+        model=LEAD_MODEL,
+        agent_id="masquerading-sol-agent",
+        agent_path="/root/standard__hidden_work_terra",
+    )
+    masquerading_context = output_json(masquerading_standard)["hookSpecificOutput"]["additionalContext"]
+    assert "result cannot be used" in masquerading_context
+    assert "agent_type=goldilocks_terra_engineer" in masquerading_context
+
+    noncanonical_lead = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="noncanonical-lead-session",
+        model=LEAD_MODEL,
+        agent_id="noncanonical-lead-agent",
+        agent_path="/root/lead__critical_review",
+    )
+    noncanonical_lead_context = output_json(noncanonical_lead)["hookSpecificOutput"][
+        "additionalContext"
+    ]
+    assert "quota violation" in noncanonical_lead_context.lower()
+    assert "return immediately" in noncanonical_lead_context.lower()
+
     explicit_lead = run_hook(
         data_dir,
         "SubagentStart",
         session_id="explicit-lead-session",
         model=LEAD_MODEL,
         agent_id="explicit-lead-agent",
-        agent_path="/root/lead__critical_review",
+        agent_path="/root/lead__critical_review_sol",
     )
-    assert_silent(explicit_lead, "explicit lead__ starts remain allowed")
+    assert_silent(explicit_lead, "canonical explicit Lead starts remain allowed")
 
-    unplanned_terra = run_hook(
+    for label, model, role in (
+        ("terra", TERRA_MODEL, "goldilocks_terra_engineer"),
+        ("luna", LUNA_MODEL, "goldilocks_luna_economy"),
+        ("spark", SPARK_MODEL, "goldilocks_spark_worker"),
+    ):
+        generic_fixed = run_hook(
+            data_dir,
+            "SubagentStart",
+            session_id=f"unplanned-{label}-session",
+            model=model,
+            agent_id=f"unplanned-{label}-agent",
+            agent_type="explorer",
+            agent_path=f"/root/fast__spoofed_{label}" if label != "terra" else "/root/standard__spoofed_terra",
+        )
+        generic_context = output_json(generic_fixed)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "identity violation" in generic_context
+        assert "return immediately" in generic_context
+        assert "without reading files" in generic_context
+        assert "calling tools" in generic_context
+        assert "result cannot be used" in generic_context
+        assert f"agent_type={role}" in generic_context
+
+    missing_identity = run_hook(
         data_dir,
         "SubagentStart",
-        session_id="unplanned-terra-session",
+        session_id="unplanned-missing-identity-session",
         model=TERRA_MODEL,
-        agent_id="unplanned-terra-agent",
+        agent_id="unplanned-missing-identity-agent",
     )
-    assert_silent(unplanned_terra, "unplanned Terra starts remain silent")
+    missing_context = output_json(missing_identity)["hookSpecificOutput"][
+        "additionalContext"
+    ]
+    assert "identity violation" in missing_context
+    assert "a generic agent" in missing_context
+    assert "return immediately" in missing_context
+    assert "result cannot be used" in missing_context
+    assert "agent_type=goldilocks_terra_engineer" in missing_context
+
+    for label, model, role, prefix in (
+        ("terra", TERRA_MODEL, "goldilocks_terra_engineer", "standard"),
+        ("luna", LUNA_MODEL, "goldilocks_luna_economy", "fast"),
+        ("spark", SPARK_MODEL, "goldilocks_spark_worker", "fast"),
+    ):
+        for identity_label, actual_agent_type in (("missing", None), ("generic", "explorer")):
+            single_session = f"single-{label}-{identity_label}-identity-session"
+            single_plan = run_hook(
+                data_dir,
+                "PreToolUse",
+                session_id=single_session,
+                tool_use_id=f"single-{label}-{identity_label}-identity",
+                tool_input=spawn_input(
+                    f"{prefix}__single_{label}_{identity_label}_{label}",
+                    fork_turns="none",
+                    model=model,
+                ),
+            )
+            assert_silent(single_plan, f"the explicit {label} contract should be planned")
+            single_invalid = run_hook(
+                data_dir,
+                "SubagentStart",
+                session_id=single_session,
+                model=model,
+                agent_id=f"single-{label}-{identity_label}-agent",
+                agent_type=actual_agent_type,
+            )
+            single_context = output_json(single_invalid)["hookSpecificOutput"][
+                "additionalContext"
+            ]
+            observed = actual_agent_type or "unknown"
+            assert "routing mismatch" in single_context.lower()
+            assert f"agent type expected {role}, observed {observed}" in single_context
+            assert "Do not execute" in single_context
+            assert "return immediately" in single_context.lower()
+            assert "without reading files" in single_context
+            assert "calling tools" in single_context
+            assert "result cannot be used" in single_context
+
+    ambiguous_session = "ambiguous-fixed-model-session"
+    for index in (1, 2):
+        planned = run_hook(
+            data_dir,
+            "PreToolUse",
+            session_id=ambiguous_session,
+            tool_use_id=f"ambiguous-fixed-{index}",
+            tool_input=spawn_input(
+                f"standard__ambiguous_fixed_{index}_terra",
+                fork_turns="none",
+                model=TERRA_MODEL,
+            ),
+        )
+        assert_silent(planned, "both explicit Terra contracts should be planned")
+    ambiguous_fixed = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id=ambiguous_session,
+        model=TERRA_MODEL,
+        agent_id="ambiguous-fixed-agent",
+        agent_type="explorer",
+    )
+    ambiguous_context = output_json(ambiguous_fixed)["hookSpecificOutput"][
+        "additionalContext"
+    ]
+    assert "identity/correlation violation" in ambiguous_context
+    assert "return immediately" in ambiguous_context
+    assert "result cannot be used" in ambiguous_context
+    assert "agent_type=goldilocks_terra_engineer" in ambiguous_context
+
+
+def test_unplanned_native_observation_requires_canonical_name(data_dir: Path) -> None:
+    canonical = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="native-canonical-session",
+        agent_id="native-canonical-agent",
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
+        agent_path="/root/fast__focused_patch_spark",
+    )
+    assert_silent(canonical, "a canonical native child name earns role_observed")
+    canonical_execution = next(
+        row
+        for row in rows(data_dir, "executions")
+        if row["agent_id"] == "native-canonical-agent"
+    )
+    assert canonical_execution["correlation_confidence"] == "role_observed"
+    assert canonical_execution["decision_id"] is not None
+
+    missing_name = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id="native-missing-name-session",
+        agent_id="native-missing-name-agent",
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
+    )
+    missing_output = output_json(missing_name)
+    assert "did not expose a visible child name" in missing_output["systemMessage"]
+    missing_execution = next(
+        row
+        for row in rows(data_dir, "executions")
+        if row["agent_id"] == "native-missing-name-agent"
+    )
+    assert missing_execution["correlation_confidence"] == "name_unverified"
+    assert missing_execution["decision_id"] is None
+    assert missing_execution["actual_agent_type"] == "goldilocks_spark_worker"
+    assert missing_execution["actual_model"] == SPARK_MODEL
+    assert missing_execution["actual_effort"] == "xhigh"
+
+    for suffix, path, model in (
+        ("wrong-tier", "/root/standard__focused_patch_spark", SPARK_MODEL),
+        ("wrong-suffix", "/root/fast__focused_patch_luna", SPARK_MODEL),
+    ):
+        mismatch = run_hook(
+            data_dir,
+            "SubagentStart",
+            session_id=f"native-{suffix}-session",
+            agent_id=f"native-{suffix}-agent",
+            model=model,
+            reasoning_effort="xhigh",
+            agent_type="goldilocks_spark_worker",
+            agent_path=path,
+        )
+        mismatch_output = output_json(mismatch)
+        assert "does not match this role" in mismatch_output["systemMessage"]
+        mismatch_execution = next(
+            row
+            for row in rows(data_dir, "executions")
+            if row["agent_id"] == f"native-{suffix}-agent"
+        )
+        assert mismatch_execution["correlation_confidence"] == "name_mismatch"
+        assert mismatch_execution["decision_id"] is None
+
+    for role, expected_model in (
+        ("goldilocks_spark_worker", SPARK_MODEL),
+        ("goldilocks_luna_economy", LUNA_MODEL),
+        ("goldilocks_terra_engineer", TERRA_MODEL),
+        ("goldilocks_sol_reviewer", LEAD_MODEL),
+    ):
+        for other_model in (SPARK_MODEL, LUNA_MODEL, TERRA_MODEL, LEAD_MODEL):
+            if other_model == expected_model:
+                continue
+            mismatch = run_hook(
+                data_dir,
+                "SubagentStart",
+                session_id=f"native-{role}-{other_model}-mismatch-session",
+                agent_id=f"native-{role}-{other_model}-mismatch-agent",
+                model=other_model,
+                reasoning_effort="xhigh",
+                agent_type=role,
+            )
+            mismatch_output = output_json(mismatch)
+            mismatch_context = mismatch_output["hookSpecificOutput"]["additionalContext"]
+            assert "identity violation" in mismatch_output["systemMessage"].lower()
+            assert "return immediately" in mismatch_context.lower()
+            assert "without reading files" in mismatch_context
+            assert "calling tools" in mismatch_context
+            assert "result cannot be used" in mismatch_context
+            assert f"agent_type={role}" in mismatch_context
+            assert expected_model in mismatch_context
+            assert other_model in mismatch_context
+            mismatch_execution = next(
+                row
+                for row in rows(data_dir, "executions")
+                if row["agent_id"] == f"native-{role}-{other_model}-mismatch-agent"
+            )
+            assert mismatch_execution["correlation_confidence"] == "fixed_identity_mismatch"
+            assert mismatch_execution["decision_id"] is None
+
+    planned_session = "planned-native-session"
+    planned = run_hook(
+        data_dir,
+        "PreToolUse",
+        session_id=planned_session,
+        tool_use_id="planned-native-spark",
+        tool_input={
+            **spawn_input("fast__planned_native", fork_turns="none"),
+            "agent_type": "goldilocks_spark_worker",
+        },
+    )
+    assert hook_output(planned)["updatedInput"]["task_name"] == "fast__planned_native_spark"
+    correlated = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id=planned_session,
+        agent_id="planned-native-agent",
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
+    )
+    assert_silent(correlated, "a planned native route must not require host agent_path")
+    correlated_execution = next(
+        row
+        for row in rows(data_dir, "executions")
+        if row["agent_id"] == "planned-native-agent"
+    )
+    assert correlated_execution["correlation_confidence"] == "single"
+    assert correlated_execution["decision_id"] is not None
 
 
 def main() -> None:
@@ -672,6 +974,7 @@ def main() -> None:
         test_stop_reconnects_by_agent_id(data_dir)
         test_real_mismatch(data_dir)
         test_unplanned_sol_immediate_return(data_dir)
+        test_unplanned_native_observation_requires_canonical_name(data_dir)
 
     print("Goldilocks alpha agent routing hook contract passed.")
 

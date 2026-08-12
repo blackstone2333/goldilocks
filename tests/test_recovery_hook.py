@@ -8,6 +8,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -15,6 +16,21 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "recovery_reminder.py"
+
+
+@contextmanager
+def database(path: Path):
+    """Match sqlite3's transaction context while closing fixture connections."""
+
+    connection = sqlite3.connect(path)
+    try:
+        yield connection
+        connection.commit()
+    except BaseException:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def run_hook(
@@ -26,6 +42,7 @@ def run_hook(
     prompt: str = "Build and test the full-stack feature with the specialist Skill.",
     turn_id: str = "test-turn",
     session_roots: Path | None = None,
+    usage_visibility: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     payload = {
         "session_id": "test-session",
@@ -48,6 +65,8 @@ def run_hook(
         env.pop("PLUGIN_DATA", None)
     if session_roots is not None:
         env["GOLDILOCKS_SESSION_ROOTS"] = str(session_roots)
+    if usage_visibility is not None:
+        env["GOLDILOCKS_USAGE_VISIBILITY"] = usage_visibility
     return subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(payload),
@@ -71,7 +90,7 @@ def main() -> None:
         nested.mkdir(parents=True)
         data_dir = parent / "plugin-data"
         data_dir.mkdir()
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             connection.execute(
                 """
                 CREATE TABLE gate_injections (
@@ -93,13 +112,15 @@ def main() -> None:
 
         compact_without_recovery = run_hook(nested, "PostCompact")
         assert compact_without_recovery.returncode == 0, compact_without_recovery.stderr
-        assert compact_without_recovery.stdout == ""
+        compact_contract = json.loads(compact_without_recovery.stdout)["systemMessage"]
+        assert "visible response contract survived compaction" in compact_contract
+        assert "Usage is host-side and fail-silent" in compact_contract
 
         no_ledger_steer = run_hook(nested, "UserPromptSubmit", data_dir=data_dir)
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
         style_output = json.loads(no_ledger_steer.stdout)
         style_context = style_output["hookSpecificOutput"]["additionalContext"]
-        assert len(style_context.split()) <= 105
+        assert len(style_context.split()) <= 205
         assert "Lead with the result" in style_context
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
@@ -109,8 +130,14 @@ def main() -> None:
         assert "evidence-backed cause" in style_context
         assert "explicitly unknown" in style_context
         assert "fix and verification" in style_context
-        assert "Before final" not in style_context
+        assert "Every executable" in style_context
+        assert "exactly one localized visible Goldilocks route receipt" in style_context
+        assert "Usage is host-side and fail-silent" in style_context
+        assert "on-demand is the default" in style_context
+        assert "Bootstrap automatic opt-in" in style_context
         assert "usage_reporter.py" not in style_context
+        assert "codex plugin list" not in style_context
+        assert "<tier>__<semantic>_<model>" in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
         assert "goldilocks:goldilocks" in style_context
@@ -132,7 +159,126 @@ def main() -> None:
         cohesive_context = json.loads(cohesive.stdout)["hookSpecificOutput"]["additionalContext"]
         assert "Likely multi-unit work detected" not in cohesive_context
 
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        night_shift_discussion = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="我们讨论一下 Night Shift 夜班模式是否适合文档任务？",
+            turn_id="night-shift-discussion",
+        )
+        discussion_context = json.loads(night_shift_discussion.stdout)[
+            "hookSpecificOutput"
+        ]["additionalContext"]
+        assert "Night Shift 已选择" not in discussion_context
+        assert "Night Shift 建议" not in discussion_context
+
+        zh_mode_question = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="讨论怎么用 Night Shift；是否启用夜班来完成这份文档更合适？",
+            turn_id="night-shift-zh-question",
+        )
+        zh_question_context = json.loads(zh_mode_question.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "Night Shift 已选择" not in zh_question_context
+        assert "Night Shift 建议" not in zh_question_context
+
+        en_mode_question = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="What is Night Shift for, and should we enable Night Shift to complete the document?",
+            turn_id="night-shift-en-question",
+        )
+        en_question_context = json.loads(en_mode_question.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "Night Shift selected" not in en_question_context
+        assert "Night Shift suggestion" not in en_question_context
+
+        night_shift_luna = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="请用夜班/成本优先模式完成这份文档和调研，我可以等到明天。",
+            turn_id="night-shift-luna",
+        )
+        luna_context = json.loads(night_shift_luna.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        for phrase in (
+            "Night Shift 已选择",
+            "Luna Max",
+            "原生不可见时先用 Adapter",
+            "实际启动失败后才可标记 route_unavailable",
+        ):
+            assert phrase in luna_context, phrase
+
+        night_shift_spark = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="Please use Night Shift to fix this urgent deterministic coding bug before the deadline.",
+            turn_id="night-shift-spark",
+        )
+        spark_context = json.loads(night_shift_spark.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        for phrase in (
+            "Night Shift selected",
+            "Spark XHigh",
+            "Try the native employee first",
+            "try the adapter",
+            "observed start failure",
+        ):
+            assert phrase in spark_context, phrase
+
+        suggested = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="请完成这份文档；不着急，可以等，成本优先。",
+            turn_id="night-shift-suggestion",
+        )
+        suggested_context = json.loads(suggested.stdout)["hookSpecificOutput"]["additionalContext"]
+        assert "Night Shift 建议" in suggested_context
+        assert "不切换模型" in suggested_context
+        repeated_suggestion = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="请继续完成这份文档；不着急，可以等，成本优先。",
+            turn_id="night-shift-suggestion-repeat",
+        )
+        repeated_suggestion_context = json.loads(repeated_suggestion.stdout)[
+            "hookSpecificOutput"
+        ]["additionalContext"]
+        assert "Night Shift 建议" not in repeated_suggestion_context
+
+        no_database_night_shift = run_hook(
+            nested,
+            "UserPromptSubmit",
+            prompt="Please use Night Shift to complete this ordinary document task; it can wait.",
+            turn_id="night-shift-no-database",
+        )
+        assert no_database_night_shift.returncode == 0, no_database_night_shift.stderr
+        assert "Luna Max" in json.loads(no_database_night_shift.stdout)[
+            "hookSpecificOutput"
+        ]["additionalContext"]
+
+        with database(data_dir / "orchestration.db") as connection:
+            reminders = connection.execute(
+                "SELECT kind FROM night_shift_reminders ORDER BY kind"
+            ).fetchall()
+        assert [row[0] for row in reminders] == [
+            "explicit_luna",
+            "explicit_spark",
+            "suggestion",
+        ]
+
+        with database(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 "SELECT session_id, turn_id, cwd_hash, prompt_fingerprint, ledger_present, "
@@ -155,11 +301,15 @@ def main() -> None:
             data_dir / "orchestration.db"
         ).read_bytes(), "audit storage must not retain prompt text"
 
+        with database(data_dir / "orchestration.db") as connection:
+            audit_count_before_repeat = connection.execute(
+                "SELECT COUNT(*) FROM gate_injections"
+            ).fetchone()[0]
         repeated = run_hook(nested, "UserPromptSubmit", data_dir=data_dir)
         assert repeated.returncode == 0, repeated.stderr
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 2, "the same prompt turn must not add another audit record"
+        assert count == audit_count_before_repeat, "the same prompt turn must not add another audit record"
 
         multi_unit_prompt = (
             "请完成以下开发任务：\n"
@@ -167,7 +317,7 @@ def main() -> None:
             "2、实现 Agent 连接。\n"
             "3、补齐测试、文档和发布检查。"
         )
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             connection.execute(
                 "CREATE TABLE project_grants (cwd_hash TEXT PRIMARY KEY, active INTEGER, "
                 "granted_at TEXT, revoked_at TEXT, policy_version TEXT)"
@@ -206,7 +356,7 @@ def main() -> None:
             "TEAM/CONCURRENCY use host-confirmed starts/active workers",
             "never planned",
             "capacity is ? when unknown",
-            "Root Direct exit stays silent",
+            "Root Direct uses the compact visible response contract",
             "Shared writes",
             "explicit bounded-delegation grant",
             "current official input/cached/output rates",
@@ -218,8 +368,8 @@ def main() -> None:
             "why Fast is ineligible",
         ):
             assert phrase in rationale_context, phrase
-        assert len(rationale_context.split()) <= 285
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        assert len(rationale_context.split()) <= 420
+        with database(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rationale_row = connection.execute(
                 "SELECT routing_rationale_candidate, routing_experiment_id "
@@ -238,7 +388,7 @@ def main() -> None:
         started = datetime.now(timezone.utc) - timedelta(minutes=2)
         completed = started + timedelta(minutes=1)
         running = datetime.now(timezone.utc) - timedelta(seconds=10)
-        with sqlite3.connect(lifecycle_data / "orchestration.db") as connection:
+        with database(lifecycle_data / "orchestration.db") as connection:
             connection.execute(
                 "CREATE TABLE decisions (decision_id TEXT PRIMARY KEY, session_id TEXT, "
                 "tier TEXT, status TEXT)"
@@ -307,7 +457,7 @@ def main() -> None:
             "additionalContext"
         ]
         assert "1 completed worker outcome(s) remain unverified" in lifecycle_context
-        with sqlite3.connect(lifecycle_data / "orchestration.db") as connection:
+        with database(lifecycle_data / "orchestration.db") as connection:
             completed_row = connection.execute(
                 "SELECT stopped_at, elapsed_ms FROM executions "
                 "WHERE agent_id = 'completed-agent'"
@@ -337,14 +487,14 @@ def main() -> None:
             "additionalContext"
         ]
         assert "Likely multi-unit work detected" not in simple_context
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             simple_candidate = connection.execute(
                 "SELECT routing_rationale_candidate FROM gate_injections "
                 "WHERE turn_id = 'simple-change'"
             ).fetchone()[0]
         assert simple_candidate == 0
 
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             connection.execute(
                 "CREATE TABLE decisions (decision_id TEXT, session_id TEXT, tier TEXT, status TEXT)"
             )
@@ -443,7 +593,7 @@ def main() -> None:
         ):
             assert phrase in repeated_context, phrase
 
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 "SELECT turn_id, repeat_failure_signal, continuity_required "
@@ -476,20 +626,74 @@ def main() -> None:
         assert "continuity debt" in compact_debt
         assert ".goldilocks/ACTIVE.md" in compact_debt
         assert "repository evidence" in compact_debt
-        assert "usage_reporter.py" not in compact_debt
+        assert "Usage is host-side and fail-silent" in compact_debt
+
+        usage_turn = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="Show my current token usage, please.",
+            turn_id="usage-survives-compact",
+        )
+        assert usage_turn.returncode == 0, usage_turn.stderr
+        assert usage_turn.stdout.count("usage_reporter.py") == 1
+        usage_compact = run_hook(
+            nested, "PostCompact", data_dir=data_dir, turn_id="usage-survives-compact"
+        )
+        usage_compact_message = json.loads(usage_compact.stdout)["systemMessage"]
+        assert usage_compact_message.count("usage_reporter.py") == 1
+        assert "'--current','--turn-id','usage-survives-compact'" in usage_compact_message
+
+        automatic_turn = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="Translate this paragraph into French.",
+            turn_id="automatic-survives-compact",
+            usage_visibility="automatic",
+        )
+        assert automatic_turn.returncode == 0, automatic_turn.stderr
+        automatic_compact = run_hook(
+            nested, "PostCompact", data_dir=data_dir, turn_id="automatic-survives-compact"
+        )
+        automatic_compact_message = json.loads(automatic_compact.stdout)["systemMessage"]
+        assert automatic_compact_message.count("usage_reporter.py") == 1
+        assert "Automatic visible Usage is enabled" in automatic_compact_message
+        assert "'--current','--turn-id','automatic-survives-compact'" in automatic_compact_message
+
+        discussion_turn = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="What do you think about code review as a practice? Just discuss it.",
+            turn_id="discussion-does-not-survive-compact",
+            usage_visibility="automatic",
+        )
+        assert discussion_turn.returncode == 0, discussion_turn.stderr
+        discussion_compact = run_hook(
+            nested,
+            "PostCompact",
+            data_dir=data_dir,
+            turn_id="discussion-does-not-survive-compact",
+        )
+        assert "usage_reporter.py" not in json.loads(discussion_compact.stdout)["systemMessage"]
 
         ledger = repo / ".goldilocks" / "ACTIVE.md"
         ledger.parent.mkdir()
         ledger.write_text("# Active task\n", encoding="utf-8")
 
+        with database(data_dir / "orchestration.db") as connection:
+            audit_count_before_worker_events = connection.execute(
+                "SELECT COUNT(*) FROM gate_injections"
+            ).fetchone()[0]
         for event in ("SessionStart", "UserPromptSubmit", "PostCompact"):
             worker = run_hook(nested, event, worker=True, data_dir=data_dir)
             assert worker.returncode == 0, worker.stderr
             assert worker.stdout == "", f"Fast worker hook must stay silent for {event}"
 
-        with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        with database(data_dir / "orchestration.db") as connection:
             count = connection.execute("SELECT COUNT(*) FROM gate_injections").fetchone()[0]
-        assert count == 8, "Fast workers must not inject or audit the root gate"
+        assert count == audit_count_before_worker_events, "Fast workers must not inject or audit the root gate"
 
         session = run_hook(nested, "SessionStart")
         assert session.returncode == 0, session.stderr
@@ -511,10 +715,14 @@ def main() -> None:
         compact_output = json.loads(compact.stdout)
         assert "systemMessage" in compact_output
         assert str(ledger) in compact_output["systemMessage"]
-        assert "usage_reporter.py" not in compact_output["systemMessage"]
+        assert "Usage is host-side and fail-silent" in compact_output["systemMessage"]
 
         hooks = json.loads((PLUGIN / "hooks" / "hooks.json").read_text(encoding="utf-8"))
-        stable_command = hooks["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"]
+        stable_command = next(
+            hook["command"]
+            for hook in hooks["hooks"]["UserPromptSubmit"][0]["hooks"]
+            if "recovery_reminder.py" in hook["command"]
+        )
         fake_bin = parent / "fake-bin"
         fake_bin.mkdir()
         fake_codex = fake_bin / "codex"
@@ -558,8 +766,10 @@ def main() -> None:
         ]
         assert "Goldilocks zero-cost gate" in stable_context
 
-        assert "Before final" not in stable_context
+        assert "用量由宿主侧静默处理" in stable_context
         assert "usage_reporter.py" not in stable_context
+        assert "codex plugin list" not in stable_context
+        assert "路由=直接" in stable_context
 
     print("Goldilocks recovery hook contract passed.")
 

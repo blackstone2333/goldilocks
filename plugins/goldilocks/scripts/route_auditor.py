@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.0"
+POLICY_VERSION = "0.5.1"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 TRANSCRIPT_TAIL_BYTES = 16 * 1024 * 1024
 ROUTE_FIELDS = (

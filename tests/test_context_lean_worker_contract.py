@@ -14,12 +14,13 @@ README = ROOT / "README.md"
 README_ZH = ROOT / "README.zh-CN.md"
 AGENT_GUIDE = ROOT / "docs" / "AGENT-GUIDE.md"
 ROUTING = PLUGIN / "skills" / "goldilocks" / "references" / "model-routing.md"
+SOL_SPECIALISTS = PLUGIN / "skills" / "goldilocks" / "references" / "sol-specialists.md"
 ARTIFACTS = PLUGIN / "skills" / "goldilocks" / "references" / "artifacts.md"
 PRESENTATIONS = PLUGIN / "skills" / "goldilocks" / "references" / "presentations.md"
 REPORT = ROOT / "evals" / "results" / "2026-07-25-v040-structured-artifact-pilot.md"
 HOOKS = PLUGIN / "hooks" / "hooks.json"
 REGISTRY = PLUGIN / "skills" / "goldilocks" / "assets" / "model-registry.json"
-EXPECTED_HOOK_HASH = "58ead228c7f6a908bfcabcac25d502e176e9a40e4b111ad0d0e7f409171ac8de"
+EXPECTED_HOOK_HASH = "284ec6cfacb801282fc6ec693c5f635e0e10c9a0ed2d32c7a20c30b4245acdc4"
 
 
 failures: list[str] = []
@@ -75,6 +76,35 @@ require(
         "gpt-5.6-luna",
         "spark-coding",
         "luna",
+    ],
+)
+require(
+    SOL_SPECIALISTS,
+    [
+        "visible Codex task/thread",
+        "a hidden native subagent",
+        "permits two",
+        "../../../scripts/sol_specialist_registry.py reserve",
+        "Require explicit user authorization",
+        "`create_thread`",
+        "host `list_projects`",
+        "same local/worktree",
+        "lead__<semantic>_sol",
+        "Goldilocks · Sol 专员 · <semantic>",
+        "gpt-5.6-sol` with high reasoning",
+        "read/list/send",
+        "delivered origin return",
+        "Never expire reservations",
+        "independently audit the root project",
+        "persistent receipt",
+        "`execution`",
+        "`audit`",
+        "create another Sol specialist",
+        "Require a concise result",
+        "goldilocks_sol_reviewer",
+        "Project Hub",
+        "cross-project event bus",
+        "automatic synchronization",
     ],
 )
 require(

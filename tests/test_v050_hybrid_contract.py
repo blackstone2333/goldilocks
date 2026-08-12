@@ -12,6 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks"
+CURRENT_VERSION = "0.5.1"
 CORRECTED_RESULTS = (
     ROOT
     / "benchmarks"
@@ -210,8 +211,8 @@ def assert_release_matrix_table() -> None:
 def main() -> None:
     codex_manifest = json.loads(read(PLUGIN / ".codex-plugin" / "plugin.json"))
     claude_manifest = json.loads(read(PLUGIN / ".claude-plugin" / "plugin.json"))
-    assert codex_manifest["version"] == "0.5.0"
-    assert claude_manifest["version"] == "0.5.0"
+    assert codex_manifest["version"] == CURRENT_VERSION
+    assert claude_manifest["version"] == CURRENT_VERSION
 
     root = read(SKILL / "SKILL.md")
     for marker in (
@@ -279,11 +280,11 @@ def main() -> None:
         SKILL / "scripts" / "dispatch_codex_worker.py",
     ]
     for path in policy_files:
-        assert 'POLICY_VERSION = "0.5.0"' in read(path), path
+        assert f'POLICY_VERSION = "{CURRENT_VERSION}"' in read(path), path
 
     assert_release_matrix_table()
 
-    print("Goldilocks v0.5.0 hybrid contract passed.")
+    print(f"Goldilocks v{CURRENT_VERSION} hybrid contract passed; v0.5.0 matrix preserved.")
 
 
 if __name__ == "__main__":

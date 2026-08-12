@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 README = ROOT / "README.md"
 README_ZH = ROOT / "README.zh-CN.md"
 AGENT_GUIDE = ROOT / "docs" / "AGENT-GUIDE.md"
@@ -56,7 +56,16 @@ def main() -> None:
         "Direct exit",
         "Do not read any Goldilocks reference",
         "Do not invoke another Goldilocks skill",
-        "Do not announce the route",
+        "localized Direct receipt",
+        "If Direct later reveals",
+        "leave Direct and load only the matching engine",
+        "route-card.md",
+        "only when multiple units become real",
+        "orchestrate.md",
+        "only when dispatching",
+        "continuity.md",
+        "only when persistence is required",
+        "The root still supplies the localized receipt",
     ):
         if phrase not in root_skill:
             failures.append(f"Goldilocks root is missing zero-cost Direct rule: {phrase}")
@@ -202,7 +211,7 @@ def main() -> None:
         body = read(path)
         for marker in markers:
             if marker not in body:
-                failures.append(f"{path.name} lacks v0.5.0 feature visibility: {marker}")
+                failures.append(f"{path.name} lacks current-release feature visibility: {marker}")
 
     install_docs = {
         INSTALL: (

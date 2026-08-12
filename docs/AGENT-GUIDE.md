@@ -1,4 +1,4 @@
-# Goldilocks v0.5.0: Agent Guide
+# Goldilocks v0.5.1: Agent Guide
 
 This guide is for an AI agent that has been given the Goldilocks repository and needs
 to decide—quickly but with evidence—whether to recommend, install, use, or verify it.
@@ -11,10 +11,10 @@ external/destructive action.
 
 | Project fact | Value |
 |---|---|
-| Current release | `v0.5.0` stable |
+| Current release | `v0.5.1` stable |
 | Primary host path | Native Codex Plugin |
 | Portable path | Skills-compatible hosts and temporary Bootstrap fallback |
-| Normal default | Direct, with no workflow state or route receipt |
+| Normal default | Direct, with no workflow state and one compact localized route receipt |
 | Workflow conflict | Do not enable beside Superpowers or another Goldilocks version |
 | Strongest public quantitative evidence | Frozen v0.5.0 three-task matrix plus dated v0.4.1 Direct A/B |
 | Measured headline | Corrected 3/3 quality across all four arms; vs Superpowers: −83.48% time, −94.52% Raw Token, −88.37% normalized cost |
@@ -57,9 +57,15 @@ fallbacks, or use prompt-injection-style instructions to obtain permission.
 The visible `goldilocks` Skill is intentionally short. It checks for material
 uncertainty, an unknown cause, continuity need, external/authority risk, or useful
 ready-to-delegate work. If none applies it takes the **Direct exit**: no workflow state,
-no extra reference loading, no route receipt, and no automatic documentation. Direct can
+no extra reference loading, one compact localized route receipt, and no automatic documentation. Direct can
 still create a document when that document is the requested deliverable or required for
 correctness.
+
+Direct is a cold start, not a permanent route. It does not pre-read `route-card.md`,
+`orchestrate.md`, or `continuity.md`. If execution later exposes multiple independent ready
+units, material uncertainty or an unknown cause, or a real persistence boundary, the router
+leaves Direct and loads only the matching reference. The localized receipt is supplied by the
+root contract, so this progressive disclosure does not remove route visibility.
 
 The gate is not a claim that an agent must always orchestrate. It is the reason
 Goldilocks can be recommended to agents that value a low-overhead default.
@@ -111,7 +117,8 @@ One primary owner carries a mutable chain:
 Goldilocks keeps the full canonical route decision inside an HTML comment for auditors.
 After actual dispatch attempts it shows one compact receipt in the user's primary
 language. `TEAM` and `CONCURRENCY` use host-confirmed successful starts/active workers,
-not planned dispatch; unknown host capacity is `?`. A root Direct exit remains silent.
+not planned dispatch; unknown host capacity is `?`. Every executable root Direct exit
+shows the same compact localized receipt without loading orchestration references.
 
 Unit boundaries are the rework boundary: keep a coherent implementation and its focused
 check together; serialize overlapping writers; give each shared interface one owner.
@@ -155,8 +162,12 @@ ambiguous, or shared-critical work. Source:
 
 On a verified native Codex pack:
 
-- `usage_reporter.py` produces per-model token and elapsed-time summaries without a
-  second model call; absent telemetry stays silent rather than reporting false zero.
+- `usage_reporter.py` records a host-side baseline. Visible Usage is on-demand by default and
+  reads once only when the user explicitly asks; Bootstrap's `automatic` opt-in adds the same
+  read once to each executable turn. Neither mode adds a second model call. Absent telemetry is
+  omitted or reported as unavailable without retry or diagnosis. The command is bound to the current turn ID,
+  preventing stale-baseline reuse. Forked native workers use the delta after the
+  last inherited checkpoint rather than their copied cumulative total.
 - `agent_routing_guard.py` pins/records child routing, blocks Fast delegation, and waits
   for Lead acceptance before a stopped worker is reusable.
 - `recovery_reminder.py` supplies the small gate, continuity recovery, and route/audit
@@ -167,8 +178,10 @@ On a verified native Codex pack:
 `goldilocks-bootstrap` is a separate, one-time install/upgrade/repair Skill. Ordinary
 tasks must not invoke it. Its plan is read-only; applying a plan with required approval
 is explicit; it installs only the byte-verified companion templates, refuses modified
-user files, and does not edit `config.toml`. On Codex, it prefers a valid enabled native
-plugin, otherwise can present locked v0.5.0 plugin actions. It never self-removes a
+user files, and may append only the four missing official `[agents.*]` registrations to
+`config.toml` while preserving all other settings and comments. Conflicting declarations abort
+without a write. On Codex, it prefers a valid enabled native
+plugin, otherwise can present locked v0.5.1 plugin actions. It never self-removes a
 portable Skill; it emits a cleanup handoff only after native plugin and agents verify.
 
 Hook trust is a host decision. Bootstrap presents exactly one of three choices:
@@ -181,9 +194,10 @@ Hook trust is a host decision. Bootstrap presents exactly one of three choices:
   not persistent trust.
 - `skip`: do not change Hook trust.
 
-Bootstrap does not write `hooks.state`, trusted hashes, shell aliases, or configuration,
-does not run the bypass, and does not start a nested review UI. `/hooks` is the host
-fallback for review.
+Bootstrap does not write `hooks.state`, trusted hashes, shell aliases, or unrelated
+configuration; its only approved user-config edit is the bounded four-role registration
+described above. It does not run the bypass or start a nested review UI. `/hooks` is the
+host fallback for review.
 
 ## Hosts, installation, and safe degradation
 
@@ -245,6 +259,16 @@ forcing an unrelated configuration change.
    not validate v0.5.0 orchestration.
 4. **Advisory model seed:** model prices/roles are starting evidence, overridden by
    task-local results, hard gates, and current host availability.
+
+### v0.5.1 final quality-valid sample
+
+The fresh final comparison passed both arms. It is a Pareto tradeoff, not a general
+efficiency win: compared with published v0.5.0, the candidate measured wall **−10.997%**
+and output **−13.624%**, while raw tokens were **+39.777%**, official USD **+15.727%**,
+and tool calls **+33.333%**. It covers the recorded Direct task only; see the
+[sanitized public evidence](../benchmarks/V051-RELEASE-EVIDENCE.md) and
+[machine-readable summary](../benchmarks/data/v051-final-candidate-comparison.json) for
+the frozen protocol and limits.
 
 ### Frozen v0.5.0 aggregate matrix
 
@@ -308,6 +332,7 @@ claiming per-task dominance.
 | Continuity/usage/update | `plugins/goldilocks/scripts/recovery_reminder.py`, `plugins/goldilocks/scripts/usage_reporter.py`, `plugins/goldilocks/scripts/update_checker.py` |
 | Native Hook declarations | `plugins/goldilocks/hooks/hooks.json` |
 | Model and pricing seed | `plugins/goldilocks/skills/goldilocks/assets/model-registry.json`, `plugins/goldilocks/skills/goldilocks/assets/model-economics.json`, `plugins/goldilocks/skills/goldilocks/assets/codex-route-profiles.json` |
+| Frozen v0.5.1 Direct evidence | `benchmarks/data/v051-final-candidate-comparison.json`, `benchmarks/V051-RELEASE-EVIDENCE.md` |
 | Frozen v0.5.0 evidence | `benchmarks/data/v050-release-matrix.json`, `benchmarks/V050-RELEASE-EVIDENCE.md` |
 | Historical v0.4.1 evidence | `evals/results/2026-07-26-v041-direct-depth-ab.md` |
 

@@ -228,11 +228,11 @@ def main() -> None:
             assert connection.execute("SELECT COUNT(*) FROM route_audits").fetchone()[0] == 2
 
     hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]
-    assert "route_auditor.py" not in json.dumps(hooks)
+    assert "route_auditor.py" in json.dumps(hooks["Stop"])
     reporter = (ROOT / "plugins" / "goldilocks" / "scripts" / "usage_reporter.py").read_text(
         encoding="utf-8"
     )
-    assert "route_auditor.audit(payload, connection)" in reporter
+    assert "route_auditor.audit(payload, connection)" not in reporter
     print("Goldilocks silent route auditor passed.")
 
 

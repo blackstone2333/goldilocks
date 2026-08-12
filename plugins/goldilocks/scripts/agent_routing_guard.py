@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_name_suffix, visible_task_name
 
 
-POLICY_VERSION = "0.5.0"
+POLICY_VERSION = "0.5.1"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
@@ -54,6 +54,12 @@ def load_native_profiles() -> dict[str, dict[str, Any]]:
 
 
 NATIVE_PROFILES = load_native_profiles()
+FIXED_NATIVE_ROLE_BY_MODEL = {
+    str(profile["model"]): name for name, profile in NATIVE_PROFILES.items()
+}
+FIXED_NATIVE_ROLE_BY_SUFFIX = {
+    model_name_suffix(model): role for model, role in FIXED_NATIVE_ROLE_BY_MODEL.items()
+}
 
 
 def now() -> str:
@@ -116,11 +122,61 @@ def canonical_visible_task_name(
     return rewritten
 
 
+def native_observed_name_confidence(
+    payload: dict[str, Any], profile: dict[str, Any]
+) -> tuple[str, str]:
+    """Classify an unplanned native start without inventing a trusted route.
+
+    ``SubagentStart`` is observational: a host can expose the native role and
+    model while omitting the user-visible task name.  That is useful identity
+    evidence, but it is not enough to turn the run into a reusable
+    ``role_observed`` route.  Only a visible name that independently agrees
+    with the role's tier and model suffix earns that confidence.
+    """
+    expected_tier = str(profile.get("tier") or "")
+    expected_model = str(profile.get("model") or "")
+    actual_model = str(payload.get("model") or "")
+    if actual_model != expected_model:
+        return "", "fixed_identity_mismatch"
+
+    observed_name = str(payload.get("agent_path") or "").rsplit("/", 1)[-1]
+    if not observed_name:
+        return "", "name_unverified"
+    if (
+        classify(observed_name) != expected_tier
+        or not has_strict_visible_task_name(observed_name, expected_model)
+    ):
+        return observed_name, "name_mismatch"
+    return observed_name, "role_observed"
+
+
 def deny_invalid_visible_name() -> None:
     deny(
         "Goldilocks requires every visible child name to be exactly "
         "<tier>__<semantic>_<model>. Use a nonempty lowercase semantic name; "
         "the Hook derives the actual model suffix."
+    )
+
+
+def fixed_role_requested_by(task_name: str, model: str) -> str | None:
+    """Identify a fixed native role from an explicit model or visible suffix."""
+    if model in FIXED_NATIVE_ROLE_BY_MODEL:
+        return FIXED_NATIVE_ROLE_BY_MODEL[model]
+    normalized = task_name.strip().lower()
+    for suffix, role in FIXED_NATIVE_ROLE_BY_SUFFIX.items():
+        if suffix and normalized.endswith(f"_{suffix}"):
+            return role
+    return None
+
+
+def require_fixed_native_role(task_name: str, model: str, agent_type: str) -> str | None:
+    role = fixed_role_requested_by(task_name, model)
+    if role is None or agent_type == role:
+        return None
+    return (
+        f"Goldilocks fixed native routing requires agent_type={role}. "
+        "A task_name suffix never selects a model or role; retry with that explicit agent_type, "
+        "or use the packaged adapter/keep the work local when the native role is unavailable."
     )
 
 
@@ -399,7 +455,7 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
     fork_value = str(tool_input.get("fork_turns") or "").strip().lower()
     requested_agent_type = str(tool_input.get("agent_type") or "").strip()
     profile = NATIVE_PROFILES.get(requested_agent_type)
-    if profile is not None:
+    if profile is not None and not (tier == "lead" and fork_value == "all"):
         expected_tier = str(profile["tier"])
         expected_model = str(profile["model"])
         expected_effort = str(profile["reasoning_effort"])
@@ -456,8 +512,30 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
             )
         return
 
+    if tier == "lead" and fork_value == "all":
+        inherited_model = str(payload.get("model") or "")
+        if not inherited_model:
+            deny("Goldilocks could not identify the parent Lead model for the full-history handoff.")
+            return
+        rewritten = canonical_visible_task_name(tool_input, inherited_model)
+        if rewritten is None:
+            deny_invalid_visible_name()
+            return
+        rewritten.pop("model", None)
+        rewritten.pop("reasoning_effort", None)
+        rewritten.pop("service_tier", None)
+        rewritten.pop("agent_type", None)
+        record_plan(payload, rewritten, tier, inherited_model)
+        emit({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": rewritten}})
+        return
+
+    requested_model = str(tool_input.get("model") or "").strip()
+    fixed_role_error = require_fixed_native_role(task_name, requested_model, requested_agent_type)
+    if fixed_role_error:
+        deny(fixed_role_error)
+        return
+
     if tier == "fast":
-        requested_model = str(tool_input.get("model") or "").strip()
         if not requested_model:
             deny(
                 "Goldilocks requires an explicit model for native Fast subagents so they cannot "
@@ -488,32 +566,6 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
             )
         return
 
-    if tier == "lead" and fork_value == "all":
-        inherited_model = str(payload.get("model") or "")
-        if not inherited_model:
-            deny("Goldilocks could not identify the parent Lead model for the full-history handoff.")
-            return
-        rewritten = canonical_visible_task_name(tool_input, inherited_model)
-        if rewritten is None:
-            deny_invalid_visible_name()
-            return
-        rewritten.pop("model", None)
-        rewritten.pop("reasoning_effort", None)
-        rewritten.pop("service_tier", None)
-        rewritten.pop("agent_type", None)
-        record_plan(payload, rewritten, tier, inherited_model)
-        emit(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "allow",
-                    "updatedInput": rewritten,
-                }
-            }
-        )
-        return
-
-    requested_model = str(tool_input.get("model") or "").strip()
     if not requested_model:
         deny(
             f"Goldilocks requires an explicit model for {tier.title()} subagents. "
@@ -595,46 +647,52 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
         confidence = "ambiguous"
     elif actual_agent_type in NATIVE_PROFILES:
         profile = NATIVE_PROFILES[actual_agent_type]
-        task_name = str(payload.get("agent_path") or actual_agent_type).rsplit("/", 1)[-1]
-        cwd_hash = stable_hash(str(payload.get("cwd") or ""))
-        fingerprint = stable_hash(re.sub(r"\s+", " ", task_name.lower()).strip())
-        decision_id = str(uuid.uuid4())
-        connection.execute(
-            """
-            INSERT INTO decisions (
-                decision_id, session_id, turn_id, tool_use_id, cwd_hash,
-                task_fingerprint, task_name, tier, parent_model, expected_model,
-                expected_agent_type, expected_effort, expected_sandbox, transport,
-                billing_channel, fork_turns, status, prior_observations, planned_at, started_at,
-                actual_model, agent_id, correlation_confidence, policy_version
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, 'native', ?, 'none',
-                'started', 0, ?, ?, ?, ?, 'role_observed', ?)
-            """,
-            (
-                decision_id,
-                session_id,
-                payload.get("turn_id"),
-                f"observed:{agent_id}",
-                cwd_hash,
-                fingerprint,
-                task_name,
-                str(profile["tier"]),
-                str(profile["model"]),
-                actual_agent_type,
-                str(profile["reasoning_effort"]),
-                str(profile.get("sandbox")) if profile.get("sandbox") else None,
-                os.environ.get("GOLDILOCKS_BILLING_CHANNEL"),
-                started_at,
-                started_at,
-                actual_model,
-                agent_id,
-                POLICY_VERSION,
-            ),
-        )
-        selected = connection.execute(
-            "SELECT * FROM decisions WHERE decision_id = ?", (decision_id,)
-        ).fetchone()
-        confidence = "role_observed"
+        task_name, native_confidence = native_observed_name_confidence(payload, profile)
+        if native_confidence != "role_observed":
+            # Keep actual role/model/effort facts in ``executions`` below, but
+            # do not synthesize a decision that later verification could reuse
+            # as a successful native route.
+            confidence = native_confidence
+        else:
+            cwd_hash = stable_hash(str(payload.get("cwd") or ""))
+            fingerprint = stable_hash(re.sub(r"\s+", " ", task_name.lower()).strip())
+            decision_id = str(uuid.uuid4())
+            connection.execute(
+                """
+                INSERT INTO decisions (
+                    decision_id, session_id, turn_id, tool_use_id, cwd_hash,
+                    task_fingerprint, task_name, tier, parent_model, expected_model,
+                    expected_agent_type, expected_effort, expected_sandbox, transport,
+                    billing_channel, fork_turns, status, prior_observations, planned_at, started_at,
+                    actual_model, agent_id, correlation_confidence, policy_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?, 'native', ?, 'none',
+                    'started', 0, ?, ?, ?, ?, 'role_observed', ?)
+                """,
+                (
+                    decision_id,
+                    session_id,
+                    payload.get("turn_id"),
+                    f"observed:{agent_id}",
+                    cwd_hash,
+                    fingerprint,
+                    task_name,
+                    str(profile["tier"]),
+                    str(profile["model"]),
+                    actual_agent_type,
+                    str(profile["reasoning_effort"]),
+                    str(profile.get("sandbox")) if profile.get("sandbox") else None,
+                    os.environ.get("GOLDILOCKS_BILLING_CHANNEL"),
+                    started_at,
+                    started_at,
+                    actual_model,
+                    agent_id,
+                    POLICY_VERSION,
+                ),
+            )
+            selected = connection.execute(
+                "SELECT * FROM decisions WHERE decision_id = ?", (decision_id,)
+            ).fetchone()
+            confidence = "role_observed"
     else:
         confidence = "unplanned"
 
@@ -682,18 +740,78 @@ def claim_plan(payload: dict[str, Any]) -> tuple[sqlite3.Row | None, str]:
 
 def handle_subagent_start(payload: dict[str, Any]) -> None:
     decision, confidence = claim_plan(payload)
+    if decision is None and confidence == "fixed_identity_mismatch":
+        actual_agent_type = str(payload.get("agent_type") or "")
+        actual_model = str(payload.get("model") or "")
+        expected_model = str(
+            NATIVE_PROFILES.get(actual_agent_type, {}).get("model") or ""
+        )
+        warning = (
+            "Goldilocks identity violation: an unplanned fixed native role started "
+            f"agent_type={actual_agent_type or 'unknown'} on {actual_model or 'an unknown model'} "
+            f"instead of {expected_model or 'its fixed model'}. SubagentStart cannot cancel a "
+            "child after launch, so return immediately without reading files, calling tools, or "
+            "implementing. This result cannot be used. Ask the parent to retry with the exact "
+            "role/model pair, use the packaged adapter, or keep the work local."
+        )
+        emit(
+            {
+                "systemMessage": warning,
+                "hookSpecificOutput": {
+                    "hookEventName": "SubagentStart",
+                    "additionalContext": warning,
+                },
+            }
+        )
+        return
+    if decision is None and confidence in {"name_unverified", "name_mismatch"}:
+        actual_agent_type = str(payload.get("agent_type") or "")
+        observed_name = str(payload.get("agent_path") or "").rsplit("/", 1)[-1]
+        detail = (
+            "the host did not expose a visible child name"
+            if confidence == "name_unverified"
+            else f"visible name {observed_name or 'unknown'} does not match this role"
+        )
+        warning = (
+            "Goldilocks native-route audit: "
+            f"{detail}. This already-started {actual_agent_type or 'native'} child remains "
+            "observable, but will not be recorded as a reusable role_observed route. "
+            "Report the actual role/model/effort; use <tier>__<semantic>_<model> on the next spawn."
+        )
+        emit(
+            {
+                "systemMessage": warning,
+                "hookSpecificOutput": {
+                    "hookEventName": "SubagentStart",
+                    "additionalContext": warning,
+                },
+            }
+        )
+        return
     if decision is None and confidence == "unplanned":
         actual_model = str(payload.get("model") or "")
         if actual_model == LEAD_MODEL:
             observed_name = str(payload.get("agent_path") or "").rsplit("/", 1)[-1]
-            explicit_lead = observed_name.lower().startswith("lead__")
+            explicit_lead = has_strict_visible_task_name(observed_name, LEAD_MODEL)
             if explicit_lead:
                 return
+            spoofed_role = fixed_role_requested_by(observed_name, "")
+            spoofed_tier = classify(observed_name)
+            retry = (
+                f" Retry with agent_type={spoofed_role}."
+                if spoofed_tier in {"fast", "standard"} and spoofed_role
+                else ""
+            )
             warning = (
                 "Goldilocks quota violation: an unplanned Lead-model subagent inherited Sol. "
                 "SubagentStart cannot cancel a child after launch, so return immediately without "
                 "reading files, calling tools, or implementing. Ask the parent to retry with a "
                 "fixed Fast/Standard employee or an explicit lead__ contract."
+                + (
+                    " This Fast/Standard-looking result cannot be used." + retry
+                    if spoofed_tier in {"fast", "standard"}
+                    else ""
+                )
             )
             emit(
                 {
@@ -702,6 +820,50 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
                         "hookEventName": "SubagentStart",
                         "additionalContext": warning,
                     }
+                }
+            )
+            return
+
+        fixed_role = FIXED_NATIVE_ROLE_BY_MODEL.get(actual_model)
+        actual_agent_type = str(payload.get("agent_type") or "")
+        if fixed_role and actual_agent_type != fixed_role:
+            warning = (
+                "Goldilocks identity violation: an unplanned fixed-model subagent started "
+                f"{actual_model} as {actual_agent_type or 'a generic agent'} instead of "
+                f"agent_type={fixed_role}. SubagentStart cannot cancel a child after launch, "
+                "so return immediately without reading files, calling tools, or implementing. "
+                "This result cannot be used. Ask the parent to retry with the exact agent_type, "
+                "use the packaged adapter, or keep the work local."
+            )
+            emit(
+                {
+                    "systemMessage": warning,
+                    "hookSpecificOutput": {
+                        "hookEventName": "SubagentStart",
+                        "additionalContext": warning,
+                    },
+                }
+            )
+        return
+    if decision is None and confidence == "ambiguous":
+        actual_model = str(payload.get("model") or "")
+        fixed_role = FIXED_NATIVE_ROLE_BY_MODEL.get(actual_model)
+        actual_agent_type = str(payload.get("agent_type") or "")
+        if fixed_role and actual_agent_type != fixed_role:
+            warning = (
+                "Goldilocks identity/correlation violation: this fixed-model subagent could not "
+                "be matched to one explicit routing contract. SubagentStart cannot cancel a child "
+                "after launch, so return immediately without reading files, calling tools, or "
+                "implementing. This result cannot be used. Ask the parent to retry serially or "
+                f"with an unambiguous agent_type={fixed_role} contract."
+            )
+            emit(
+                {
+                    "systemMessage": warning,
+                    "hookSpecificOutput": {
+                        "hookEventName": "SubagentStart",
+                        "additionalContext": warning,
+                    },
                 }
             )
         return
@@ -717,9 +879,9 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
     mismatches: list[str] = []
     if expected_model and actual_model != expected_model:
         mismatches.append(f"model expected {expected_model}, observed {actual_model or 'unknown'}")
-    if expected_agent_type and actual_agent_type and actual_agent_type != expected_agent_type:
+    if expected_agent_type and actual_agent_type != expected_agent_type:
         mismatches.append(
-            f"agent type expected {expected_agent_type}, observed {actual_agent_type}"
+            f"agent type expected {expected_agent_type}, observed {actual_agent_type or 'unknown'}"
         )
     if expected_effort and actual_effort and actual_effort != expected_effort:
         mismatches.append(
@@ -738,8 +900,9 @@ def handle_subagent_start(payload: dict[str, Any]) -> None:
             "hookSpecificOutput": {
                 "hookEventName": "SubagentStart",
                 "additionalContext": (
-                    f"{message} Do not execute the delegated task. Report the mismatch immediately "
-                    "so the owner can keep the work local or choose a verified route."
+                    f"{message} Do not execute the delegated task. Return immediately without "
+                    "reading files, calling tools, or implementing. This result cannot be used. "
+                    "Report the mismatch so the owner can keep the work local or choose a verified route."
                 ),
             },
         }

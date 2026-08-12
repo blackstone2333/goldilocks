@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import sqlite3
@@ -12,13 +11,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import route_auditor
 from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.5.0"
+POLICY_VERSION = "0.5.1"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}
@@ -136,6 +135,58 @@ def completed_task_usage_since(path: object, started_at: str) -> dict[str, int] 
     return totals if completed else None
 
 
+def forked_task_usage_since(
+    path: object, started_at: str
+) -> tuple[dict[str, int] | None, bool]:
+    """Measure a fresh native fork from its last inherited checkpoint.
+
+    Codex may copy the parent rollout history into a child and keep the copied
+    cumulative token totals.  SubagentStop can therefore report a lifetime-like
+    value.  The SubagentStart timestamp falls after the copied history and before
+    the child's first model response, so the last checkpoint before that boundary
+    is the correct baseline.
+    """
+
+    if not isinstance(path, str) or not path:
+        return None, False
+    transcript = Path(path).expanduser()
+    cutoff = parse_timestamp(started_at)
+    if not transcript.is_file() or cutoff is None:
+        return None, False
+    forked = False
+    baseline: dict[str, int] | None = None
+    current: dict[str, int] | None = None
+    try:
+        with transcript.open(encoding="utf-8") as handle:
+            for raw in handle:
+                try:
+                    record = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if record.get("type") == "session_meta":
+                    payload = record.get("payload")
+                    source = payload.get("source") if isinstance(payload, dict) else None
+                    subagent = source.get("subagent") if isinstance(source, dict) else None
+                    spawn = subagent.get("thread_spawn") if isinstance(subagent, dict) else None
+                    if isinstance(spawn, dict):
+                        forked = True
+                usage = usage_from_record(record)
+                if usage is None:
+                    continue
+                timestamp = parse_timestamp(record.get("timestamp"))
+                if timestamp is None:
+                    continue
+                if timestamp < cutoff:
+                    baseline = usage
+                else:
+                    current = usage
+    except (OSError, TypeError, ValueError):
+        return None, forked
+    if not forked or baseline is None or current is None:
+        return None, forked
+    return ({key: delta(current[key], baseline[key]) for key in TOKEN_KEYS}, True)
+
+
 def connect(root: Path) -> sqlite3.Connection:
     root.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(root / "orchestration.db", timeout=5)
@@ -172,6 +223,17 @@ def connect(root: Path) -> sqlite3.Connection:
     connection.execute(
         "DELETE FROM task_usage_baselines WHERE julianday('now') - julianday(started_at) > 30"
     )
+    return connection
+
+
+def connect_readonly(database: Path) -> sqlite3.Connection:
+    """Open the existing ledger without migrations, journals, or backfills."""
+
+    uri = f"file:{quote(str(database.resolve()), safe='/')}?mode=ro"
+    connection = sqlite3.connect(uri, uri=True, timeout=5)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA busy_timeout = 5000")
+    connection.execute("PRAGMA query_only = ON")
     return connection
 
 
@@ -228,6 +290,34 @@ def add_usage(
     )
 
 
+def is_verified_fresh_fork(row: sqlite3.Row) -> bool:
+    """Whether a completed execution is an accepted fresh-context dispatch."""
+
+    return (
+        row["decision_fork_turns"] == "none"
+        and row["decision_status"] == "verified_pass"
+        and row["stopped_at"] is not None
+    )
+
+
+def verified_fresh_fork_db_usage(row: sqlite3.Row) -> dict[str, object] | None:
+    """Return complete posthoc usage only for an explicit fresh verified fork.
+
+    A forked transcript can begin without the inherited checkpoint required to
+    calculate a transcript delta.  The runtime inspector may nevertheless have
+    recorded complete child-only usage.  That record is safe for this turn only
+    when the original dispatch explicitly started a fresh context and the
+    completed execution has subsequently passed verification.
+    """
+
+    if (
+        not is_verified_fresh_fork(row)
+        or any(row[key] is None for key in TOKEN_KEYS)
+    ):
+        return None
+    return {key: row[key] for key in TOKEN_KEYS}
+
+
 def worker_usage(
     connection: sqlite3.Connection,
     session_id: str,
@@ -261,6 +351,11 @@ def worker_usage(
             "decision_id",
             "session_id",
         }.issubset(decision_columns) and "decision_id" in execution_columns
+        can_read_fork_proof = {
+            "decision_id",
+            "fork_turns",
+            "status",
+        }.issubset(decision_columns) and "decision_id" in execution_columns
         has_execution_owner = "session_id" in execution_columns
         if required_executions.issubset(execution_columns) and (
             has_execution_owner or can_join_decisions
@@ -276,19 +371,29 @@ def worker_usage(
                         "ON decision.decision_id = execution.decision_id"
                     )
                     owner_clause = "decision.session_id = ?"
+                decision_projection = (
+                    ", decision.fork_turns AS decision_fork_turns, "
+                    "decision.status AS decision_status"
+                    if can_read_fork_proof
+                    else ", NULL AS decision_fork_turns, NULL AS decision_status"
+                )
+                decision_join = (
+                    " LEFT JOIN decisions AS decision "
+                    "ON decision.decision_id = execution.decision_id"
+                    if can_read_fork_proof and has_execution_owner
+                    else ""
+                )
                 rows = connection.execute(
                     f"""
                     SELECT execution.agent_id, execution.actual_model,
-                           execution.started_at, execution.input_tokens,
-                           execution.cached_input_tokens, execution.output_tokens
-                    {source}
+                           execution.started_at, execution.stopped_at,
+                           execution.input_tokens, execution.cached_input_tokens,
+                           execution.output_tokens {decision_projection}
+                    {source}{decision_join}
                     WHERE {owner_clause} AND execution.stopped_at IS NOT NULL
                       AND (
                           julianday(execution.stopped_at) >= julianday(?)
-                          OR (
-                              julianday(execution.stopped_at) IS NULL
-                              AND julianday(execution.started_at) >= julianday(?)
-                          )
+                          OR julianday(execution.started_at) >= julianday(?)
                       )
                     """,
                     (owner_session, started_at, started_at),
@@ -318,30 +423,26 @@ def worker_usage(
                             missing += 1
                             continue
                     else:
-                        values = {key: row[key] for key in TOKEN_KEYS}
-                        if all(values[key] is None for key in TOKEN_KEYS):
-                            recovered = (
-                                latest_usage(str(transcript))
-                                if transcript is not None
-                                else None
+                        values = None
+                        if transcript is not None:
+                            values, _forked = forked_task_usage_since(
+                                str(transcript), str(row["started_at"])
                             )
-                            if recovered is None:
+                        if values is None:
+                            # A missing, unreadable, or malformed transcript is
+                            # not permission to trust lifetime-looking DB totals.
+                            # Use the posthoc record only when the dispatch is
+                            # provably fresh, complete, and accepted.
+                            values = verified_fresh_fork_db_usage(row)
+                            if (
+                                values is None
+                                and is_verified_fresh_fork(row)
+                                and transcript is not None
+                            ):
+                                values = latest_usage(str(transcript))
+                            if values is None:
                                 missing += 1
                                 continue
-                            values = recovered
-                            connection.execute(
-                                """
-                                UPDATE executions SET input_tokens = ?,
-                                    cached_input_tokens = ?, output_tokens = ?
-                                WHERE agent_id = ?
-                                """,
-                                (
-                                    recovered["input_tokens"],
-                                    recovered["cached_input_tokens"],
-                                    recovered["output_tokens"],
-                                    agent_id,
-                                ),
-                            )
                     add_usage(
                         models,
                         row["actual_model"],
@@ -394,53 +495,6 @@ def format_duration(started_at: str) -> str:
     return f"{seconds}s"
 
 
-def format_receipt(
-    models: dict[str, dict[str, int]],
-    *,
-    root_unknown: bool,
-    missing_workers: int,
-    started_at: str,
-) -> tuple[str, str]:
-    ranked = sorted(
-        models.items(),
-        key=lambda item: item[1]["input_tokens"] + item[1]["output_tokens"],
-        reverse=True,
-    )
-    parts: list[str] = []
-    total = 0
-    for model, usage in ranked:
-        processing = usage["input_tokens"] + usage["output_tokens"]
-        total += processing
-        parts.append(
-            f"{model}: in {usage['input_tokens']:,} "
-            f"({usage['cached_input_tokens']:,} cached) + out "
-            f"{usage['output_tokens']:,} = {processing:,}"
-        )
-    if root_unknown:
-        parts.append("root: token telemetry unavailable")
-    if missing_workers:
-        parts.append(f"{missing_workers} worker(s): token telemetry unavailable")
-    if not parts:
-        parts.append("token telemetry unavailable")
-    message = (
-        "Goldilocks usage | "
-        + "; ".join(parts)
-        + f" | total {total:,} tokens · wall {format_duration(started_at)}"
-    )
-    fingerprint = hashlib.sha256(
-        json.dumps(
-            {
-                "models": models,
-                "root_unknown": root_unknown,
-                "missing_workers": missing_workers,
-            },
-            sort_keys=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
-    return message, fingerprint
-
-
 def resolve_data_root() -> Path:
     configured = os.environ.get("PLUGIN_DATA")
     if configured:
@@ -483,8 +537,15 @@ def find_transcript(session_id: str, stored: object) -> Path | None:
     return max(matches, key=lambda path: path.stat().st_mtime) if matches else None
 
 
-def format_current(models: dict[str, dict[str, int]]) -> str | None:
-    if not models:
+def format_current(
+    models: dict[str, dict[str, int]],
+    language: str = "en",
+    started_at: str | None = None,
+    *,
+    unavailable_root: str | None = None,
+    missing_workers: int = 0,
+) -> str | None:
+    if not models and unavailable_root is None and not missing_workers:
         return None
     rows: list[tuple[int, str, dict[str, int]]] = []
     for model, usage in models.items():
@@ -497,29 +558,76 @@ def format_current(models: dict[str, dict[str, int]]) -> str | None:
         if processing == 0:
             continue
         total += processing
-        parts.append(
-            f"{label} {processing:,} (in {usage['input_tokens']:,} / "
-            f"cached {usage['cached_input_tokens']:,} / out {usage['output_tokens']:,})"
-        )
+        if language == "zh":
+            parts.append(
+                f"{label} {processing:,}（输入 {usage['input_tokens']:,} / "
+                f"缓存 {usage['cached_input_tokens']:,} / 输出 {usage['output_tokens']:,}）"
+            )
+        else:
+            parts.append(
+                f"{label} {processing:,} (in {usage['input_tokens']:,} / "
+                f"cached {usage['cached_input_tokens']:,} / out {usage['output_tokens']:,})"
+            )
+    unavailable = unavailable_root is not None or missing_workers > 0
+    if unavailable_root is not None:
+        if language == "zh":
+            parts.append(f"主模型 {unavailable_root} 暂不可用")
+        else:
+            parts.append(f"root {unavailable_root} unavailable")
+    if missing_workers:
+        if language == "zh":
+            parts.append(f"{missing_workers} 个子智能体用量暂不可用")
+        else:
+            noun = "worker" if missing_workers == 1 else "workers"
+            parts.append(f"usage unavailable for {missing_workers} {noun}")
     if not parts:
         return None
-    return "Usage: " + " | ".join(parts) + f" | total {total:,} tokens"
+    duration = format_duration(started_at) if started_at is not None else "unknown"
+    if language == "zh":
+        total_text = (
+            f"已知合计 {total:,} tokens"
+            if unavailable and total
+            else "总计暂不可用"
+            if unavailable
+            else f"总计 {total:,} tokens"
+        )
+        return (
+            "用量：" + " | ".join(parts) + f" | {total_text} · 用时 {duration}"
+        )
+    total_text = (
+        f"known total {total:,} tokens"
+        if unavailable and total
+        else "total unavailable"
+        if unavailable
+        else f"total {total:,} tokens"
+    )
+    return (
+        "Usage: " + " | ".join(parts) + f" | {total_text} · wall {duration}"
+    )
 
 
-def current_receipt(session_id: str) -> str | None:
+def current_receipt(
+    session_id: str, language: str = "en", turn_id: str | None = None
+) -> str | None:
     root = resolve_data_root()
     database = root / "orchestration.db"
     if not database.is_file() or not session_id:
         return None
-    with connect(root) as connection:
-        baseline = connection.execute(
-            "SELECT * FROM task_usage_baselines WHERE session_id = ? "
-            "ORDER BY started_at DESC LIMIT 1",
-            (session_id,),
-        ).fetchone()
+    with connect_readonly(database) as connection:
+        if turn_id:
+            baseline = connection.execute(
+                "SELECT * FROM task_usage_baselines WHERE session_id = ? AND turn_id = ?",
+                (session_id, turn_id),
+            ).fetchone()
+        else:
+            baseline = connection.execute(
+                "SELECT * FROM task_usage_baselines WHERE session_id = ? "
+                "ORDER BY started_at DESC LIMIT 1",
+                (session_id,),
+            ).fetchone()
         if baseline is None:
             return None
-        models, _missing = worker_usage(
+        models, missing_workers = worker_usage(
             connection,
             session_id,
             str(baseline["turn_id"]),
@@ -527,7 +635,8 @@ def current_receipt(session_id: str) -> str | None:
         )
         transcript = find_transcript(session_id, baseline["transcript_path"])
         current = latest_usage(str(transcript)) if transcript is not None else None
-        if bool(baseline["baseline_available"]) and current is not None:
+        root_available = bool(baseline["baseline_available"]) and current is not None
+        if root_available and current is not None:
             add_usage(
                 models,
                 str(baseline["root_model"] or "unknown"),
@@ -538,62 +647,63 @@ def current_receipt(session_id: str) -> str | None:
                 ),
                 delta(current["output_tokens"], baseline["baseline_output_tokens"]),
             )
-        return format_current(models)
-
-
-def build_receipt(
-    connection: sqlite3.Connection, payload: dict[str, Any]
-) -> str | None:
-    session_id = str(payload.get("session_id") or "")
-    turn_id = str(payload.get("turn_id") or "")
-    if not session_id or not turn_id:
-        return None
-    baseline = connection.execute(
-        "SELECT * FROM task_usage_baselines WHERE session_id = ? AND turn_id = ?",
-        (session_id, turn_id),
-    ).fetchone()
-    if baseline is None:
-        return None
-    models, missing_workers = worker_usage(
-        connection, session_id, turn_id, str(baseline["started_at"])
-    )
-    current = latest_usage(payload.get("transcript_path"))
-    root_unknown = not bool(baseline["baseline_available"]) or current is None
-    if not root_unknown and current is not None:
-        add_usage(
+        unavailable_root = None
+        if not root_available:
+            unavailable_root = model_display_label(
+                str(baseline["root_model"] or "root")
+            )
+        return format_current(
             models,
-            str(payload.get("model") or baseline["root_model"] or "unknown"),
-            delta(current["input_tokens"], baseline["baseline_input_tokens"]),
-            delta(
-                current["cached_input_tokens"],
-                baseline["baseline_cached_input_tokens"],
-            ),
-            delta(current["output_tokens"], baseline["baseline_output_tokens"]),
+            language,
+            str(baseline["started_at"]),
+            unavailable_root=unavailable_root,
+            missing_workers=missing_workers,
         )
-    message, fingerprint = format_receipt(
-        models,
-        root_unknown=root_unknown,
-        missing_workers=missing_workers,
-        started_at=str(baseline["started_at"]),
-    )
-    if baseline["last_receipt_hash"] == fingerprint:
-        return None
-    connection.execute(
-        """
-        UPDATE task_usage_baselines
-        SET last_receipt_hash = ?, last_reported_at = ?
-        WHERE session_id = ? AND turn_id = ?
-        """,
-        (fingerprint, now(), session_id, turn_id),
-    )
-    return message
+
+
+def requested_language(arguments: list[str]) -> str:
+    for index, argument in enumerate(arguments):
+        if argument.startswith("--language="):
+            value = argument.split("=", 1)[1]
+        elif argument == "--language" and index + 1 < len(arguments):
+            value = arguments[index + 1]
+        else:
+            continue
+        return "zh" if value.lower().startswith("zh") else "en"
+    return "en"
+
+
+def requested_turn_id(arguments: list[str]) -> str | None:
+    for index, argument in enumerate(arguments):
+        if argument.startswith("--turn-id="):
+            value = argument.split("=", 1)[1]
+        elif argument == "--turn-id" and index + 1 < len(arguments):
+            value = arguments[index + 1]
+        else:
+            continue
+        return value.strip() or None
+    return None
 
 
 def main() -> None:
     if "--current" in sys.argv[1:]:
-        receipt = current_receipt(os.environ.get("CODEX_THREAD_ID", ""))
-        if receipt:
-            print(receipt)
+        try:
+            receipt = current_receipt(
+                os.environ.get("CODEX_THREAD_ID", ""),
+                requested_language(sys.argv[1:]),
+                requested_turn_id(sys.argv[1:]),
+            )
+            if receipt:
+                print(receipt)
+        except (
+            OSError,
+            sqlite3.Error,
+            TypeError,
+            ValueError,
+            KeyError,
+            json.JSONDecodeError,
+        ):
+            pass
         return
     event = ""
     try:
@@ -603,22 +713,16 @@ def main() -> None:
             if event == "Stop":
                 print("{}")
             return
+        if event == "Stop":
+            print("{}")
+            return
+        if event != "UserPromptSubmit":
+            return
         configured = os.environ.get("PLUGIN_DATA")
         if not configured:
-            if event == "Stop":
-                print("{}")
             return
         with connect(Path(configured).expanduser()) as connection:
-            if event == "UserPromptSubmit":
-                record_baseline(connection, payload)
-                return
-            if event == "Stop":
-                try:
-                    route_auditor.audit(payload, connection)
-                except (OSError, sqlite3.Error, TypeError, ValueError):
-                    pass
-                message = build_receipt(connection, payload)
-                print(json.dumps({"systemMessage": message} if message else {}, ensure_ascii=False))
+            record_baseline(connection, payload)
     except (OSError, sqlite3.Error, TypeError, ValueError, json.JSONDecodeError):
         if event == "Stop":
             print("{}")

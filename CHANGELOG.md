@@ -2,6 +2,22 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.1 — 2026-08-12
+
+### Native visibility, safe setup, and measured defaults
+
+- Added one compact visible Direct receipt and made Usage on-demand by default; `automatic` is an explicit Bootstrap opt-in. The default avoids a mandatory pre-final read on ordinary work, while both modes remain one local read with no second model call.
+- Registered and identity-checked native Spark, Luna, Terra, and Sol roles, with the packaged adapter as the fallback when the host cannot expose the required native route. Night Shift is now an active delivery mode under the same route and ownership gates.
+- Bounded visible Sol specialists to two concurrent slots per root, with host-confirmed terminal return before capacity is recycled.
+- Made Bootstrap validate complete TOML safely on Python 3.9 with bundled, MIT-licensed Tomli. After approval it can append only the four missing official `[agents.*]` registrations; Hook trust remains a host decision.
+- Clarified that immutable Tag updates require Tag verification, marketplace removal, re-add at the verified ref, plugin reinstall, Bootstrap plan/apply/check, and a new task; Goldilocks never self-updates.
+- Refined complete-chain ownership: one owner carries the known mutable chain, receives one ordinary focused repair when needed, and returns evidence for proportional Lead acceptance.
+- Made Direct a progressive cold start: it preloads no Route Card, orchestration, or continuity reference, but upgrades on demand when execution reveals independent units, an unknown cause, or a persistence boundary. The root-localized route receipt remains visible.
+
+### Evidence limits
+
+The [final frozen Direct sample](benchmarks/V051-RELEASE-EVIDENCE.md) was quality-valid for both arms. Relative to published v0.5.0, the candidate measured wall **−10.997%** and output **−13.624%**, but raw tokens **+39.777%**, official USD **+15.727%**, and tool calls **+33.333%**. This is a Pareto tradeoff, not a dominant efficiency result; it covers only the recorded task and does not claim automatic Hook trust or automatic self-update.
+
 ## 0.5.0 — 2026-08-11
 
 ### Stable release

@@ -8,6 +8,7 @@ import json
 import os
 import re
 import sqlite3
+import subprocess
 import sys
 import time
 import urllib.error
@@ -25,6 +26,16 @@ DEFAULT_MANIFEST_URL = (
 DISABLED_VALUES = {"0", "false", "no", "off", "disabled"}
 VERSION_PATTERN = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?$"
+)
+SELECTOR_COMPONENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+NETWORK_GIT_SOURCE = re.compile(
+    r"^(?:https://|ssh://(?:[A-Za-z0-9][A-Za-z0-9._-]*@)?)"
+    r"[A-Za-z0-9][A-Za-z0-9.-]*/[A-Za-z0-9][A-Za-z0-9._/-]*\.git$",
+    re.ASCII,
+)
+SCP_GIT_SOURCE = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9._-]*@[A-Za-z0-9][A-Za-z0-9.-]*:[A-Za-z0-9][A-Za-z0-9._/-]*\.git$",
+    re.ASCII,
 )
 
 
@@ -66,6 +77,66 @@ def installed_version() -> tuple[tuple[int, int, int, int, str], str] | None:
     manifest = plugin_root() / ".codex-plugin" / "plugin.json"
     payload = json.loads(manifest.read_text(encoding="utf-8"))
     return parse_version(payload.get("version"))
+
+
+def valid_git_source(value: object) -> str | None:
+    """Accept only a single Git remote argument suitable for an explicit handoff."""
+
+    if not isinstance(value, str) or not value or len(value) > 2048 or not value.isascii():
+        return None
+    if NETWORK_GIT_SOURCE.fullmatch(value):
+        return value
+    if SCP_GIT_SOURCE.fullmatch(value):
+        return value
+    return None
+
+
+def installed_git_marketplace() -> tuple[str, str, str] | None:
+    """Return the aligned Git selector and remote, never guessing installation provenance."""
+
+    try:
+        result = subprocess.run(
+            ["codex", "plugin", "list", "--json"],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=1,
+        )
+        if result.returncode != 0:
+            return None
+        payload = json.loads(result.stdout)
+        installed = payload.get("installed")
+        if not isinstance(installed, list):
+            return None
+        root = plugin_root().resolve()
+        for item in installed:
+            if not isinstance(item, dict) or item.get("name") != "goldilocks":
+                continue
+            marketplace = item.get("marketplaceName")
+            source = item.get("source")
+            marketplace_source = item.get("marketplaceSource")
+            if not isinstance(marketplace, str) or not SELECTOR_COMPONENT.fullmatch(marketplace):
+                continue
+            if not isinstance(source, dict) or not isinstance(source.get("path"), str):
+                continue
+            if not isinstance(marketplace_source, dict):
+                continue
+            if marketplace_source.get("sourceType") != "git":
+                continue
+            remote = valid_git_source(marketplace_source.get("source"))
+            if remote is None:
+                continue
+            if item.get("pluginId") != f"goldilocks@{marketplace}":
+                continue
+            try:
+                source_path = Path(source["path"]).expanduser().resolve()
+            except OSError:
+                continue
+            if source_path == root:
+                return "goldilocks", marketplace, remote
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, subprocess.SubprocessError):
+        return None
+    return None
 
 
 def connect_state(root: Path) -> sqlite3.Connection:
@@ -181,13 +252,20 @@ def record_remote(
         connection.close()
 
 
-def emit_notice(current: str, latest: str) -> None:
+def emit_notice(current: str, latest: str, plugin: str, marketplace: str, remote: str) -> None:
+    selector = f"{plugin}@{marketplace}"
+    tag = f"v{latest}"
     message = (
         f"Goldilocks update available: installed {current}, latest {latest}. "
-        "No files were changed; this task continues with the installed version. "
-        "After reviewing the changelog and approving the update, run "
-        "`codex plugin marketplace upgrade goldilocks-local`, then "
-        "`codex plugin add goldilocks@goldilocks-local`, and start a new task."
+        f"Detected Git marketplace `{marketplace}`, plugin `{selector}`, and source `{remote}`. "
+        "This check only discovered the update: no files were changed, and this task "
+        "continues with the installed version. Reply that you approve the update; the "
+        f"installing agent must first verify `{tag}` before mutation with `git ls-remote "
+        f"--exit-code --refs {remote} refs/tags/{tag}`, then run `codex plugin marketplace "
+        f"remove {marketplace} --json`, `codex plugin marketplace add {remote} --ref {tag} "
+        f"--json`, and `codex plugin add {selector} --json`; then run Bootstrap "
+        "plan/apply/check and start a new task. This checker never automatically upgrades, "
+        "retains approval, or trusts changed Hooks."
     )
     print(
         json.dumps(
@@ -196,8 +274,10 @@ def emit_notice(current: str, latest: str) -> None:
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
                     "additionalContext": (
-                        f"{message} Inform the user once, but do not run update commands without "
-                        "explicit user approval."
+                        f"{message} Inform the user once. After explicit approval, verify {tag} "
+                        "before removal, then use the displayed remove/add/add sequence and "
+                        "$goldilocks-bootstrap for Bootstrap plan/apply/check; do not run an "
+                        "automatic update or trust changed Hooks."
                     ),
                 },
             },
@@ -210,6 +290,9 @@ def main() -> None:
     try:
         payload = json.load(sys.stdin)
         if payload.get("hook_event_name") != "SessionStart" or not enabled():
+            return
+        selector = installed_git_marketplace()
+        if selector is None:
             return
         data = plugin_data()
         current = installed_version()
@@ -231,7 +314,7 @@ def main() -> None:
             should_notify=latest[0] > current[0],
         )
         if notify:
-            emit_notice(current[1], latest[1])
+            emit_notice(current[1], latest[1], *selector)
     except (OSError, ValueError, TypeError, json.JSONDecodeError, sqlite3.Error, urllib.error.URLError):
         return
 

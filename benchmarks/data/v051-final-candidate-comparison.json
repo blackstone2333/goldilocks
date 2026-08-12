@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "comparison": "Goldilocks v0.5.1 candidate versus published v0.5.0",
+  "sample": {
+    "route": "Direct",
+    "count": 1,
+    "task_class": "deterministic artifact-manifest",
+    "scope": "This single frozen sample is not generalizable to other task mixes, samples, hosts, models, providers, repositories, or routes."
+  },
+  "outcome": {
+    "status": "VALID_PARETO_TRADEOFF",
+    "conclusion": "Both arms passed quality and infrastructure gates. The v0.5.1 candidate is faster and uses fewer output tokens; published v0.5.0 uses fewer tokens, costs less at official rates, and uses fewer tool calls. No dominant winner is declared.",
+    "attempts_per_arm": 1,
+    "retries_per_arm": 0,
+    "infrastructure_failures": 0
+  },
+  "quality": {
+    "published_v050": {"visible": "5/5 PASS", "hidden": "8/8 PASS", "overall": "PASS"},
+    "v051_candidate": {"visible": "7/7 PASS", "hidden": "8/8 PASS", "overall": "PASS", "extra_visible_tests": 2}
+  },
+  "metrics": {
+    "published_v050": {"wall_seconds": 219.15, "input_tokens": 197660, "cached_input_tokens": 164608, "output_tokens": 9285, "raw_tokens": 206945, "official_usd": 0.526114, "tool_calls": 9},
+    "v051_candidate": {"wall_seconds": 195.049, "input_tokens": 281242, "cached_input_tokens": 230656, "output_tokens": 8020, "raw_tokens": 289262, "official_usd": 0.608858, "tool_calls": 12}
+  },
+  "candidate_minus_published": {
+    "wall_seconds": {"absolute": -24.101, "percent": -10.997},
+    "input_tokens": {"absolute": 83582, "percent": 42.286},
+    "cached_input_tokens": {"absolute": 66048, "percent": 40.124},
+    "uncached_input_tokens": {"absolute": 17534, "percent": 53.05},
+    "output_tokens": {"absolute": -1265, "percent": -13.624},
+    "raw_tokens": {"absolute": 82317, "percent": 39.777},
+    "official_usd": {"absolute": 0.082744, "percent": 15.727},
+    "tool_calls": {"absolute": 3, "percent": 33.333}
+  },
+  "pricing": {
+    "spark_participated": false,
+    "official_cost_fully_defined": true,
+    "normalized_equals_official": true,
+    "spark_official_usd": "N/A",
+    "caveat": "Spark has no official numeric USD price. A Luna-rate normalized proxy, when used in other comparisons, is an analytical estimate and not a bill."
+  }
+}

@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.0"
+POLICY_VERSION = "0.5.1"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 MICRO_STYLE = (
@@ -30,6 +30,158 @@ ROUTING_GATE = (
     "Direct remains valid when briefing and review cost more. "
     "Skip for pure conversation."
 )
+VISIBLE_RESPONSE_CONTRACT_EN = (
+    "Every executable task, including Direct, ends with exactly one localized visible Goldilocks route receipt. "
+    "Direct includes `ROUTE=direct`, Lead team, concurrency 0/?, no delegation, reason, and concise detail. "
+    "Child task_name must be <tier>__<semantic>_<model> before spawn; native hosts may bypass PreToolUse. "
+    "Usage is host-side and fail-silent: on-demand is the default and runs once when explicitly requested; "
+    "after Bootstrap automatic opt-in, it runs once for each executable task. "
+    "Pure conversation has no receipt or Usage."
+)
+VISIBLE_RESPONSE_CONTRACT_ZH = (
+    "每个可执行任务（包括直接路径）最终都必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执；"
+    "直接路径包含 `路由=直接`、主模型团队、并发 0/?、无委派、理由和简要详情。每个子智能体在 spawn "
+    "前的 task_name 必须符合 <tier>__<semantic>_<model>；原生宿主可能绕过 PreToolUse。"
+    "用量由宿主侧静默处理：默认按需，用户明确索要时读取一次；Bootstrap 启用自动模式后，"
+    "每个可执行任务自动读取一次。纯对话不显示回执或用量。"
+)
+USAGE_VISIBILITY_MODES = {"on-demand", "automatic"}
+
+
+def usage_visibility_mode() -> str:
+    """Resolve Bootstrap's portable preference without making hook delivery depend on it."""
+
+    override = os.environ.get("GOLDILOCKS_USAGE_VISIBILITY", "").strip().lower()
+    if override in USAGE_VISIBILITY_MODES:
+        return override
+    configured = os.environ.get("GOLDILOCKS_BOOTSTRAP_STATE_DIR")
+    if configured:
+        state_dir = Path(configured).expanduser()
+    elif os.name == "nt":
+        state_dir = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "goldilocks-bootstrap"
+    else:
+        state_dir = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "goldilocks-bootstrap"
+    preference = state_dir / "usage-visibility.json"
+    try:
+        if preference.is_symlink() or not preference.is_file():
+            return "on-demand"
+        value = json.loads(preference.read_text(encoding="utf-8"))
+        mode = value.get("mode") if isinstance(value, dict) else None
+        return mode if mode in USAGE_VISIBILITY_MODES else "on-demand"
+    except (OSError, ValueError, TypeError):
+        return "on-demand"
+
+
+DIRECT_USAGE_QUERY_PATTERN = re.compile(
+    r"(?:\b(?:show|display|report|check|give|current|how many|what(?:'s| is))\b.{0,32}"
+    r"\b(?:usage|tokens?|token count)\b|\b(?:usage|tokens?|token count)\b.{0,24}"
+    r"\b(?:now|current|please)\b|(?:显示|查看|报告|告诉|当前|本次|多少).{0,16}"
+    r"(?:用量|token|令牌)|(?:用量|token|令牌).{0,8}(?:多少|是多少|情况|统计))",
+    re.IGNORECASE,
+)
+USAGE_FEATURE_DISCUSSION_PATTERN = re.compile(
+    r"(?:\b(?:usage|tokens?)\b.{0,32}\b(?:feature|automatic|on[ -]?demand|bootstrap|"
+    r"enable|setting|preference|design|work)\b|\b(?:how does|should (?:we|i)|"
+    r"discuss)\b.{0,32}\b(?:usage|tokens?)\b|(?:用量|token|令牌).{0,24}"
+    r"(?:功能|自动|按需|Bootstrap|启用|设置|偏好|设计|讨论))",
+    re.IGNORECASE,
+)
+
+
+def direct_usage_query(prompt: str) -> bool:
+    return bool(DIRECT_USAGE_QUERY_PATTERN.search(prompt)) and not bool(
+        USAGE_FEATURE_DISCUSSION_PATTERN.search(prompt)
+    )
+
+
+USAGE_EXECUTABLE_REQUEST_PATTERN = re.compile(
+    r"(?:翻译|翻成|撰写|写(?:一|个|份)?|审查|评审|分析|诊断|总结|概括|摘要|搜索|查找|检索|"
+    r"比较|对比|构建|编译|编辑|修改|修复|实现|开发|创建|测试|部署|发布|安装|升级)|"
+    r"\b(?:translate|write|draft|review|audit|analy[sz]e|diagnose|summari[sz]e|search|compare|"
+    r"build|compile|edit|change|fix|implement|develop|create|test|deploy|release|install|upgrade)\b|"
+    r"\b(?:provide|give|need|want|request|help(?:\s+me)?\s+with)"
+    r"\s+(?:(?:a|an)\s+)?(?:translation|writing|analysis|review|summary|search|comparison)\b",
+    re.IGNORECASE,
+)
+PURE_USAGE_DISCUSSION_PATTERN = re.compile(
+    r"(?:\bwhat do you think about\b|\bjust discuss(?:\s+(?:this|it|that))?\b|"
+    r"\blet'?s discuss\b|\b(?:can|could|should)\s+(?:we|i)\s+discuss\b|"
+    r"\bdiscuss(?:ing)?\s+(?:how|whether|the (?:feature|setting|idea|practice))\b|"
+    r"\b(?:explain|describe|clarify|introduce|teach|what is|how (?:does|do|is))\b|"
+    r"\bwhat are (?:the )?(?:benefits|advantages|pros) of\b|\bi (?:think|believe|feel)\b|"
+    r"\b(?:is|are)\s+(?:code\s+)?review\b.{0,48}\b(?:good|useful|worth|best practice)\b|"
+    r"(?:你觉得|你怎么看).{0,48}(?:讨论|聊聊)|(?:只|先).{0,6}(?:讨论|聊聊)|"
+    r"(?:讨论|聊聊).{0,32}(?:如何|怎么|是否|要不要|功能|设置|实践)|"
+    r"(?:解释|说明|介绍).{0,48}|(?:我觉得|我认为|我想).{0,48}(?:审查|评审)|"
+    r"(?:代码|同行|同伴)审查.{0,24}(?:好处|优点|益处|好吗|好不好|是否值得))",
+    re.IGNORECASE,
+)
+USAGE_FOLLOW_ON_WORK_PATTERN = re.compile(
+    r"(?:[,，;；.!?。]\s*(?:then\s+)?|\b(?:and|then)\s+)(?:please\s+)?(?:translate|write|draft|review|audit|"
+    r"analy[sz]e|diagnose|summari[sz]e|search|compare|build|compile|edit|change|fix|"
+    r"implement|develop|create|test|deploy|release|install|upgrade)\b|"
+    r"(?:[,，;；。]\s*|并|然后|再).{0,16}(?:翻译|撰写|审查|分析|诊断|总结|搜索|查找|检索|比较|对比|"
+    r"构建|编译|编辑|修改|修复|实现|开发|创建|测试|部署|发布|安装|升级)",
+    re.IGNORECASE,
+)
+
+
+def usage_reporter_command(turn_id: str | None, zh: bool) -> str:
+    """Build one shell-portable Python command with no versioned cache path."""
+
+    safe_turn = turn_id if re.fullmatch(r"[A-Za-z0-9_.:-]+", turn_id or "") else ""
+    launcher = "py -3" if os.name == "nt" else "python3"
+    arguments = f"'--current','--turn-id','{safe_turn}'"
+    if zh:
+        arguments += ",'--language','zh'"
+    program = (
+        "import json,runpy,subprocess,sys; from pathlib import Path; "
+        "p=json.loads(subprocess.check_output(['codex','plugin','list','--json'])); "
+        "r=Path(next(x for x in p.get('installed',[]) if x.get('enabled') and "
+        "(str(x.get('name') or '').lower()=='goldilocks' or "
+        "str(x.get('pluginId') or '').lower().startswith('goldilocks@')))['source']['path'])/"
+        "'scripts'/'usage_reporter.py'; "
+        f"sys.argv=[str(r),{arguments}]; runpy.run_path(str(r),run_name='__main__')"
+    )
+    return f'{launcher} -c "{program}"'
+
+
+def usage_requirements(prompt: str) -> tuple[bool, bool, bool]:
+    """Classify visible Usage without treating an opinion prompt as executable work."""
+
+    requested = direct_usage_query(prompt)
+    automatic = (
+        usage_visibility_mode() == "automatic"
+        and USAGE_EXECUTABLE_REQUEST_PATTERN.search(prompt) is not None
+        and not USAGE_FEATURE_DISCUSSION_PATTERN.search(prompt)
+        and (
+            not PURE_USAGE_DISCUSSION_PATTERN.search(prompt)
+            or USAGE_FOLLOW_ON_WORK_PATTERN.search(prompt) is not None
+        )
+    )
+    return requested, automatic, primary_language_is_zh(prompt)
+
+
+def usage_instruction_for(
+    turn_id: str | None, requested: bool, automatic: bool, zh: bool
+) -> str:
+    """Return one runnable, fail-silent current-Usage instruction for a recorded turn."""
+
+    if not requested and not automatic:
+        return ""
+    command = usage_reporter_command(turn_id, zh)
+    trigger = "Automatic visible Usage is enabled" if automatic and not requested else "Current Usage was requested"
+    return (
+        f"{trigger}: resolve the enabled plugin with `codex plugin list --json`, then immediately "
+        f"before the final response run `{command}` exactly once; "
+        "append nonempty output, and on empty output or failure omit Usage without retrying or debugging."
+    )
+
+
+def usage_instruction(prompt: str, turn_id: str | None) -> str:
+    """Return one runnable, fail-silent current-Usage request when it was requested."""
+
+    return usage_instruction_for(turn_id, *usage_requirements(prompt))
 ROUTING_RATIONALE_GATE = (
     "Likely multi-unit work detected. Read route-card.md before implementation and write its canonical ROUTE line "
     "inside an HTML comment "
@@ -37,7 +189,8 @@ ROUTING_RATIONALE_GATE = (
     "current host-confirmed running ownership—not UI labels, idle/completed handles, artifacts, or a "
     "historical task_started; collect finals via host wait/status. PLANNED_DISPATCH is intent; Hooks "
     "count starts. After attempts, show one primary-language receipt: TEAM/CONCURRENCY use host-confirmed "
-    "starts/active workers, never planned; capacity is ? when unknown. Root Direct exit stays silent. "
+    "starts/active workers, never planned; capacity is ? when unknown. Root Direct uses the compact "
+    "visible response contract without loading orchestration references. "
     "Shared writes permit reads. Direct names transfer cost. Audit is silent; create no "
     "extra proof, probe, document, test, or model call. Name every child "
     "<tier>__<semantic>_<model>, where tier is fast, standard, or lead."
@@ -104,6 +257,36 @@ SINGLE_UNIT_PATTERN = re.compile(
     r"(?:implementation\s+)?(?:unit|task|change)\b",
     re.IGNORECASE,
 )
+NIGHT_SHIFT_COMMAND_PATTERN = re.compile(
+    r"(?:(?:请|这次|就)?\s*(?:用|使用|启用|选择|按)\s*(?:night\s*shift|夜班|挂机班))|"
+    r"(?:(?:night\s*shift|夜班|挂机班)(?:模式)?\s*(?:跑|运行|执行|处理))|"
+    r"\b(?:use|enable|choose|run)\s+(?:the\s+)?night\s*shift\b",
+    re.IGNORECASE,
+)
+WAITABLE_PATTERN = re.compile(
+    r"(?:可以等|不着急|明天|过夜|晚点|can\s+wait|not\s+urgent|overnight|"
+    r"latency[ -]?tolerant)",
+    re.IGNORECASE,
+)
+COST_PRIORITY_PATTERN = re.compile(
+    r"(?:成本优先|省钱|预算|cost\s*(?:first|priority)|budget|cheaper|economy)",
+    re.IGNORECASE,
+)
+URGENT_PATTERN = re.compile(r"(?:紧急|马上|立刻|截止|urgent|asap|deadline)", re.IGNORECASE)
+CODING_PATTERN = re.compile(
+    r"(?:代码|编码|开发|实现|修复|bug|测试|code|coding|implement|fix|build|test)",
+    re.IGNORECASE,
+)
+DOCUMENT_PATTERN = re.compile(
+    r"(?:文档|方案|报告|总结|调研|写作|document|proposal|report|research|writing)",
+    re.IGNORECASE,
+)
+CONVERSATION_PATTERN = re.compile(
+    r"(?:聊聊|讨论|解释|介绍|怎么看|什么是|是否可行|是否启用|要不要启用|想问|"
+    r"talk about|discuss|explain|what is|how does|should\s+(?:we|i)\s+enable|"
+    r"whether\s+to\s+enable)",
+    re.IGNORECASE,
+)
 
 
 def stable_hash(value: str) -> str:
@@ -134,6 +317,186 @@ def routing_rationale_signal(prompt: str) -> bool:
     return False
 
 
+def primary_language_is_zh(prompt: str) -> bool:
+    return len(re.findall(r"[\u3400-\u9fff]", prompt)) > len(re.findall(r"[A-Za-z]", prompt)) / 3
+
+
+def night_shift_kind(prompt: str) -> str | None:
+    """Classify an observable Night Shift intent; never select a model automatically."""
+
+    if not EXECUTION_PATTERN.search(prompt):
+        return None
+    # A discussion or a question about the mode is never consent to use it.
+    if CONVERSATION_PATTERN.search(prompt):
+        return None
+    explicit = NIGHT_SHIFT_COMMAND_PATTERN.search(prompt) is not None
+    waitable = WAITABLE_PATTERN.search(prompt) is not None
+    if explicit:
+        return "explicit_spark" if URGENT_PATTERN.search(prompt) and CODING_PATTERN.search(prompt) else "explicit_luna"
+    if (
+        waitable
+        and COST_PRIORITY_PATTERN.search(prompt)
+        and (DOCUMENT_PATTERN.search(prompt) or CODING_PATTERN.search(prompt))
+    ):
+        return "suggestion"
+    return None
+
+
+def night_shift_message(kind: str, zh: bool) -> str:
+    if zh:
+        if kind == "suggestion":
+            return (
+                "Night Shift 建议：此任务看起来可无人值守且成本优先；如你同意，可选夜班模式。"
+                "这是建议，不切换模型、不阻塞当前执行，也不会在本会话/工作区重复提示。"
+            )
+        if kind == "explicit_spark":
+            return (
+                "Night Shift 已选择：这是紧急且确定性的编码工作，优先 Spark XHigh。先尝试原生员工；"
+                "原生不可见时先用 Adapter；仅在实际启动失败后才可标记 route_unavailable 并回退。"
+            )
+        return (
+            "Night Shift 已选择：普通经济型通用/文档工作优先 Luna Max。先尝试原生员工；"
+            "原生不可见时先用 Adapter；仅在实际启动失败后才可标记 route_unavailable 并回退。"
+        )
+    if kind == "suggestion":
+        return (
+            "Night Shift suggestion: this looks unattended and cost-first; offer the mode if useful. "
+            "This is non-blocking, does not switch models, and is not repeated for this session/workspace."
+        )
+    if kind == "explicit_spark":
+        return (
+            "Night Shift selected: urgent deterministic coding prefers Spark XHigh. Try the native employee first; "
+            "if it is not visible, try the adapter; only an observed start failure may become route_unavailable and fall back."
+        )
+    return (
+        "Night Shift selected: ordinary economy general/document work prefers Luna Max. Try the native employee first; "
+        "if it is not visible, try the adapter; only an observed start failure may become route_unavailable and fall back."
+    )
+
+
+def night_shift_context(payload: dict[str, object], cwd: Path, prompt: str) -> str:
+    """Persist a once-only Night Shift hint without storing prompt text or blocking delivery."""
+
+    kind = night_shift_kind(prompt)
+    if kind is None:
+        return ""
+    zh = primary_language_is_zh(prompt)
+    try:
+        configured = os.environ.get("PLUGIN_DATA")
+        if not configured:
+            return night_shift_message(kind, zh)
+        root = Path(configured).expanduser()
+        root.mkdir(parents=True, exist_ok=True)
+        with sqlite3.connect(root / "orchestration.db", timeout=3) as connection:
+            connection.execute("PRAGMA busy_timeout = 3000")
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS night_shift_reminders (
+                    session_id TEXT NOT NULL,
+                    cwd_hash TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    reminded_at TEXT NOT NULL,
+                    policy_version TEXT NOT NULL,
+                    PRIMARY KEY (session_id, cwd_hash, kind)
+                )
+                """
+            )
+            cursor = connection.execute(
+                "INSERT OR IGNORE INTO night_shift_reminders "
+                "(session_id, cwd_hash, kind, reminded_at, policy_version) VALUES (?, ?, ?, ?, ?)",
+                (
+                    str(payload.get("session_id") or "unknown-session"),
+                    stable_hash(str(workspace_root(cwd))),
+                    kind,
+                    datetime.now(timezone.utc).isoformat(),
+                    POLICY_VERSION,
+                ),
+            )
+            if cursor.rowcount == 0:
+                return ""
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        # Auditing is advisory only. Preserve the intent even when persistence is unavailable.
+        return night_shift_message(kind, zh)
+    return night_shift_message(kind, zh)
+
+
+def visible_response_contract(prompt: str, turn_id: str | None) -> str:
+    cjk = len(re.findall(r"[\u3400-\u9fff]", prompt))
+    latin = len(re.findall(r"[A-Za-z]", prompt))
+    value = VISIBLE_RESPONSE_CONTRACT_ZH if cjk > latin / 3 else VISIBLE_RESPONSE_CONTRACT_EN
+    turn_arg = f"--turn-id {turn_id}" if turn_id else ""
+    return value.replace("{turn_arg}", turn_arg).replace("  ", " ")
+
+
+def latest_turn_id(payload: dict[str, object], cwd: Path) -> str | None:
+    explicit = str(payload.get("turn_id") or "").strip()
+    if explicit:
+        return explicit
+    try:
+        configured = os.environ.get("PLUGIN_DATA")
+        if not configured:
+            return None
+        database = Path(configured).expanduser() / "orchestration.db"
+        if not database.is_file():
+            return None
+        uri = f"{database.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(uri, uri=True, timeout=3) as connection:
+            row = connection.execute(
+                "SELECT turn_id FROM gate_injections WHERE session_id = ? AND cwd_hash = ? "
+                "ORDER BY injected_at DESC LIMIT 1",
+                (
+                    str(payload.get("session_id") or "unknown-session"),
+                    stable_hash(str(workspace_root(cwd))),
+                ),
+            ).fetchone()
+        return str(row[0]) if row and row[0] else None
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return None
+
+
+def latest_usage_instruction(payload: dict[str, object], cwd: Path) -> str:
+    """Restore Usage only when the most recent recorded root turn required it."""
+
+    try:
+        configured = os.environ.get("PLUGIN_DATA")
+        if not configured:
+            return ""
+        database = Path(configured).expanduser() / "orchestration.db"
+        if not database.is_file():
+            return ""
+        uri = f"{database.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(uri, uri=True, timeout=3) as connection:
+            columns = {
+                str(row[1]) for row in connection.execute("PRAGMA table_info(gate_injections)")
+            }
+            if not {"usage_requested", "usage_automatic", "usage_language"}.issubset(columns):
+                return ""
+            session_id = str(payload.get("session_id") or "unknown-session")
+            cwd_hash = stable_hash(str(workspace_root(cwd)))
+            explicit_turn_id = str(payload.get("turn_id") or "").strip()
+            if explicit_turn_id:
+                row = connection.execute(
+                    "SELECT turn_id, usage_requested, usage_automatic, usage_language "
+                    "FROM gate_injections WHERE session_id = ? AND cwd_hash = ? AND turn_id = ? "
+                    "ORDER BY injected_at DESC LIMIT 1",
+                    (session_id, cwd_hash, explicit_turn_id),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    "SELECT turn_id, usage_requested, usage_automatic, usage_language "
+                    "FROM gate_injections WHERE session_id = ? AND cwd_hash = ? "
+                    "ORDER BY injected_at DESC LIMIT 1",
+                    (session_id, cwd_hash),
+                ).fetchone()
+        if row is None:
+            return ""
+        return usage_instruction_for(
+            str(row[0]) or None, bool(row[1]), bool(row[2]), row[3] == "zh"
+        )
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return ""
+
+
 def ensure_gate_schema(connection: sqlite3.Connection) -> None:
     connection.execute(
         """
@@ -149,6 +512,9 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
             routing_rationale_candidate INTEGER NOT NULL DEFAULT 0,
             routing_experiment_id TEXT,
             delegation_grant_active INTEGER NOT NULL DEFAULT 0,
+            usage_requested INTEGER NOT NULL DEFAULT 0,
+            usage_automatic INTEGER NOT NULL DEFAULT 0,
+            usage_language TEXT,
             injected_at TEXT NOT NULL,
             policy_version TEXT NOT NULL
         )
@@ -181,6 +547,16 @@ def ensure_gate_schema(connection: sqlite3.Connection) -> None:
             "ALTER TABLE gate_injections ADD COLUMN "
             "delegation_grant_active INTEGER NOT NULL DEFAULT 0"
         )
+    if "usage_requested" not in columns:
+        connection.execute(
+            "ALTER TABLE gate_injections ADD COLUMN usage_requested INTEGER NOT NULL DEFAULT 0"
+        )
+    if "usage_automatic" not in columns:
+        connection.execute(
+            "ALTER TABLE gate_injections ADD COLUMN usage_automatic INTEGER NOT NULL DEFAULT 0"
+        )
+    if "usage_language" not in columns:
+        connection.execute("ALTER TABLE gate_injections ADD COLUMN usage_language TEXT")
 
 
 def project_grant_active(connection: sqlite3.Connection, cwd_hash: str) -> bool:
@@ -208,11 +584,15 @@ def record_gate(
     prompt = str(payload.get("prompt") or "")
     repeat_signal = repeat_failure_signal(prompt)
     rationale_candidate = routing_rationale_signal(prompt)
+    usage_requested, usage_automatic, usage_zh = usage_requirements(prompt)
     state = {
         "repeat_failure_signal": repeat_signal,
         "continuity_required": False,
         "routing_rationale_candidate": rationale_candidate,
         "delegation_grant_active": False,
+        "usage_requested": usage_requested,
+        "usage_automatic": usage_automatic,
+        "usage_zh": usage_zh,
     }
     try:
         configured = os.environ.get("PLUGIN_DATA")
@@ -232,7 +612,8 @@ def record_gate(
             ensure_gate_schema(connection)
             existing = connection.execute(
                 "SELECT repeat_failure_signal, continuity_required, "
-                "routing_rationale_candidate, delegation_grant_active "
+                "routing_rationale_candidate, delegation_grant_active, "
+                "usage_requested, usage_automatic, usage_language "
                 "FROM gate_injections WHERE injection_id = ?",
                 (injection_id,),
             ).fetchone()
@@ -244,6 +625,9 @@ def record_gate(
                         existing["routing_rationale_candidate"]
                     ),
                     "delegation_grant_active": bool(existing["delegation_grant_active"]),
+                    "usage_requested": bool(existing["usage_requested"]),
+                    "usage_automatic": bool(existing["usage_automatic"]),
+                    "usage_zh": existing["usage_language"] == "zh",
                 }
             prior_prompts = int(
                 connection.execute(
@@ -264,8 +648,9 @@ def record_gate(
                     injection_id, session_id, turn_id, cwd_hash, prompt_fingerprint,
                     ledger_present, repeat_failure_signal, continuity_required,
                     routing_rationale_candidate, routing_experiment_id,
-                    delegation_grant_active, injected_at, policy_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    delegation_grant_active, usage_requested, usage_automatic,
+                    usage_language, injected_at, policy_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     injection_id,
@@ -279,6 +664,9 @@ def record_gate(
                     int(rationale_candidate),
                     ROUTING_EXPERIMENT_ID if rationale_candidate else None,
                     int(grant_active),
+                    int(usage_requested),
+                    int(usage_automatic),
+                    "zh" if usage_zh else "en",
                     datetime.now(timezone.utc).isoformat(),
                     POLICY_VERSION,
                 ),
@@ -288,6 +676,9 @@ def record_gate(
                 "continuity_required": continuity_required,
                 "routing_rationale_candidate": rationale_candidate,
                 "delegation_grant_active": grant_active,
+                "usage_requested": usage_requested,
+                "usage_automatic": usage_automatic,
+                "usage_zh": usage_zh,
             }
     except (OSError, sqlite3.Error, TypeError, ValueError):
         # Auditability must never block or suppress the routing instruction.
@@ -540,7 +931,18 @@ def main() -> None:
             }
         elif event == "UserPromptSubmit":
             gate_state = record_gate(payload, cwd, ledger)
-            message = f"{MICRO_STYLE} {ROUTING_GATE}"
+            prompt = str(payload.get("prompt") or "")
+            message = (
+                f"{MICRO_STYLE} {ROUTING_GATE} "
+                f"{visible_response_contract(prompt, str(payload.get('turn_id') or '') or None)}"
+            )
+            if usage := usage_instruction_for(
+                str(payload.get("turn_id") or "") or None,
+                gate_state["usage_requested"],
+                gate_state["usage_automatic"],
+                gate_state["usage_zh"],
+            ):
+                message += f" {usage}"
             if gate_state["routing_rationale_candidate"]:
                 message += f" {ROUTING_RATIONALE_GATE}"
                 if gate_state["delegation_grant_active"]:
@@ -553,6 +955,9 @@ def main() -> None:
                 )
             elif gate_state["continuity_required"]:
                 message += f" {CONTINUITY_GATE}"
+            night_shift = night_shift_context(payload, cwd, prompt)
+            if night_shift:
+                message += f" {night_shift}"
             debt = routing_debt_context(payload)
             if debt:
                 message += f" {debt}"
@@ -563,20 +968,27 @@ def main() -> None:
                 }
             }
         elif event == "PostCompact":
+            response_recovery = (
+                "Goldilocks visible response contract survived compaction. "
+                + visible_response_contract("", latest_turn_id(payload, cwd))
+                + " Use `--language zh` when the user's primary language is Chinese."
+            )
+            if usage := latest_usage_instruction(payload, cwd):
+                response_recovery += f" {usage}"
             if ledger is None:
                 if not has_continuity_debt(payload, cwd):
-                    return
+                    system_message = response_recovery
                 else:
                     system_message = (
                         "Goldilocks continuity debt survived compaction without a task frontier. Read "
                         "continuity.md, reconcile repository evidence, create or update "
                         ".goldilocks/ACTIVE.md and the existing debug/validation record, then resume "
-                        "from the exact next test."
+                        f"from the exact next test. {response_recovery}"
                     )
             else:
                 system_message = (
                     f"Goldilocks recovery required: read {ledger}, reconcile repository state, "
-                    "and resume from Exact next action."
+                    f"and resume from Exact next action. {response_recovery}"
                 )
             output = {
                 "continue": True,

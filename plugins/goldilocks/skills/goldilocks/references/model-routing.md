@@ -72,13 +72,20 @@ The Hook fails closed for a missing tier/semantic prefix and derives `_luna`, `_
 - Standard: `none` or at most four relevant turns.
 - Only a justified full-history Lead handoff may use `all`; it inherits Lead model and reasoning.
 
-Native Fast/Standard require explicit host-supported models and cannot silently inherit
-Lead. Use the installed native `goldilocks_spark_worker` and
-`goldilocks_luna_economy` when their host supports them; otherwise use the external
-adapter fallback below. Fast cannot delegate. The Hook accepts `Agent`, `spawn_agent`,
-and `collaboration.spawn_agent`; an unplanned Sol child is told to return immediately
-because `SubagentStart` cannot cancel it. Ambiguous concurrent or nested starts remain
-unverifiable rather than false mismatches.
+Fixed employees require explicit `agent_type`: `goldilocks_spark_worker`,
+`goldilocks_luna_economy`, `goldilocks_terra_engineer`, or
+`goldilocks_sol_reviewer`. Model overrides and suffixes never select them; generic fixed
+model starts fail closed. Use the Adapter or keep work local when a role is invisible.
+Only a justified Lead handoff may inherit Lead, and Fast cannot delegate. The Hook
+accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; unplanned Sol returns
+immediately, and a Fast/Standard disguise is unusable. Ambiguous concurrent or nested starts stay unverifiable.
+
+## Host-visible Sol specialists (prototype)
+
+After authorization, read [Sol Specialists](sol-specialists.md). Its visible Sol/high
+path is separate from the native reviewer and hidden subagents: two slots, no nested
+Sol, and mandatory origin return. Execution may delegate Terra/Spark/Luna; audit stays
+read-only. Capability failure falls back openly. This is not Project Hub.
 
 ## External Fast adapter
 

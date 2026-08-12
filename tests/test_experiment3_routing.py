@@ -334,6 +334,220 @@ def test_runtime_inspector(root: Path) -> None:
     assert immutable.returncode != 0
     assert "immutable after Lead verification" in immutable.stderr
 
+    # Runtime metadata enriches an already planned route but must never replace
+    # its canonical contract identity when the rollout omits agent_path.
+    mutable_thread = "22222222-3333-4444-8555-666666666666"
+    mutable_records = [
+        {
+            "type": "session_meta",
+            "payload": {
+                "id": mutable_thread,
+                "parent_thread_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+                "agent_role": "goldilocks_terra_engineer",
+                "model_provider": "fixture",
+            },
+        },
+        records[1],
+        records[2],
+    ]
+    (sessions / f"rollout-2026-08-03T00-30-00-{mutable_thread}.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in mutable_records) + "\n",
+        encoding="utf-8",
+    )
+    planned_name = "standard__planned_identity_terra"
+    planned_cwd_hash = "planned-cwd-hash"
+    planned_fingerprint = "planned-task-fingerprint"
+    with sqlite3.connect(audit / "orchestration.db") as connection:
+        connection.execute(
+            "INSERT INTO decisions VALUES (?, 'started', NULL, ?, ?, ?)",
+            ("decision-2", planned_name, planned_cwd_hash, planned_fingerprint),
+        )
+        connection.execute(
+            "INSERT INTO executions VALUES (?, 'decision-2', ?, ?, NULL, NULL, NULL, NULL, NULL, NULL)",
+            (mutable_thread, "goldilocks_terra_engineer", TERRA),
+        )
+    mutable = command(
+        str(INSPECTOR),
+        mutable_thread,
+        "--sessions-dir",
+        str(root / "sessions"),
+        "--data-dir",
+        str(audit),
+        "--record",
+    )
+    assert mutable.returncode == 0, mutable.stderr
+    assert json.loads(mutable.stdout)["recorded"] is True
+    with sqlite3.connect(audit / "orchestration.db") as connection:
+        preserved = connection.execute(
+            "SELECT actual_model, task_name, cwd_hash, task_fingerprint "
+            "FROM decisions WHERE decision_id = 'decision-2'"
+        ).fetchone()
+    assert preserved == (TERRA, planned_name, planned_cwd_hash, planned_fingerprint)
+
+    # Codex native starts can precede the rollout metadata that contains the
+    # canonical child path and effort.  The inspector may repair precisely that
+    # observed-only state, but not infer any broader route.
+    posthoc_data = root / "posthoc-audit"
+    parent = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+    posthoc_thread = "66666666-7777-4888-8999-aaaaaaaaaaaa"
+    posthoc_start = hook(
+        posthoc_data,
+        {
+            "hook_event_name": "SubagentStart",
+            "session_id": parent,
+            "turn_id": "native-child-turn",
+            "agent_id": posthoc_thread,
+            "agent_type": "goldilocks_terra_engineer",
+            "model": TERRA,
+            "cwd": "/fixture",
+        },
+    )
+    assert posthoc_start.returncode == 0, posthoc_start.stderr
+    posthoc_rollout = sessions / f"rollout-2026-08-03T01-00-00-{posthoc_thread}.jsonl"
+    posthoc_records = [
+        {
+            "type": "session_meta",
+            "payload": {
+                "id": posthoc_thread,
+                "parent_thread_id": parent,
+                "agent_role": "goldilocks_terra_engineer",
+                "agent_path": "/root/standard__posthoc_runtime_terra",
+            },
+        },
+        {
+            "type": "turn_context",
+            "payload": {
+                "model": TERRA,
+                "effort": "medium",
+                "sandbox_policy": {"type": "danger-full-access"},
+                "permission_profile": {"type": "disabled"},
+                "cwd": "/fixture",
+            },
+        },
+        {
+            "type": "event_msg",
+            "payload": {"info": {"total_token_usage": {"input_tokens": 13, "cached_input_tokens": 5, "output_tokens": 3}}},
+        },
+    ]
+    posthoc_rollout.write_text(
+        "\n".join(json.dumps(item) for item in posthoc_records) + "\n", encoding="utf-8"
+    )
+    posthoc_stop = hook(
+        posthoc_data,
+        {
+            "hook_event_name": "SubagentStop",
+            "session_id": parent,
+            "agent_id": posthoc_thread,
+            "agent_type": "goldilocks_terra_engineer",
+            "model": TERRA,
+        },
+    )
+    assert posthoc_stop.returncode == 0, posthoc_stop.stderr
+    posthoc = command(
+        str(INSPECTOR), posthoc_thread, "--sessions-dir", str(root / "sessions"),
+        "--data-dir", str(posthoc_data), "--record",
+    )
+    assert posthoc.returncode == 0, posthoc.stderr
+    assert json.loads(posthoc.stdout)["recorded"] is True
+    with sqlite3.connect(posthoc_data / "orchestration.db") as connection:
+        connection.row_factory = sqlite3.Row
+        decision = connection.execute(
+            "SELECT * FROM decisions WHERE agent_id = ?", (posthoc_thread,)
+        ).fetchone()
+        execution = connection.execute(
+            "SELECT * FROM executions WHERE agent_id = ?", (posthoc_thread,)
+        ).fetchone()
+    assert decision["task_name"] == "standard__posthoc_runtime_terra"
+    assert decision["correlation_confidence"] == "posthoc_role_observed"
+    assert decision["status"] == "stopped"
+    assert decision["planned_at"] == execution["started_at"]
+    assert decision["started_at"] == execution["started_at"]
+    assert decision["stopped_at"] == execution["stopped_at"]
+    assert execution["decision_id"] == decision["decision_id"]
+    assert execution["actual_effort"] == "medium"
+    assert execution["input_tokens"] == 13 and execution["output_tokens"] == 3
+    repeated = command(
+        str(INSPECTOR), posthoc_thread, "--sessions-dir", str(root / "sessions"),
+        "--data-dir", str(posthoc_data), "--record",
+    )
+    assert repeated.returncode == 0, repeated.stderr
+    with sqlite3.connect(posthoc_data / "orchestration.db") as connection:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM decisions WHERE agent_id = ?", (posthoc_thread,)
+        ).fetchone()[0] == 1
+
+    # The posthoc bridge rejects all material ambiguities rather than converting
+    # them into a reusable native decision.
+    bad_parent_thread = "77777777-8888-4999-8aaa-bbbbbbbbbbbb"
+    bad_parent = [dict(item) for item in posthoc_records]
+    bad_parent[0] = {**bad_parent[0], "payload": {**posthoc_records[0]["payload"], "id": bad_parent_thread, "parent_thread_id": "wrong-parent"}}
+    (sessions / f"rollout-2026-08-03T02-00-00-{bad_parent_thread}.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in bad_parent) + "\n", encoding="utf-8"
+    )
+    hook(posthoc_data, {"hook_event_name": "SubagentStart", "session_id": parent, "agent_id": bad_parent_thread, "agent_type": "goldilocks_terra_engineer", "model": TERRA, "cwd": "/fixture"})
+    rejected_parent = command(str(INSPECTOR), bad_parent_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_parent.returncode != 0 and "parent_thread_id" in rejected_parent.stderr
+
+    bad_name_thread = "88888888-9999-4aaa-8bbb-cccccccccccc"
+    bad_name = [dict(item) for item in posthoc_records]
+    bad_name[0] = {**bad_name[0], "payload": {**posthoc_records[0]["payload"], "id": bad_name_thread, "agent_path": "/root/not-a-route"}}
+    (sessions / f"rollout-2026-08-03T03-00-00-{bad_name_thread}.jsonl").write_text("\n".join(json.dumps(item) for item in bad_name) + "\n", encoding="utf-8")
+    hook(posthoc_data, {"hook_event_name": "SubagentStart", "session_id": parent, "agent_id": bad_name_thread, "agent_type": "goldilocks_terra_engineer", "model": TERRA, "cwd": "/fixture"})
+    rejected_name = command(str(INSPECTOR), bad_name_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_name.returncode != 0 and "canonical native task name" in rejected_name.stderr
+
+    bad_profile_thread = "99999999-aaaa-4bbb-8ccc-dddddddddddd"
+    bad_profile = [dict(item) for item in posthoc_records]
+    bad_profile[0] = {
+        **bad_profile[0],
+        "payload": {**posthoc_records[0]["payload"], "id": bad_profile_thread},
+    }
+    bad_profile[1] = {
+        **bad_profile[1],
+        "payload": {**posthoc_records[1]["payload"], "model": "gpt-5.6-sol"},
+    }
+    (sessions / f"rollout-2026-08-03T04-00-00-{bad_profile_thread}.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in bad_profile) + "\n", encoding="utf-8"
+    )
+    hook(posthoc_data, {"hook_event_name": "SubagentStart", "session_id": parent, "agent_id": bad_profile_thread, "agent_type": "goldilocks_terra_engineer", "model": TERRA, "cwd": "/fixture"})
+    rejected_profile = command(str(INSPECTOR), bad_profile_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_profile.returncode != 0 and "route mismatch" in rejected_profile.stderr
+
+    unplanned_thread = "aaaaaaaa-bbbb-4ccc-8ddd-ffffffffffff"
+    unplanned = [dict(item) for item in posthoc_records]
+    unplanned[0] = {**unplanned[0], "payload": {**posthoc_records[0]["payload"], "id": unplanned_thread}}
+    (sessions / f"rollout-2026-08-03T05-00-00-{unplanned_thread}.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in unplanned) + "\n", encoding="utf-8"
+    )
+    hook(posthoc_data, {"hook_event_name": "SubagentStart", "session_id": parent, "agent_id": unplanned_thread, "agent_type": "goldilocks_terra_engineer", "model": TERRA, "cwd": "/fixture"})
+    with sqlite3.connect(posthoc_data / "orchestration.db") as connection:
+        connection.execute("UPDATE executions SET correlation_confidence = 'unplanned' WHERE agent_id = ?", (unplanned_thread,))
+    rejected_unplanned = command(str(INSPECTOR), unplanned_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_unplanned.returncode != 0 and "not eligible" in rejected_unplanned.stderr
+    with sqlite3.connect(posthoc_data / "orchestration.db") as connection:
+        connection.execute("UPDATE executions SET correlation_confidence = 'ambiguous' WHERE agent_id = ?", (unplanned_thread,))
+    rejected_ambiguous = command(str(INSPECTOR), unplanned_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_ambiguous.returncode != 0 and "not eligible" in rejected_ambiguous.stderr
+
+    different_thread = "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff"
+    different = [dict(item) for item in posthoc_records]
+    different[0] = {**different[0], "payload": {**posthoc_records[0]["payload"], "id": different_thread}}
+    (sessions / f"rollout-2026-08-03T06-00-00-{different_thread}.jsonl").write_text(
+        "\n".join(json.dumps(item) for item in different) + "\n", encoding="utf-8"
+    )
+    hook(posthoc_data, {"hook_event_name": "SubagentStart", "session_id": parent, "agent_id": different_thread, "agent_type": "goldilocks_terra_engineer", "model": TERRA, "cwd": "/fixture"})
+    with sqlite3.connect(posthoc_data / "orchestration.db") as connection:
+        connection.execute(
+            "INSERT INTO decisions SELECT ?, session_id, turn_id, ?, cwd_hash, task_fingerprint, "
+            "task_name, tier, parent_model, expected_model, expected_agent_type, expected_effort, "
+            "expected_sandbox, billing_channel, transport, fork_turns, status, prior_observations, "
+            "planned_at, started_at, stopped_at, actual_model, ?, correlation_confidence, policy_version "
+            "FROM decisions WHERE decision_id = ?",
+            ("different-decision", "different-tool", different_thread, decision["decision_id"]),
+        )
+    rejected_different = command(str(INSPECTOR), different_thread, "--sessions-dir", str(root / "sessions"), "--data-dir", str(posthoc_data), "--record")
+    assert rejected_different.returncode != 0 and "different routing decision" in rejected_different.stderr
+
 
 def test_native_role_audit(root: Path) -> None:
     data = root / "routing-data"

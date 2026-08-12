@@ -2,6 +2,22 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.5.1 — 2026-08-12
+
+### 原生可见性、安全安装与可测量默认值
+
+- 加入一条紧凑可见的 Direct 回执，并将 Usage 默认改为按需；`automatic` 只能经 Bootstrap 显式 opt-in。默认值避免普通工作必须在最终回复前读取一次；两种模式都只做一次本地读取，不额外调用模型。
+- 注册并校验原生 Spark、Luna、Terra、Sol 角色身份；宿主不能暴露所需原生路线时使用打包 Adapter fallback。Night Shift 现已在同一套路由和负责人门槛下启用。
+- 将每个根任务可见的 Sol specialist 限制为两个并发槽位，只有宿主确认终态并返回原任务后才回收容量。
+- Bootstrap 在 Python 3.9 上通过内置、MIT 许可的 Tomli 安全解析完整 TOML。获得批准后，它只能追加缺失的四个官方 `[agents.*]` 注册；Hook 信任仍由宿主决定。
+- 明确 immutable Tag 更新必须验证 Tag、移除 marketplace、以已验证 ref 重新添加、重装 Plugin、运行 Bootstrap plan/apply/check 并新建任务；Goldilocks 不会自行更新。
+- 细化完整执行链负责人：一位 owner 负责已知可变链，必要时获得一次普通的聚焦修复，并交回证据供 Lead 按比例验收。
+- 将 Direct 明确为渐进式冷启动：默认不预读 Route Card、编排或连续性参考；执行中发现独立单元、未知根因或持久化边界时再按需升级。根 Skill 仍直接提供本地化路由回执。
+
+### 证据边界
+
+[最终冻结 Direct 样本](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)中两组均质量合格。相对已发布 v0.5.0，candidate 的 wall **−10.997%**、输出 **−13.624%**，但 Raw Token **+39.777%**、官方 USD **+15.727%**、工具调用 **+33.333%**。这是 Pareto 取舍，不是支配性的效率结论；它只覆盖记录的任务，也不声称会自动信任 Hook 或自动自更新。
+
 ## 0.5.0 — 2026-08-11
 
 ### 正式稳定版

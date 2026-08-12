@@ -21,7 +21,8 @@ comment. Keep its field names and reason code in English exactly as shown:
 
 After dispatch attempts return—or immediately for a Direct choice made inside
 orchestration—show exactly one short receipt in the user's primary language. Do not show
-the canonical comment or both languages. The root Direct exit remains silent.
+the canonical comment or both languages. The root Direct exit shows the same compact
+receipt through the always-loaded response contract without reading this card.
 
 - English: `ROUTE=mixed | TEAM=Lead+3 workers | CONCURRENCY=3/6 | DELEGATED=tests, parser, +1 | LEAD=integration | REASON=parallel gain | DETAIL=...`
 - 中文：`路由=混合｜团队=主模型+3 个子智能体｜并发=3/6｜委派=测试、解析、+1｜主模型=整合｜理由=并行收益｜详情=…`
@@ -41,7 +42,7 @@ Price every independent ready unit before Direct. Shared writes block conflictin
 
 Silently reuse run data; create no probe. Direct needs concrete weighted-cost, quality, authority, route-failure, or inseparability evidence. With an active grant, verified route, equal acceptance, and lower scarce-quota cost, dispatch the highest-value ready unit within time and raw-token bounds.
 
-Evaluate Fast before Standard. If all workers are Terra, `DETAIL` explains why judgment, tools, authority, or acceptance exclude Fast. Missing native Luna visibility is not `route_unavailable` while the adapter works. Name children `<tier>__<semantic>_<model>`.
+Evaluate Fast before Standard. If all workers are Terra, `DETAIL` explains why judgment, tools, authority, or acceptance exclude Fast. Missing native Luna visibility is not `route_unavailable` while the adapter works. Name children `<tier>__<semantic>_<model>` before native spawn; `SubagentStart` is too late to rename.
 
 Collect terminal children with host wait/status; never make the user open one. Persist approval with `../../../scripts/project_delegation.py --grant --global --authority explicit-user`; use project `--revoke` for opt-out.
 

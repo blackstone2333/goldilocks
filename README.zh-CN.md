@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.0-2ea44f" alt="版本 0.5.0">
+  <img src="https://img.shields.io/badge/version-0.5.1-2ea44f" alt="版本 0.5.1">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
@@ -34,7 +34,7 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 C
 把下面这段直接发给你正在使用的 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.0，并锁定 Git ref v0.5.0。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.1，并锁定 Git ref v0.5.1。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
 ```
 
 ### Codex CLI 或 Desktop
@@ -42,7 +42,7 @@ Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 C
 优先安装原生 Plugin。它会带上根门禁、生命周期 Hook、Usage 统计、更新检查，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.0
+codex plugin marketplace add blackstone2333/goldilocks@v0.5.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -76,10 +76,10 @@ Codex 中的 portable Skills 仅作为 fallback 或临时 Bootstrap 来源，日
 - 使用 `codex --dangerously-bypass-hook-trust` 仅绕过一次。它会影响本次启动中的全部已启用 Hook，不会形成永久信任。
 - 暂不信任。文字 Skill 仍可使用，依赖 Hook 的自动化保持关闭。
 
-Bootstrap 不会写入 `hooks.state`、trusted hash、alias 或用户配置。启动审核未出现或需要事后检查时使用 `/hooks`。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭原生 Plugin 的每日版本检查。
+Bootstrap 不会写入 `hooks.state`、trusted hash、alias 或无关用户配置。得到明确批准后，它只会向 `config.toml` 追加缺失的四个官方 `[agents.*]` 注册；发现冲突则不写入。启动审核未出现或需要事后检查时使用 `/hooks`。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭原生 Plugin 的每日版本检查。
 
 > [!IMPORTANT]
-> **并发数量由用户控制。** Goldilocks 只遵守宿主上限，绝不会修改 `~/.codex/config.toml`。你可以把单任务子线程上限设置为 **6（建议起始值）**；当 Codex 版本、机器性能、任务隔离和审核能力都足够时，也可以继续提高。
+> **并发数量由用户控制。** Goldilocks 只遵守宿主上限，绝不会修改这里的并发配置。你可以把单任务子线程上限设置为 **6（建议起始值）**；当 Codex 版本、机器性能、任务隔离和审核能力都足够时，也可以继续提高。
 
 ```toml
 [features.multi_agent_v2]
@@ -109,7 +109,7 @@ max_concurrent_threads_per_session = 6
 ```mermaid
 flowchart TD
     A["收到任务"] --> B{"存在实质不确定性、连续性、风险或值得拆分的就绪工作吗？"}
-    B -- "没有" --> C["Direct 退出<br/>最小完整改动 + 决定性检查"]
+    B -- "没有" --> C["Direct 冷启动<br/>不读流程参考 + 决定性检查"]
     B -- "终局不清楚" --> D["Align"]
     B -- "根因未知" --> E["Diagnose"]
     B -- "多阶段工作" --> F["Build"]
@@ -124,7 +124,9 @@ flowchart TD
     J -- "混合链或仍有有界判断" --> L["Standard 主负责人 / Terra Medium"]
     J -- "确定性纯编程叶子" --> M["Fast / Spark XHigh"]
     J -- "不赶时间的经济叶子" --> N["Economy / Luna Max"]
-    C --> O["新鲜验收证据"]
+    C --> T{"中途是否出现新的不确定性、<br/>持久化需求或独立单元？"}
+    T -- "没有" --> O["新鲜验收证据"]
+    T -- "出现" --> B
     K --> O
     L --> O
     M --> O
@@ -142,7 +144,7 @@ flowchart TD
 
 ## 默认 Direct
 
-根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会在加载任何工作流参考前直接退出。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。
+根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会以 Direct 冷启动，不加载任何工作流参考。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。Direct 不是锁死的路线：如果执行中途才发现真正独立的工作单元、未知根因，或需要跨阶段留存，它会按需升级，只加载对应的路由、编排、诊断或连续性参考。Direct 的本地化路由回执仍由根合同直接提供，不依赖这些文件。
 
 原生 Hook 会加入一条精简沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全、歧义或用户明确要求详细说明时恢复完整解释。它减少叙述噪声，不会让模型扮演某种人设，也不会删掉必要证据。
 
@@ -184,7 +186,11 @@ Goldilocks 把委派视为经济决策和组织决策，但不会让每项任务
 
 ## 看懂路由回执
 
-根路由的 Direct 退出保持静默。任务真正进入编排并完成启动尝试后，才会按用户语言显示一条短回执：
+现在每个可执行任务都会按用户语言显示一条短回执。Direct 只承担这条常量级的可见性成本；进入编排后，则在派发尝试完成后显示真实启动结果：
+
+```text
+路由=直接｜团队=主模型｜并发=0/?｜委派=无｜主模型=执行与验收｜理由=主模型更快｜详情=单一工作单元
+```
 
 ```text
 路由=混合｜团队=主模型+3 个子智能体｜并发=3/6｜委派=测试、解析、文档核对｜主模型=整合与验收｜理由=并行收益｜详情=三个独立单元已经启动
@@ -194,15 +200,15 @@ Goldilocks 把委派视为经济决策和组织决策，但不会让每项任务
 
 ## Usage 用量统计
 
-Codex 原生 Plugin 会在工作结束时直接生成一条宿主侧用量回执，不额外调用模型：
+Codex 原生 Plugin 会在宿主侧记录起始基线。可见 Usage **默认按需**：只有用户明确索要时，才会在最终回复前运行一次本地只读统计器。Bootstrap 可以显式启用 `automatic`；开启后，每个可执行任务会进行同样的一次性读取。两种模式都不会额外调用模型：
 
 ```text
-Goldilocks usage | Sol: in … + out …; Terra: …; Luna: …; Spark: … | total … tokens · wall …
+用量：Sol …（输入 … / 缓存 … / 输出 …） | Terra … | Luna … | Spark … | 总计 … tokens · 用时 …
 ```
 
 它会按真实模型身份汇总 Lead、原生子智能体和外部 Worker，分别统计输入、缓存输入、输出，并在宿主能取得有效基线时显示总耗时。DeepSeek、Kimi、Qwen、Gemini 等第三方模型只要宿主提供真实身份，也会保留可读名称，不会全部算到 Sol 下面。
 
-拿不到的遥测会明确保持 unavailable，绝不会伪装成 0。portable Skills 仍能保留文字工作流，但自动 Usage 依赖宿主支持原生 Hook 和会话数据。
+部分 Worker 的遥测缺失时，会在已有合计旁显示“暂不可用”；整轮没有可用数据或读取失败时则保持静默。它绝不会伪装成 0，也不会在任务里重试或排查数据库。读取会绑定当前轮次 ID；即使本轮基线 Hook 失败，也不会误用上一轮数据。原生 fork 子智能体只计算继承检查点之后的增量，不再把复制来的父对话生命周期总量算到本次任务。portable Skills 仍能保留文字工作流，但自动 Usage 依赖宿主支持原生 Hook 和会话数据。
 
 ## Night Shift 夜班模式
 
@@ -307,6 +313,7 @@ Spark 没有公开数值费率。统一比较采用官方已知模型价格，�
 
 - [给 AI Agent 的项目指南](docs/AGENT-GUIDE.md)：完整能力、边界、证据等级和审计文件地图
 - [安装说明](docs/installation.zh-CN.md)：所有宿主路径与信任边界
+- [v0.5.1 发布证据](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)：最终质量合格的 Direct 样本与 Pareto 边界
 - [v0.5.0 发布证据](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md)：数据来源与修正规则
 - [评测经验](docs/benchmarking-lessons.zh-CN.md)：可复用的测试方法
 - [Goldilocks 对 Superpowers](benchmarks/GOLDILOCKS-VS-SUPERPOWERS.zh-CN.md)：更早且带日期的正面对照
@@ -315,6 +322,6 @@ Spark 没有公开数值费率。统一比较采用官方已知模型价格，�
 
 ## 当前状态
 
-Goldilocks `v0.5.0` 是稳定版。所有公开性能结论均限定在已链接的冻结评测范围内。
+Goldilocks `v0.5.1` 是稳定版。[最终质量合格的对比](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)中两组都通过，但相对已发布 v0.5.0 是 Pareto 取舍：wall −10.997%、输出 −13.624%；Raw Token +39.777%、官方 USD +15.727%、工具调用 +33.333%。所有公开性能结论均限定在已链接的冻结评测范围内。
 
 MIT 许可证。由 Charles Roc 和贡献者开发。Goldilocks 是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。

@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_VERSION = "0.5.0"
+RELEASE_VERSION = "0.5.1"
 PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILLS = PLUGIN / "skills"
 MAIN = SKILLS / "goldilocks" / "SKILL.md"
@@ -260,6 +260,16 @@ if MAIN.is_file():
         fail("main router lacks conditional continuity routing")
     if ".goldilocks/ACTIVE.md" not in main_text:
         fail("main router lacks deterministic recovery routing")
+    for required_text in [
+        "If Direct later reveals",
+        "leave Direct and load only the matching engine",
+        "only when multiple units become real",
+        "only when dispatching",
+        "only when persistence is required",
+        "The root still supplies the localized receipt",
+    ]:
+        if required_text not in main_text:
+            fail(f"main router lacks dynamic Direct upgrade contract: {required_text}")
 
 for engine in sorted(ENGINES):
     engine_path = SKILLS / "goldilocks" / "references" / f"{engine}.md"

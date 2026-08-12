@@ -26,7 +26,7 @@ decision line before implementation only inside an HTML comment:
 
 `<!-- ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<count> | READ_READY=<count> | EXISTING=<count> | PLANNED_DISPATCH=<count> | LEAD=<key nodes> | REASON=<code> | DETAIL=<one concise sentence> -->`
 
-Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `DETAIL` is one concise sentence, never chain-of-thought. After dispatch attempts return, show one user-language receipt using actual host-confirmed successful starts/active workers for `TEAM` and `CONCURRENCY`, not planned dispatch. A Direct choice inside this engine shows its receipt immediately; the root Direct exit shows none. Keep at most three delegated items plus `+N`, use `?` for an unknown host limit, and explain fallback after a failed start.
+Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `DETAIL` is one concise sentence, never chain-of-thought. After dispatch, show one user-language receipt using host-confirmed successful starts/active workers for `TEAM` and `CONCURRENCY`, not plans. Direct shows it immediately through the loaded response contract. Keep at most three delegated items plus `+N`, use `?` for an unknown host limit, and explain failed-start fallback.
 
 This is not a delegation quota; Direct remains valid. With an active project grant, verified route, equal acceptance, and lower scarce-quota cost, default to actually dispatching the highest-value ready unit even when slightly slower. Keep raw tokens and time proportionate. The grant covers bounded Fast/Standard dispatch only; Lead protects intent, interfaces, Critical decisions, integration, and acceptance instead of absorbing worker-ready implementation.
 
@@ -54,6 +54,12 @@ Use the shallowest organization that shortens the critical path or reduces quota
 - Lead → Standard → Fast: one domain with several ready units.
 - Multiple Standard advisers may investigate independently, but one owner decides; never create overlapping writers.
 
+## Use host-visible Sol specialists only by contract
+
+After authorization, read [Sol Specialists](sol-specialists.md): the host-visible
+Sol/high path has two slots, no nesting, and mandatory return. Execution may delegate
+Terra/Spark/Luna; audit stays read-only. It is not the native reviewer or Project Hub.
+
 Fast is a leaf and does not delegate. Standard may delegate a non-conflicting Fast leaf
 only within its domain; it cannot expand scope, change shared interfaces, or cross
 authority. The Standard owner integrates that leaf, makes one ordinary self-repair if
@@ -69,10 +75,11 @@ Classify after decomposition: a large unit can be Fast when discretion is low; a
 
 Workers return `STATUS`, `CHANGES`, `VERIFIED`, `JUDGMENT CALLS`, and `GAPS`; for defect handoffs, add an evidence-backed `CAUSE` or explicitly mark it unknown, then the fix and verification. Expand causal detail when asked. Owners inspect real diffs and evidence.
 
-Name every child exactly `<tier>__<semantic>_<model>`: `fast__..._luna`,
-`fast__..._spark`, `standard__..._terra`, or `lead__..._sol`. The two-layer
-organization adds no `owner` name prefix. Hooks/adapters fail closed when the tier or
-semantic prefix is missing and derive the actual model suffix from the pinned model.
+Name every child exactly `<tier>__<semantic>_<model>`; the parent supplies it before
+spawn because `SubagentStart` is too late to rename. Fixed employees require the
+explicit `agent_type` listed in [model-routing.md](model-routing.md); a suffix never
+selects the model. Use the packaged Adapter or keep work local when a role is invisible.
+Only a justified full-history Lead handoff may inherit Lead.
 
 Keep a coherent unit and focused checks together. Workers escalate ambiguity. The
 primary owner gets one ordinary repair plus re-verification; if the same acceptance
