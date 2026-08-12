@@ -2,9 +2,9 @@
   <img src="plugins/goldilocks/assets/logo.png" width="176" alt="Goldilocks 图标：一碗温热的粥">
 </p>
 
-<h1 align="center">Goldilocks</h1>
+<h1 align="center">Goldilocks｜AI Agent 项目智能编排器</h1>
 
-<p align="center"><strong>流程不过量，严谨不缺席，一切刚刚好。</strong></p>
+<p align="center"><strong>一个比 Superpowers 更轻、更灵活的项目工作流与质量控制方案。</strong></p>
 
 <p align="center">
   <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="docs/AGENT-GUIDE.md">给 AI Agent 的项目指南</a>
@@ -16,11 +16,15 @@
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
 
-Goldilocks 是一个精简、动态的 Superpowers 替代方案，也是面向 Codex、Claude Code 和其他兼容 Skills 宿主的成本感知型 AI Agent 工作流。头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
+Goldilocks 是面向 Codex、Claude Code 和其他兼容 Skills 宿主的 Direct-first、成本感知型 AI Agent 项目智能编排器。它会动态判断什么时候由主模型直接完成，什么时候调用专业 Agent 规划、诊断、并行执行、延续项目上下文或完成质量验收，而不是让每个任务都套用同一套固定流程。
+
+它不只服务于编程。软件开发、研究、文档、演示、表格及其他结构化交付项目都可以进入这套编排；其中工程开发是当前优化和实证验证最充分的场景。
+
+头脑风暴、spec、plan、TDD、debug、连续性、委派、审查、验收和新想法留存等质量保障能力都还在，但只对外显示一个 Skill。
 
 > 只使用足以维持质量、安全、授权和验收底线的流程。
 
-清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给更便宜的工作模型。
+清晰任务保持 Direct；只有出现具体触发条件才增加结构。Lead 模型把稀缺上下文用在理解意图、架构、整合和最终验收上，把完整、可独立验证的执行合同交给最合适的专业模型。
 
 本页面写给人类读者。需要让 AI Agent 全面评估仓库时，请直接交给它[项目指南](docs/AGENT-GUIDE.md)。
 

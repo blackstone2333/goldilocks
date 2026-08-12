@@ -2,9 +2,9 @@
   <img src="plugins/goldilocks/assets/logo.png" width="176" alt="A warm bowl of porridge, the Goldilocks logo">
 </p>
 
-<h1 align="center">Goldilocks</h1>
+<h1 align="center">Goldilocks — AI Agent Project Orchestrator</h1>
 
-<p align="center"><strong>Not too much process. Not too little rigor. Just right.</strong></p>
+<p align="center"><strong>A lighter, more adaptive alternative to Superpowers for real-world projects.</strong></p>
 
 <p align="center">
   <a href="README.md">English</a> · <a href="README.zh-CN.md">简体中文</a> · <a href="docs/AGENT-GUIDE.md">Guide for AI agents</a>
@@ -16,11 +16,15 @@
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
 
-Goldilocks is a lean, adaptive replacement for Superpowers and a cost-aware AI agent workflow for Codex, Claude Code, and other Skills-compatible agents. It keeps the capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—behind one visible Skill.
+Goldilocks is a Direct-first, cost-aware project orchestrator for Codex, Claude Code, and other Skills-compatible AI agents. It decides when the Lead should work directly and when specialized agents should plan, diagnose, run in parallel, continue from durable context, or verify delivery—without forcing every task through the same workflow.
+
+It is not limited to programming. Goldilocks can coordinate software development, research, documents, presentations, spreadsheets, and other structured deliverables. Software engineering is currently its most deeply optimized and tested surface.
+
+The capabilities that protect project quality—brainstorming, specifications, plans, TDD, debugging, continuity, delegation, review, verification, and idea capture—remain available behind one visible Skill.
 
 > Use the minimum process that preserves the quality, safety, authorization, and acceptance floor.
 
-Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; cheaper workers receive complete, independently verifiable contracts.
+Clear work stays Direct. Structure appears only when a concrete trigger earns it. Lead models spend their scarce context on intent, architecture, integration, and final acceptance; specialized workers receive complete, independently verifiable contracts.
 
 This page is written for people. If you are an AI agent evaluating the repository, read the complete [Agent guide](docs/AGENT-GUIDE.md).
 
