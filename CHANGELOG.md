@@ -2,6 +2,15 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.3-beta.4 — 2026-08-20
+
+### Compact execution and local diagnostics
+
+- Added minimum-sufficient verification guidance: reuse focused evidence, preserve existing safeguards, and after one ordinary repair rerun only failed or affected checks.
+- Made the Direct route receipt explicit for every executable task while keeping Usage on-demand by default; Bootstrap `automatic` remains an explicit opt-in.
+- Preserved user-selected host permissions across native routing, strengthened route and native-role identity audits, and record only privacy-preserving local Hook-health metadata for aggregate export.
+- Added a seven-day, read-only diagnostics Skill for Beta feedback. It excludes prompts, project contents, secrets, and transcript text; unavailable or old local evidence is reported as insufficient rather than a failure.
+
 ## 0.5.2 — 2026-08-12
 
 ### Bootstrap compatibility patch

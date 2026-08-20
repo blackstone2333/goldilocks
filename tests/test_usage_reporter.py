@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import runpy
 import sqlite3
 import subprocess
 import sys
@@ -142,6 +143,29 @@ def without_wall(value: str) -> str:
 def main() -> None:
     with tempfile.TemporaryDirectory() as temporary:
         root = Path(temporary)
+        resolver = runpy.run_path(
+            str(REPORTER), run_name="goldilocks_usage_reporter_contract"
+        )["resolve_data_root"]
+        plugin_data = root / "plugin-data"
+        stable_data = plugin_data / "goldilocks-goldilocks-local"
+        beta_data = plugin_data / "goldilocks-goldilocks-beta-local"
+        for target, started_at in (
+            (stable_data, "2026-08-14T00:00:00+00:00"),
+            (beta_data, "2026-08-20T00:00:00+00:00"),
+        ):
+            target.mkdir(parents=True)
+            with sqlite3.connect(target / "orchestration.db") as connection:
+                connection.execute(
+                    "CREATE TABLE task_usage_baselines "
+                    "(session_id TEXT, started_at TEXT)"
+                )
+                connection.execute(
+                    "INSERT INTO task_usage_baselines VALUES (?, ?)",
+                    ("shared-session", started_at),
+                )
+        assert resolver("shared-session", plugin_data) == beta_data
+        assert resolver("missing-session", plugin_data) == stable_data
+
         data = root / "data"
         transcript = root / "rollout.jsonl"
         append_usage(transcript, 100, 60, 10)
@@ -365,7 +389,11 @@ def main() -> None:
         assert "usage unavailable for 1 worker" in partial.stdout
         assert "known total 11 tokens" in partial.stdout, partial.stdout
         stale = run_current(data, turn_id="missing-turn")
-        assert stale.returncode == 0 and stale.stdout == "" and stale.stderr == ""
+        assert stale.returncode == 0 and stale.stderr == ""
+        assert stale.stdout == "Usage unavailable for current task\n", stale.stdout
+        stale_zh = run_current(data, turn_id="missing-turn", language="zh")
+        assert stale_zh.returncode == 0 and stale_zh.stderr == ""
+        assert stale_zh.stdout == "当前任务用量暂不可用\n", stale_zh.stdout
         missing_stop = run_hook(data, None, "Stop", turn_id="turn-2")
         assert json.loads(missing_stop.stdout) == {}
 

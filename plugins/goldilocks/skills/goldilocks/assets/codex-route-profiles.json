@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "experiment": "v0.5.2-hybrid-routing",
+  "experiment": "v0.5.3-beta.4-hybrid-routing",
   "economics": {
     "registry": "model-economics.json",
     "decision": "quality gate, then billing-pool cost, elapsed-time and raw-token Pareto comparison",
@@ -74,7 +74,8 @@
       "reasoning_effort": "high",
       "transport": "native",
       "agent_type": "goldilocks_sol_reviewer",
-      "sandbox": "read-only",
+      "review_mode": "no-write-by-contract",
+      "host_permissions": "inherit-user-selection",
       "may_delegate": false
     }
   }

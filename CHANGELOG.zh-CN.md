@@ -2,6 +2,15 @@
 
 [English changelog](CHANGELOG.md)
 
+## 0.5.3-beta.4 — 2026-08-20
+
+### 紧凑执行与本地诊断
+
+- 加入最小充分验证准则：复用聚焦证据、保留既有 safeguards；一次普通修复后只重跑失败或受影响的检查。
+- 明确每个可执行任务都输出 Direct 路由回执，同时 Usage 仍默认按需；Bootstrap `automatic` 依旧只能显式 opt-in。
+- 原生路由始终保留用户选择的宿主权限，增强路由与原生角色身份审计，并且只记录保护隐私的本地 Hook health 元数据，供聚合导出。
+- 加入用于 Beta 反馈的七天只读诊断 Skill。它排除 prompt、项目内容、secret 和 transcript 文本；本地证据缺失或 schema 过旧时标记为证据不足，而非失败。
+
 ## 0.5.2 — 2026-08-12
 
 ### Bootstrap 兼容性补丁

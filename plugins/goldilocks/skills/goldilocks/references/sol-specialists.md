@@ -1,4 +1,4 @@
-# Sol Specialists (0.5.2 host contract)
+# Sol Specialists (0.5.3-beta.4 host contract)
 
 Require explicit user authorization. It is a visible Codex task/thread at Sol/high—not
 a hidden native subagent, external worker,
@@ -33,6 +33,7 @@ integration.
 
 Contracts state mode, paths/tools, non-goals, interfaces, acceptance/audit question,
 and return format. Names and reservations do not prove starts.
-`goldilocks_sol_reviewer` remains only the native requested-read-only reviewer. This
+`goldilocks_sol_reviewer` remains only the native review-only specialist; its no-write
+rule is a task-behavior contract and never changes user-selected host permissions. This
 preview adds no Project Hub, cross-project event bus, automatic synchronization, or
 autonomous follow-up.

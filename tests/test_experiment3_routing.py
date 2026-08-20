@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import sqlite3
 import subprocess
@@ -14,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 INSTALLER = PLUGIN / "scripts" / "install_agents.py"
+BOOTSTRAP = PLUGIN / "skills" / "goldilocks-bootstrap" / "scripts" / "bootstrap.py"
 GRANT = PLUGIN / "scripts" / "project_delegation.py"
 INSPECTOR = PLUGIN / "scripts" / "inspect_agent_runtime.py"
 GUARD = PLUGIN / "scripts" / "agent_routing_guard.py"
@@ -33,6 +35,14 @@ def command(*args: str, env: dict[str, str] | None = None) -> subprocess.Complet
         check=False,
         env=env,
     )
+
+
+def bootstrap_module():
+    spec = importlib.util.spec_from_file_location("goldilocks_bootstrap_migration", BOOTSTRAP)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def hook(data_dir: Path, payload: dict[str, object]) -> subprocess.CompletedProcess[str]:
@@ -72,7 +82,26 @@ def test_profiles_and_installer(root: Path) -> None:
     }
     assert profiles["goldilocks_terra_engineer"]["transport"] == "native"
     assert profiles["goldilocks_terra_engineer"]["may_delegate"] is True
-    assert profiles["goldilocks_sol_reviewer"]["sandbox"] == "read-only"
+    # Native roles inherit the user's host access.  Sol's review restriction is
+    # behavioral only; it must not turn a danger-full-access host into a
+    # read-only child sandbox.
+    assert profiles["goldilocks_sol_reviewer"]["review_mode"] == "no-write-by-contract"
+    assert profiles["goldilocks_sol_reviewer"]["host_permissions"] == "inherit-user-selection"
+    sol_agent = (PLUGIN / "agents" / "goldilocks-sol-reviewer.toml").read_text(
+        encoding="utf-8"
+    )
+    bootstrap_sol_agent = (
+        PLUGIN
+        / "skills"
+        / "goldilocks-bootstrap"
+        / "assets"
+        / "bootstrap-agents"
+        / "goldilocks-sol-reviewer.toml"
+    ).read_text(encoding="utf-8")
+    for source in (sol_agent, bootstrap_sol_agent):
+        assert "sandbox" not in source
+        assert "requested-read-only" not in source
+        assert "host\npermission request" in source
     ratios = route_registry["economics"]["chatgpt_standard_same_mix_ratios_to_sol"]
     assert ratios["gpt-5.6-terra"] == 0.4
     assert ratios["gpt-5.6-luna"] == 0.04
@@ -168,6 +197,40 @@ def test_profiles_and_installer(root: Path) -> None:
     assert symlink_refused.returncode != 0
     assert "not a real directory" in symlink_refused.stderr
     assert not any(real_target.iterdir())
+
+
+def test_v052_sol_template_migrates_only_when_byte_exact(root: Path) -> None:
+    old = subprocess.run(
+        ["git", "show", "v0.5.2:plugins/goldilocks/agents/goldilocks-sol-reviewer.toml"],
+        cwd=ROOT, capture_output=True, check=True,
+    ).stdout
+    target = root / "v052-sol"
+    target.mkdir()
+    destination = target / "goldilocks-sol-reviewer.toml"
+    destination.write_bytes(old)
+
+    installed = command(str(INSTALLER), "--target-dir", str(target), "--json")
+    assert installed.returncode == 0, installed.stderr
+    assert "goldilocks-sol-reviewer.toml" in json.loads(installed.stdout)["migrated"]
+    assert destination.read_bytes() == (PLUGIN / "agents" / destination.name).read_bytes()
+
+    bootstrap = bootstrap_module()
+    bootstrap_destination = root / "bootstrap-v052-sol" / "goldilocks-sol-reviewer.toml"
+    bootstrap_destination.parent.mkdir()
+    bootstrap_destination.write_bytes(old)
+    bootstrap_template = bootstrap.TEMPLATE_DIR / bootstrap_destination.name
+    assert bootstrap.classify(bootstrap_template, bootstrap_destination) == "legacy"
+    bootstrap.replace_legacy(bootstrap_template, bootstrap_destination)
+    assert bootstrap_destination.read_bytes() == bootstrap_template.read_bytes()
+    bootstrap_destination.write_bytes(old + b"# user edit\n")
+    assert bootstrap.classify(bootstrap_template, bootstrap_destination) == "conflict"
+
+    conflict = root / "v052-sol-conflict"
+    conflict.mkdir()
+    (conflict / "goldilocks-sol-reviewer.toml").write_bytes(old + b"# user edit\n")
+    refused = command(str(INSTALLER), "--target-dir", str(conflict))
+    assert refused.returncode != 0
+    assert "goldilocks-sol-reviewer.toml=conflict" in refused.stderr
 
 
 def test_project_grant(root: Path) -> None:
@@ -268,6 +331,7 @@ def test_runtime_inspector(root: Path) -> None:
                 "sandbox_policy": {"type": "danger-full-access"},
                 "permission_profile": {"type": "disabled"},
                 "cwd": "/fixture",
+                "fork_turns": "none",
             },
         },
         {
@@ -422,6 +486,7 @@ def test_runtime_inspector(root: Path) -> None:
                 "sandbox_policy": {"type": "danger-full-access"},
                 "permission_profile": {"type": "disabled"},
                 "cwd": "/fixture",
+                "fork_turns": "none",
             },
         },
         {

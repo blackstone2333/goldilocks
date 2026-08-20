@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.5.2"
+POLICY_VERSION = "0.5.3-beta.4"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}
@@ -495,24 +495,35 @@ def format_duration(started_at: str) -> str:
     return f"{seconds}s"
 
 
-def resolve_data_root() -> Path:
+def resolve_data_root(session_id: str = "", data_base: Path | None = None) -> Path:
     configured = os.environ.get("PLUGIN_DATA")
     if configured:
         return Path(configured).expanduser()
+    base = data_base or (Path.home() / ".codex" / "plugins" / "data")
     candidates = sorted(
         path.parent
-        for path in (Path.home() / ".codex" / "plugins" / "data").glob(
-            "goldilocks-*/orchestration.db"
-        )
+        for path in base.glob("goldilocks-*/orchestration.db")
     )
     if len(candidates) == 1:
         return candidates[0]
+    if session_id:
+        matches: list[tuple[str, Path]] = []
+        for candidate in candidates:
+            try:
+                with connect_readonly(candidate / "orchestration.db") as connection:
+                    row = connection.execute(
+                        "SELECT started_at FROM task_usage_baselines "
+                        "WHERE session_id = ? ORDER BY started_at DESC LIMIT 1",
+                        (session_id,),
+                    ).fetchone()
+                if row is not None:
+                    matches.append((str(row["started_at"] or ""), candidate))
+            except (OSError, sqlite3.Error, TypeError, ValueError, KeyError):
+                continue
+        if matches:
+            return max(matches, key=lambda item: (item[0], str(item[1])))[1]
     return (
-        Path.home()
-        / ".codex"
-        / "plugins"
-        / "data"
-        / "goldilocks-goldilocks-local"
+        base / "goldilocks-goldilocks-local"
     )
 
 
@@ -609,7 +620,7 @@ def format_current(
 def current_receipt(
     session_id: str, language: str = "en", turn_id: str | None = None
 ) -> str | None:
-    root = resolve_data_root()
+    root = resolve_data_root(session_id)
     database = root / "orchestration.db"
     if not database.is_file() or not session_id:
         return None
@@ -626,7 +637,7 @@ def current_receipt(
                 (session_id,),
             ).fetchone()
         if baseline is None:
-            return None
+            return "当前任务用量暂不可用" if language == "zh" else "Usage unavailable for current task"
         models, missing_workers = worker_usage(
             connection,
             session_id,

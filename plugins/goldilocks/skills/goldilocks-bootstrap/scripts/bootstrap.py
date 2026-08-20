@@ -56,7 +56,7 @@ ROLE_SPECS = (
     (
         "goldilocks_sol_reviewer",
         "goldilocks-sol-reviewer.toml",
-        "Goldilocks fresh-context, requested-read-only reviewer for high-risk integration.",
+        "Goldilocks fresh-context review-only specialist for high-risk integration.",
     ),
 )
 LEGACY_TEMPLATE_DIGESTS = {
@@ -65,6 +65,8 @@ LEGACY_TEMPLATE_DIGESTS = {
     },
     "goldilocks-sol-reviewer.toml": {
         "966d4258e284da8e3e00b12d2367fd98f84f3b45f4b33d61f2401ece7ad2fa62",
+        # v0.5.2 official Sol template; retain only its exact shipped bytes.
+        "ab7f7df4df07b83ea003781f960b4e5340812af122e835a52a49fc594e956e6e",
     },
 }
 USAGE_VISIBILITY_MODES = ("on-demand", "automatic")

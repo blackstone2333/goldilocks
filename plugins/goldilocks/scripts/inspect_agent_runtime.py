@@ -27,6 +27,7 @@ PROFILES = (
 )
 ROUTE_PREFIXES = {"fast__": "fast", "standard__": "standard", "lead__": "lead"}
 SEMANTIC_NAME = re.compile(r"[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$")
+POLICY_VERSION = "0.5.3-beta.4"
 
 
 def canonical_native_name(agent_path: object, profile: dict[str, object]) -> str:
@@ -95,6 +96,59 @@ def one(values: list[object], label: str, *, required: bool = True) -> object | 
     return json.loads(next(iter(normalized)))
 
 
+def task_complete_time(records: list[dict[str, object]]) -> str | None:
+    """Return the last rollout completion timestamp, if the child reached one.
+
+    Some hosts omit ``SubagentStop`` after interrupts.  A child rollout's own
+    terminal event is direct lifecycle evidence, so use it to close an already
+    observed execution without inferring success or route availability.
+    """
+    latest: str | None = None
+    for record in records:
+        payload = record.get("payload")
+        if record.get("type") != "event_msg" or not isinstance(payload, dict):
+            continue
+        if payload.get("type") != "task_complete":
+            continue
+        timestamp = record.get("timestamp")
+        if isinstance(timestamp, str) and timestamp and (latest is None or timestamp > latest):
+            latest = timestamp
+    return latest
+
+
+def verified_posthoc_fork_turns(role: object, profile: dict[str, object], observed: object) -> str:
+    """Return a reusable native fork contract only when rollout evidence proves it.
+
+    A posthoc native correlation has no PreToolUse decision to establish an
+    explicit Lead handoff.  It therefore accepts only the fixed-role contracts
+    that the rollout itself can prove, and never promotes an arbitrary non-null
+    value (particularly ``all``) into reusable route evidence.
+    """
+    if not isinstance(observed, str):
+        raise ValueError("rollout fork_turns must be an explicit string contract")
+    value = observed.strip().lower()
+    if not value:
+        raise ValueError("rollout lacks observed fork_turns; native runtime evidence cannot synthesize a reusable routing decision")
+
+    role_name = str(role)
+    tier = str(profile.get("tier") or "")
+    if role_name in {"goldilocks_spark_worker", "goldilocks_luna_economy"}:
+        allowed = {"none"}
+    elif role_name == "goldilocks_sol_reviewer":
+        allowed = {"none"}
+    elif role_name == "goldilocks_terra_engineer" and tier == "standard":
+        allowed = {"none", "1", "2", "3", "4"}
+    else:
+        raise ValueError("child is not a recognized fixed native Goldilocks role")
+    if value not in allowed:
+        expected = "none" if allowed == {"none"} else "none or one to four"
+        raise ValueError(
+            f"rollout fork_turns={value!r} violates {role_name}'s fixed contract: {expected}. "
+            "Only an explicitly planned Lead handoff may use all; posthoc runtime evidence cannot infer one."
+        )
+    return value
+
+
 def main() -> None:
     args = parser().parse_args()
     if UUID.fullmatch(args.thread_id) is None:
@@ -108,6 +162,7 @@ def main() -> None:
 
     session_meta: list[dict[str, object]] = []
     contexts: list[dict[str, object]] = []
+    rollout_records: list[dict[str, object]] = []
     usage: dict[str, int] = {}
     with matches[0].open(encoding="utf-8") as handle:
         for raw in handle:
@@ -118,6 +173,7 @@ def main() -> None:
             payload = record.get("payload")
             if not isinstance(payload, dict):
                 continue
+            rollout_records.append(record)
             if record.get("type") == "session_meta":
                 session_meta.append(payload)
             elif record.get("type") == "turn_context":
@@ -208,6 +264,7 @@ def main() -> None:
                     f"child {args.thread_id} is already {execution['status']}; "
                     "runtime evidence is immutable after Lead verification"
                 )
+            completed_at = task_complete_time(rollout_records)
             if execution["decision_id"]:
                 connection.execute(
                     """
@@ -239,6 +296,12 @@ def main() -> None:
                 if expected is None:
                     raise ValueError("child is not a recognized native Goldilocks role")
                 task_name = canonical_native_name(session.get("agent_path"), expected)
+                observed_fork = one(
+                    [item.get("fork_turns") for item in contexts],
+                    "fork_turns",
+                    required=False,
+                )
+                observed_fork = verified_posthoc_fork_turns(role, expected, observed_fork)
                 if execution["correlation_confidence"] not in {
                     "name_unverified", "name_mismatch"
                 }:
@@ -278,15 +341,15 @@ def main() -> None:
                         transport, fork_turns, status, prior_observations, planned_at, started_at,
                         stopped_at, actual_model, agent_id, correlation_confidence, policy_version
                     ) VALUES (?, ?, '', ?, ?, ?, ?, ?, '', ?, ?, ?, ?, NULL,
-                        'native', 'none', ?, 0, ?, ?, ?, ?, ?, 'posthoc_role_observed', '0.5.2')
+                        'native', ?, ?, 0, ?, ?, ?, ?, ?, 'posthoc_role_observed', ?)
                     """,
                     (
                         decision_id, session.get("parent_thread_id"), f"posthoc:{args.thread_id}",
                         hashlib.sha256(observed_cwd.encode()).hexdigest(),
                         hashlib.sha256(task_name.lower().encode()).hexdigest(), task_name,
                         expected["tier"], model, role, effort,
-                        expected.get("sandbox"), status, started_at, started_at, stopped_at,
-                        model, args.thread_id,
+                        expected.get("sandbox"), str(observed_fork), status, started_at,
+                        started_at, stopped_at, model, args.thread_id, POLICY_VERSION,
                     ),
                 )
                 updated = connection.execute(
@@ -308,6 +371,18 @@ def main() -> None:
                 )
                 if updated.rowcount != 1:
                     raise ValueError("child changed during posthoc native correlation")
+            if completed_at and execution["stopped_at"] is None:
+                connection.execute(
+                    "UPDATE executions SET stopped_at = ? WHERE agent_id = ? AND stopped_at IS NULL",
+                    (completed_at, args.thread_id),
+                )
+                connection.execute(
+                    """
+                    UPDATE decisions SET status = 'stopped', stopped_at = ?
+                    WHERE agent_id = ? AND status IN ('planned', 'started')
+                    """,
+                    (completed_at, args.thread_id),
+                )
         result["recorded"] = True
     print(json.dumps(result, sort_keys=True))
 

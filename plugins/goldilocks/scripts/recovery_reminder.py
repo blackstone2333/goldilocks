@@ -10,13 +10,15 @@ import os
 import re
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.2"
+POLICY_VERSION = "0.5.3-beta.4"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
+HOOK_HEALTH_TTL_DAYS = 30
+HOOK_HEALTH_TABLE = "hook_health"
 MICRO_STYLE = (
     "Lead with the result. Omit work preambles, repeated plans/status/recaps, tangents, and "
     "long logs. Report only changed state and decisive evidence; expand for safety/ambiguity. "
@@ -30,19 +32,29 @@ ROUTING_GATE = (
     "Direct remains valid when briefing and review cost more. "
     "Skip for pure conversation."
 )
+MINIMUM_SUFFICIENT_VERIFICATION = (
+    "Minimum-sufficient verification: reuse existing checks. Add no hash/frozen contract/baseline/gate "
+    "unless a named failure escapes Git/version/key/transaction/constraint/type/tests. Without relevant "
+    "change, do not rerun a pass; after repair run only failed/affected checks. Unexplained recurrence "
+    "means diagnose, not retry. Preserve safeguards; auth/data/irreversible/release remain risk-based."
+)
 VISIBLE_RESPONSE_CONTRACT_EN = (
-    "Every executable task, including Direct, ends with exactly one localized visible Goldilocks route receipt. "
-    "Direct includes `ROUTE=direct`, Lead team, concurrency 0/?, no delegation, reason, and concise detail. "
-    "Child task_name must be <tier>__<semantic>_<model> before spawn; native hosts may bypass PreToolUse. "
-    "Usage is host-side and fail-silent: on-demand is the default and runs once when explicitly requested; "
-    "after Bootstrap automatic opt-in, it runs once for each executable task. "
-    "Pure conversation has no receipt or Usage."
+    "Every executable task, including Direct (`ROUTE=direct`), ends with exactly one localized visible Goldilocks "
+    "route receipt in this exact field order: `ROUTE=<direct|fast|standard|mixed> | TEAM=<main model and actually started roles> | "
+    "CONCURRENCY=<host-confirmed starts/host limit or ?> | DELEGATED=<actual delegated work or none> | "
+    "REASON=<short reason> | DETAIL=<one factual sentence>`. TEAM uses `main model`, never Codex/primary agent. "
+    "Before spawn self-check (native hosts may bypass PreToolUse): Luna/Spark use `fast__<semantic>_<model>` + `fork_turns=none`; "
+    "Terra uses `standard__<semantic>_<model>` + none/1-4; Sol reviewer uses `lead__<semantic>_<model>` + none, fresh review-only/no write/repair/delegate; this never changes user-selected host permissions; only explicit "
+    "Lead handoff permits `all`. Usage is host-side and fail-silent: on-demand is the default; after Bootstrap automatic "
+    "opt-in, it runs once for each executable task. Pure conversation has no receipt or Usage."
 )
 VISIBLE_RESPONSE_CONTRACT_ZH = (
-    "每个可执行任务（包括直接路径）最终都必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执；"
-    "直接路径包含 `路由=直接`、主模型团队、并发 0/?、无委派、理由和简要详情。每个子智能体在 spawn "
-    "前的 task_name 必须符合 <tier>__<semantic>_<model>；原生宿主可能绕过 PreToolUse。"
-    "用量由宿主侧静默处理：默认按需，用户明确索要时读取一次；Bootstrap 启用自动模式后，"
+    "每个可执行任务（包括直接路径 `路由=直接`）最终都必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执，字段顺序固定："
+    "`路由=<直接|快速|标准|混合>｜团队=<主模型及实际启动角色>｜并发=<宿主确认启动数/宿主上限或?>｜"
+    "委派=<实际委派任务或无>｜理由=<简短理由>｜详情=<一句事实>`。团队根身份只写 `主模型`，不得写 Codex/主代理。"
+    "每次 spawn 前主模型自检：原生宿主可能绕过 PreToolUse；Luna/Spark 用 `fast__<semantic>_<model>` 且 `fork_turns=none`；"
+    "Terra 用 `standard__<semantic>_<model>` 且仅 none/1-4；Sol reviewer 用 `lead__<semantic>_<model>` 且 none、fresh review-only/no write/repair/delegate；绝不修改用户选择的宿主权限；"
+    "只有显式 Lead handoff 可用 `all`。用量由宿主侧静默处理：默认按需；Bootstrap 启用自动模式后，"
     "每个可执行任务自动读取一次。纯对话不显示回执或用量。"
 )
 USAGE_VISIBILITY_MODES = {"on-demand", "automatic"}
@@ -298,6 +310,136 @@ def workspace_root(cwd: Path) -> Path:
         if (directory / ".git").exists():
             return directory
     return cwd
+
+
+def _now_isoformat() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _hash_identity(payload: dict[str, object], key: str, fallback: str) -> str:
+    return stable_hash(str(payload.get(key, fallback)))
+
+
+def _plugin_data() -> Path | None:
+    configured = os.environ.get("PLUGIN_DATA")
+    if not configured:
+        return None
+    root = Path(configured).expanduser()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _ensure_health_schema(connection: sqlite3.Connection) -> None:
+    table_exists = (
+        connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?",
+            (HOOK_HEALTH_TABLE,),
+        ).fetchone()
+        is not None
+    )
+    if not table_exists:
+        connection.execute(
+            f"""
+            CREATE TABLE {HOOK_HEALTH_TABLE} (
+                event_name TEXT NOT NULL,
+                session_id_hash TEXT NOT NULL,
+                turn_id_hash TEXT NOT NULL,
+                event_id TEXT PRIMARY KEY,
+                started_at TEXT NOT NULL,
+                finished_at TEXT NOT NULL,
+                elapsed_ms INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL,
+                policy_version TEXT NOT NULL DEFAULT '{POLICY_VERSION}'
+            )
+            """
+        )
+    columns = {
+        str(row[1]) for row in connection.execute(f"PRAGMA table_info({HOOK_HEALTH_TABLE})")
+    }
+    if "elapsed_ms" not in columns:
+        connection.execute(f"ALTER TABLE {HOOK_HEALTH_TABLE} ADD COLUMN elapsed_ms INTEGER NOT NULL DEFAULT 0")
+    if "policy_version" not in columns:
+        connection.execute(
+            f"ALTER TABLE {HOOK_HEALTH_TABLE} "
+            f"ADD COLUMN policy_version TEXT NOT NULL DEFAULT '{POLICY_VERSION}'"
+        )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS hook_health_cleanup_idx ON "
+        f"{HOOK_HEALTH_TABLE} (finished_at)"
+    )
+
+
+def _elapsed_ms(started_at: str, finished_at: str) -> int:
+    try:
+        started = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
+        finished = datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
+        return max(0, int((finished - started).total_seconds() * 1000))
+    except (TypeError, ValueError, ArithmeticError):
+        return 0
+
+
+def _prune_hook_health(connection: sqlite3.Connection, cutoff: str) -> None:
+    connection.execute(
+        f"DELETE FROM {HOOK_HEALTH_TABLE} WHERE finished_at < ?",
+        (cutoff,),
+    )
+
+
+def _record_hook_health(
+    payload: dict[str, object],
+    event: str,
+    status: str,
+    started_at: str,
+) -> None:
+    if status not in {"ok", "error"}:
+        return
+    try:
+        root = _plugin_data()
+        if root is None:
+            return
+        connection = sqlite3.connect(root / "orchestration.db", timeout=3)
+        try:
+            connection.execute("PRAGMA busy_timeout = 3000")
+            connection.execute("PRAGMA journal_mode = WAL")
+            _ensure_health_schema(connection)
+            session_id_hash = _hash_identity(payload, "session_id", "unknown-session")
+            turn_id_hash = _hash_identity(payload, "turn_id", "unknown-turn")
+            event_id = stable_hash(f"{event}\n{session_id_hash}\n{turn_id_hash}")
+            now = _now_isoformat()
+            connection.execute(
+                f"""
+                INSERT INTO {HOOK_HEALTH_TABLE} (
+                    event_name, session_id_hash, turn_id_hash, event_id,
+                    started_at, finished_at, elapsed_ms, status, policy_version
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(event_id) DO UPDATE SET
+                    elapsed_ms = excluded.elapsed_ms,
+                    finished_at = excluded.finished_at,
+                    status = excluded.status,
+                    policy_version = excluded.policy_version
+                """,
+                (
+                    event,
+                    session_id_hash,
+                    turn_id_hash,
+                    event_id,
+                    started_at,
+                    now,
+                    _elapsed_ms(started_at, now),
+                    status,
+                    POLICY_VERSION,
+                ),
+            )
+            cutoff = (
+                datetime.now(timezone.utc) - timedelta(days=HOOK_HEALTH_TTL_DAYS)
+            ).isoformat()
+            _prune_hook_health(connection, cutoff)
+            connection.commit()
+        finally:
+            connection.close()
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return
 
 
 def repeat_failure_signal(prompt: str) -> bool:
@@ -901,39 +1043,48 @@ def find_ledger(cwd: Path) -> Path | None:
 
 
 def main() -> None:
+    if os.environ.get("GOLDILOCKS_WORKER") == "1":
+        return
     try:
-        if os.environ.get("GOLDILOCKS_WORKER") == "1":
-            return
         payload = json.load(sys.stdin)
+        event = str(payload.get("hook_event_name") or "")
+        if event not in {"SessionStart", "UserPromptSubmit", "PostCompact"}:
+            return
+        started_at = _now_isoformat()
         cwd = Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
         ledger = find_ledger(cwd)
-        event = payload.get("hook_event_name")
+        output = None
         if event == "SessionStart":
             if ledger is None:
                 if not has_continuity_debt(payload, cwd):
-                    return
-                routing = (
-                    "Goldilocks continuity debt exists for this session and workspace. Before "
-                    "continuing, read continuity.md, reconcile repository evidence, create or "
-                    "update .goldilocks/ACTIVE.md and the existing debug/validation record, then "
-                    "resume from the exact next test."
-                )
+                    output = None
+                else:
+                    output = {
+                        "hookSpecificOutput": {
+                            "hookEventName": "SessionStart",
+                            "additionalContext": (
+                                "Goldilocks continuity debt exists for this session and workspace. "
+                                "Before continuing, read continuity.md, reconcile repository evidence, "
+                                "create or update .goldilocks/ACTIVE.md and the existing debug/validation "
+                                "record, then resume from the exact next test."
+                            ),
+                        }
+                    }
             else:
-                routing = (
-                    f"Recovery state exists at {ledger}; read it, reconcile repository evidence, "
-                    "honor applied steering and Do not repeat, then continue from Exact next action."
-                )
-            output = {
-                "hookSpecificOutput": {
-                    "hookEventName": "SessionStart",
-                    "additionalContext": routing,
+                output = {
+                    "hookSpecificOutput": {
+                        "hookEventName": "SessionStart",
+                        "additionalContext": (
+                            f"Recovery state exists at {ledger}; read it, reconcile repository evidence, "
+                            "honor applied steering and Do not repeat, then continue from Exact next action."
+                        ),
+                    }
                 }
-            }
         elif event == "UserPromptSubmit":
             gate_state = record_gate(payload, cwd, ledger)
             prompt = str(payload.get("prompt") or "")
             message = (
-                f"{MICRO_STYLE} {ROUTING_GATE} "
+                f"{MICRO_STYLE} {ROUTING_GATE} {MINIMUM_SUFFICIENT_VERIFICATION} "
                 f"{visible_response_contract(prompt, str(payload.get('turn_id') or '') or None)}"
             )
             if usage := usage_instruction_for(
@@ -967,9 +1118,11 @@ def main() -> None:
                     "additionalContext": message,
                 }
             }
-        elif event == "PostCompact":
+        else:
             response_recovery = (
-                "Goldilocks visible response contract survived compaction. "
+                "Goldilocks visible response and verification contracts survived compaction. "
+                + MINIMUM_SUFFICIENT_VERIFICATION
+                + " "
                 + visible_response_contract("", latest_turn_id(payload, cwd))
                 + " Use `--language zh` when the user's primary language is Chinese."
             )
@@ -994,12 +1147,13 @@ def main() -> None:
                 "continue": True,
                 "systemMessage": system_message,
             }
-        else:
-            return
 
-        print(json.dumps(output, ensure_ascii=False))
-    except (OSError, ValueError, TypeError):
-        # Continuity reminders are a guardrail; a broken hook must not block work.
+        if output is not None:
+            print(json.dumps(output, ensure_ascii=False))
+        _record_hook_health(payload, event, "ok", started_at)
+    except Exception:
+        if "event" in locals():
+            _record_hook_health(payload, event, "error", started_at)
         return
 
 

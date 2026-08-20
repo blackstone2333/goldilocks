@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.2"
+POLICY_VERSION = "0.5.3-beta.4"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 TRANSCRIPT_TAIL_BYTES = 16 * 1024 * 1024
 ROUTE_FIELDS = (
@@ -208,7 +208,10 @@ def active_agents(
     available = tables(connection)
     if {"decisions", "executions"}.issubset(available):
         required_decision = {"decision_id", "cwd_hash", "tier", "expected_model"}
-        required_execution = {"agent_id", "decision_id", "started_at", "stopped_at"}
+        required_execution = {
+            "agent_id", "decision_id", "started_at", "stopped_at",
+            "correlation_confidence",
+        }
         if required_decision.issubset(columns(connection, "decisions")) and required_execution.issubset(
             columns(connection, "executions")
         ):
@@ -218,7 +221,9 @@ def active_agents(
                        decision.tier, decision.expected_model
                 FROM executions AS execution
                 JOIN decisions AS decision ON decision.decision_id = execution.decision_id
-                WHERE decision.cwd_hash = ? AND execution.started_at <= ?
+                WHERE decision.cwd_hash = ? AND execution.correlation_confidence
+                    IN ('single', 'route_unique', 'role_observed', 'posthoc_role_observed')
+                  AND execution.started_at <= ?
                   AND (execution.stopped_at IS NULL OR execution.stopped_at > ?)
                 """,
                 (cwd_hash, route_at.isoformat(), route_at.isoformat()),
@@ -256,6 +261,36 @@ def active_agents(
                 if age <= lifecycle_minutes(row["expected_model"]):
                     observed.add(f"external:{row['route_id']}")
     return len(observed)
+
+
+def stale_native_agents(
+    connection: sqlite3.Connection, cwd_hash: str, route_at: datetime
+) -> int:
+    """Count expired, unclosed confirmed routes as cleanup warnings only."""
+    if not {"decisions", "executions"}.issubset(tables(connection)):
+        return 0
+    if not {"decision_id", "cwd_hash", "tier", "expected_model"}.issubset(columns(connection, "decisions")):
+        return 0
+    if not {"agent_id", "decision_id", "started_at", "stopped_at", "correlation_confidence"}.issubset(columns(connection, "executions")):
+        return 0
+    rows = connection.execute(
+        """
+        SELECT execution.agent_id, execution.started_at, decision.tier, decision.expected_model
+        FROM executions AS execution
+        JOIN decisions AS decision ON decision.decision_id = execution.decision_id
+        WHERE decision.cwd_hash = ? AND execution.stopped_at IS NULL
+          AND execution.correlation_confidence
+              IN ('single', 'route_unique', 'role_observed', 'posthoc_role_observed')
+          AND execution.started_at <= ?
+        """,
+        (cwd_hash, route_at.isoformat()),
+    ).fetchall()
+    return sum(
+        1
+        for row in rows
+        if (started := parse_timestamp(row["started_at"])) is not None
+        and (route_at - started).total_seconds() / 60 > lifecycle_minutes(row["expected_model"], row["tier"])
+    )
 
 
 def observed_dispatches(
@@ -309,6 +344,7 @@ def available_route_models(
             "actual_model",
             "started_at",
             "stopped_at",
+            "correlation_confidence",
         }
         if required_decision.issubset(columns(connection, "decisions")) and required_execution.issubset(
             columns(connection, "executions")
@@ -318,7 +354,9 @@ def available_route_models(
                 SELECT DISTINCT execution.actual_model
                 FROM executions AS execution
                 JOIN decisions AS decision ON decision.decision_id = execution.decision_id
-                WHERE execution.started_at < ?
+                WHERE execution.correlation_confidence
+                    IN ('single', 'route_unique', 'role_observed', 'posthoc_role_observed')
+                  AND execution.started_at < ?
                   AND execution.stopped_at IS NOT NULL
                   AND execution.actual_model = decision.expected_model
                 """,
@@ -381,6 +419,7 @@ def audit(payload: dict[str, Any], connection: sqlite3.Connection) -> None:
     audited_at = datetime.now(timezone.utc)
     cwd_hash = str(row["cwd_hash"])
     active_count = active_agents(connection, cwd_hash, route_at)
+    stale_count = stale_native_agents(connection, cwd_hash, route_at)
     observed_count = observed_dispatches(connection, session_id, route_at, audited_at)
     route_models = available_route_models(connection, cwd_hash, route_at)
     mentioned = named_models(detail)
@@ -389,6 +428,8 @@ def audit(payload: dict[str, Any], connection: sqlite3.Connection) -> None:
     flags: list[str] = []
     if existing_count > active_count:
         flags.append("existing_above_observed_agents")
+    if stale_count:
+        flags.append("stale_native_execution_without_terminal")
     if planned_count != observed_count:
         flags.append("planned_dispatch_mismatch")
     if reason == "route_unavailable" and history_conflict:

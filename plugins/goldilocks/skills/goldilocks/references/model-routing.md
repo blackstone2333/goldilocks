@@ -55,12 +55,12 @@ Resolve `../assets/codex-route-profiles.json`:
 - `goldilocks_luna_economy`: native Luna Max Fast for latency-tolerant low-discretion
   general or document work.
 - `goldilocks_terra_engineer`: native Terra Medium Standard for mixed implementation, durable documentation, and bounded judgment; it may contract Fast.
-- `goldilocks_sol_reviewer`: fresh native Sol/High requested-read-only review.
+- `goldilocks_sol_reviewer`: fresh native Sol/High review-only task; inherits user-selected host permissions.
 
 `goldilocks_spark_coder` and `goldilocks_luna_worker` remain packaged external-adapter
 fallback profiles for non-native hosts.
 
-Install native templates with `../../../scripts/install_agents.py`, then start a new task. The installer never edits `config.toml` or overwrites a differing file. Requested read-only is not proof of OS isolation; use `../../../scripts/inspect_agent_runtime.py --record` when runtime evidence is incomplete.
+Install native templates with `../../../scripts/install_agents.py`, then start a new task. The installer never edits `config.toml`, host permissions, or a differing file; use `../../../scripts/inspect_agent_runtime.py --record` when runtime evidence is incomplete.
 
 Cache visibility is not route readiness. Confirm the model on the native host. Name
 spawns exactly `fast__<name>_<model>`, `standard__<name>_<model>`, or

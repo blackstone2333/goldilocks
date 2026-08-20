@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sqlite3
 import subprocess
@@ -16,6 +17,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "recovery_reminder.py"
+
+
+def stable_hash(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8", errors="ignore")).hexdigest()
 
 
 @contextmanager
@@ -113,14 +118,16 @@ def main() -> None:
         compact_without_recovery = run_hook(nested, "PostCompact")
         assert compact_without_recovery.returncode == 0, compact_without_recovery.stderr
         compact_contract = json.loads(compact_without_recovery.stdout)["systemMessage"]
-        assert "visible response contract survived compaction" in compact_contract
+        assert "visible response and verification contracts survived compaction" in compact_contract
+        assert "Minimum-sufficient verification" in compact_contract
+        assert "diagnose, not retry" in compact_contract
         assert "Usage is host-side and fail-silent" in compact_contract
 
         no_ledger_steer = run_hook(nested, "UserPromptSubmit", data_dir=data_dir)
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
         style_output = json.loads(no_ledger_steer.stdout)
         style_context = style_output["hookSpecificOutput"]["additionalContext"]
-        assert len(style_context.split()) <= 205
+        assert len(style_context.split()) <= 280
         assert "Lead with the result" in style_context
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
@@ -132,18 +139,138 @@ def main() -> None:
         assert "fix and verification" in style_context
         assert "Every executable" in style_context
         assert "exactly one localized visible Goldilocks route receipt" in style_context
+        assert "in this exact field order" in style_context
+        assert "ROUTE=<direct|fast|standard|mixed>" in style_context
+        assert "TEAM=<main model and actually started roles>" in style_context
+        assert "CONCURRENCY=<host-confirmed starts/host limit or ?>" in style_context
+        assert "DELEGATED=<actual delegated work or none>" in style_context
+        assert "REASON=<short reason>" in style_context
+        assert "DETAIL=<one factual sentence>" in style_context
+        assert "never Codex/primary agent" in style_context
         assert "Usage is host-side and fail-silent" in style_context
         assert "on-demand is the default" in style_context
         assert "Bootstrap automatic opt-in" in style_context
         assert "usage_reporter.py" not in style_context
         assert "codex plugin list" not in style_context
-        assert "<tier>__<semantic>_<model>" in style_context
+        assert "fast__<semantic>_<model>" in style_context
+        assert "standard__<semantic>_<model>" in style_context
+        assert "lead__<semantic>_<model>" in style_context
+        assert "Luna/Spark" in style_context
+        assert "fork_turns=none" in style_context
+        assert "none/1-4" in style_context
+        assert "fresh review-only/no write/repair/delegate" in style_context
+        assert "never changes user-selected host permissions" in style_context
+        assert "only explicit Lead handoff permits `all`" in style_context
+        assert "native hosts may bypass PreToolUse" in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
         assert "goldilocks:goldilocks" in style_context
         assert "otherwise take its Direct exit" in style_context
         assert "pure conversation" in style_context
+        assert "Minimum-sufficient verification" in style_context
+        assert "Add no hash/frozen contract/baseline/gate" in style_context
+        assert "Without relevant change, do not rerun a pass" in style_context
+        assert "after repair run only failed/affected checks" in style_context
+        assert "diagnose, not retry" in style_context
+        assert "Preserve safeguards" in style_context
         assert "Likely multi-unit work detected" not in style_context
+
+        health_session_start = run_hook(nested, "SessionStart", data_dir=data_dir)
+        assert health_session_start.returncode == 0, health_session_start.stderr
+        assert health_session_start.stdout == ""
+        health_prompt = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="Track hook health without saving sensitive content.",
+            turn_id="health-turn",
+        )
+        assert health_prompt.returncode == 0, health_prompt.stderr
+        health_compact = run_hook(nested, "PostCompact", data_dir=data_dir)
+        assert health_compact.returncode == 0, health_compact.stderr
+        assert "systemMessage" in json.loads(health_compact.stdout)
+
+        with database(data_dir / "orchestration.db") as connection:
+            connection.row_factory = sqlite3.Row
+            health_rows = connection.execute(
+                "SELECT event_name, session_id_hash, turn_id_hash, status, started_at, finished_at "
+                ", elapsed_ms, policy_version "
+                "FROM hook_health ORDER BY event_name, session_id_hash, turn_id_hash"
+            ).fetchall()
+        assert len(health_rows) >= 4
+        for row in health_rows:
+            assert row["status"] == "ok"
+            assert row["session_id_hash"] == stable_hash("test-session")
+            assert len(row["session_id_hash"]) == 64
+            assert len(row["turn_id_hash"]) == 64
+            assert row["started_at"]
+            assert row["finished_at"]
+            assert row["elapsed_ms"] >= 0
+            assert row["policy_version"]
+        with database(data_dir / "orchestration.db") as connection:
+            session_hash = stable_hash("test-session")
+            assert connection.execute(
+                "SELECT COUNT(*) FROM hook_health WHERE session_id_hash = ? AND event_name = 'SessionStart' "
+                "AND turn_id_hash = ?",
+                (session_hash, stable_hash("test-turn")),
+            ).fetchone()[0] == 1
+            assert connection.execute(
+                "SELECT COUNT(*) FROM hook_health WHERE session_id_hash = ? AND event_name = 'UserPromptSubmit' "
+                "AND turn_id_hash = ?",
+                (session_hash, stable_hash("health-turn")),
+            ).fetchone()[0] == 1
+            assert connection.execute(
+                "SELECT COUNT(*) FROM hook_health WHERE session_id_hash = ? AND event_name = 'PostCompact' "
+                "AND turn_id_hash = ?",
+                (session_hash, stable_hash("test-turn")),
+            ).fetchone()[0] == 1
+        assert b"Track hook health without saving sensitive content." not in (
+            data_dir / "orchestration.db"
+        ).read_bytes()
+
+        duplicate_health_prompt = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="This prompt duplicates the previous turn_id.",
+            turn_id="health-turn",
+        )
+        assert duplicate_health_prompt.returncode == 0, duplicate_health_prompt.stderr
+        with database(data_dir / "orchestration.db") as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM hook_health WHERE event_name = 'UserPromptSubmit' "
+                "AND turn_id_hash = ?",
+                (stable_hash("health-turn"),),
+            ).fetchone()[0]
+        assert count == 1
+
+        with database(data_dir / "orchestration.db") as connection:
+            connection.execute(
+                "INSERT INTO hook_health ("
+                "event_name, session_id_hash, turn_id_hash, event_id, started_at, finished_at, "
+                "elapsed_ms, status, policy_version"
+                ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    "SessionStart",
+                    "stale_session",
+                    "stale_turn",
+                    "stale",
+                    (datetime.now(timezone.utc) - timedelta(days=40)).isoformat(),
+                    (datetime.now(timezone.utc) - timedelta(days=40)).isoformat(),
+                    0,
+                    "ok",
+                    "0.5.3-beta.4",
+                ),
+            )
+        stale_cleanup = run_hook(
+            nested, "SessionStart", data_dir=data_dir, turn_id="stale-turn"
+        )
+        assert stale_cleanup.returncode == 0, stale_cleanup.stderr
+        with database(data_dir / "orchestration.db") as connection:
+            stale_remaining = connection.execute(
+                "SELECT COUNT(*) FROM hook_health WHERE event_id = 'stale'"
+            ).fetchone()[0]
+        assert stale_remaining == 0
 
         cohesive_prompt = (
             "Implement this single local implementation unit. Update the code, focused tests, "
@@ -626,6 +753,7 @@ def main() -> None:
         assert "continuity debt" in compact_debt
         assert ".goldilocks/ACTIVE.md" in compact_debt
         assert "repository evidence" in compact_debt
+        assert "Minimum-sufficient verification" in compact_debt
         assert "Usage is host-side and fail-silent" in compact_debt
 
         usage_turn = run_hook(
@@ -715,6 +843,7 @@ def main() -> None:
         compact_output = json.loads(compact.stdout)
         assert "systemMessage" in compact_output
         assert str(ledger) in compact_output["systemMessage"]
+        assert "Minimum-sufficient verification" in compact_output["systemMessage"]
         assert "Usage is host-side and fail-silent" in compact_output["systemMessage"]
 
         hooks = json.loads((PLUGIN / "hooks" / "hooks.json").read_text(encoding="utf-8"))

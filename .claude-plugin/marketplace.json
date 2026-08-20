@@ -10,7 +10,7 @@
       "name": "goldilocks",
       "source": "./plugins/goldilocks",
       "description": "Direct by default; structure, continuity, delegation, and verification only when earned.",
-      "version": "0.5.2",
+      "version": "0.5.3-beta.4",
       "author": {
         "name": "Charles Roc"
       },
