@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import sqlite3
 import subprocess
@@ -22,15 +23,19 @@ class ManifestHandler(BaseHTTPRequestHandler):
     version = "0.3.1"
     etag = '"release-031"'
     requests = 0
+    payload: object | None = None
+    if_none_match: list[str | None] = []
 
     def do_GET(self) -> None:  # noqa: N802 - stdlib handler API
         type(self).requests += 1
+        type(self).if_none_match.append(self.headers.get("If-None-Match"))
         if self.headers.get("If-None-Match") == type(self).etag:
             self.send_response(304)
             self.end_headers()
             return
 
-        body = json.dumps({"version": type(self).version}).encode("utf-8")
+        payload = type(self).payload
+        body = json.dumps({"version": type(self).version} if payload is None else payload).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -56,15 +61,18 @@ def write_fake_codex(
     source_type: str = "git",
     git_source: str = "https://github.com/blackstone2333/goldilocks.git",
     aligned: bool = True,
+    source_path: Path | None = None,
+    listed_version: str | None = None,
 ) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
-    source_root = plugin_root if aligned else plugin_root.parent / "different-plugin"
+    source_root = source_path or (plugin_root if aligned else plugin_root.parent / "different-plugin")
     listing = {
         "installed": [
             {
                 "pluginId": f"goldilocks@{marketplace}",
                 "name": "goldilocks",
                 "marketplaceName": marketplace,
+                "version": listed_version,
                 "source": {"source": "local", "path": str(source_root)},
                 "marketplaceSource": {
                     "sourceType": source_type,
@@ -95,6 +103,9 @@ def run_checker(
     source_type: str = "git",
     git_source: str = "https://github.com/blackstone2333/goldilocks.git",
     aligned: bool = True,
+    source_path: Path | None = None,
+    listed_version: str | None = None,
+    codex_home: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     fake_bin = write_fake_codex(
         plugin_root.parent / "fake-bin",
@@ -103,6 +114,8 @@ def run_checker(
         source_type=source_type,
         git_source=git_source,
         aligned=aligned,
+        source_path=source_path,
+        listed_version=listed_version,
     )
     env = os.environ.copy()
     env.update(
@@ -118,6 +131,8 @@ def run_checker(
             "PATH": f"{fake_bin}{os.pathsep}{env.get('PATH', '')}",
         }
     )
+    if codex_home is not None:
+        env["CODEX_HOME"] = str(codex_home)
     return subprocess.run(
         [sys.executable, str(CHECKER)],
         input=json.dumps({"hook_event_name": "SessionStart", "cwd": str(ROOT)}),
@@ -133,8 +148,41 @@ def expire_check(data_dir: Path) -> None:
         connection.execute("UPDATE update_state SET checked_at = 0 WHERE singleton = 1")
 
 
+def clear_retry(data_dir: Path) -> None:
+    with sqlite3.connect(data_dir / "orchestration.db") as connection:
+        connection.execute("UPDATE update_state SET retry_after = 0, reserved_until = 0 WHERE singleton = 1")
+
+
 def main() -> None:
+    spec = importlib.util.spec_from_file_location("update_checker", CHECKER)
+    assert spec is not None and spec.loader is not None
+    checker = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = checker
+    spec.loader.exec_module(checker)
+    assert checker.parse_version("0.5.3-beta.10")[0] > checker.parse_version("0.5.3-beta.9")[0]
+    assert checker.parse_version("0.5.3")[0] > checker.parse_version("0.5.3-beta.99")[0]
+    assert checker.parse_version("0.5.3-beta.01") is None
+    assert checker.parse_version("0.5.3-beta..1") is None
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        data = Path(temp_dir)
+        data.mkdir(exist_ok=True)
+        old = checker.reserve_check(data, 100_000.0, "0.5.1")
+        assert old is not None
+        with sqlite3.connect(data / "orchestration.db") as connection:
+            connection.execute("UPDATE update_state SET reserved_until = 0")
+        new = checker.reserve_check(data, 100_001.0, "0.5.1")
+        assert new is not None
+        assert checker.record_remote(data, new["reservation_id"], 100_002.0, "0.5.2", '"new"', False,
+                                     should_notify=False) is False
+        checker.record_failure(data, old["reservation_id"], 101_000.0)
+        with sqlite3.connect(data / "orchestration.db") as connection:
+            state = connection.execute("SELECT latest_version, retry_after FROM update_state").fetchone()
+        assert state == ("0.5.2", 0), "a late failed request must not overwrite a newer success"
+
     ManifestHandler.requests = 0
+    ManifestHandler.payload = None
+    ManifestHandler.if_none_match = []
     server = ThreadingHTTPServer(("127.0.0.1", 0), ManifestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -192,6 +240,95 @@ def main() -> None:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
+            ManifestHandler.payload = [
+                {"tag_name": "v0.5.3-beta.10", "prerelease": True, "draft": False},
+                {"tag_name": "v0.5.2", "prerelease": False, "draft": False},
+            ]
+            ManifestHandler.etag = '"release-api-stable"'
+            write_manifest(root / "plugin", "0.5.1")
+            stable = run_checker(root / "plugin", root / "data", url)
+            assert "0.5.2" in json.loads(stable.stdout)["systemMessage"]
+            assert "beta.10" not in stable.stdout, "stable channels must ignore prereleases"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            ManifestHandler.payload = [
+                {"tag_name": "v0.5.3-beta.10", "prerelease": True, "draft": False},
+                {"tag_name": "v0.5.3-beta.9", "prerelease": True, "draft": False},
+                {"tag_name": "v0.5.4-draft", "prerelease": True, "draft": True},
+            ]
+            ManifestHandler.etag = '"release-api-beta"'
+            write_manifest(root / "plugin", "0.5.3-beta.9")
+            beta = run_checker(root / "plugin", root / "data", url)
+            assert "0.5.3-beta.10" in json.loads(beta.stdout)["systemMessage"]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            ManifestHandler.payload = [
+                {"tag_name": "v0.5.3-beta.10", "prerelease": True, "draft": False},
+                {"tag_name": "v0.5.3", "prerelease": False, "draft": False},
+            ]
+            ManifestHandler.etag = '"release-api-beta-to-stable"'
+            write_manifest(root / "plugin", "0.5.3-beta.9")
+            beta_to_stable = run_checker(root / "plugin", root / "data", url)
+            assert "latest 0.5.3." in json.loads(beta_to_stable.stdout)["systemMessage"]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            ManifestHandler.payload = [
+                {"tag_name": "v0.5.3-beta.10", "prerelease": True, "draft": False},
+                {"tag_name": "v0.5.2", "prerelease": False, "draft": False},
+            ]
+            ManifestHandler.etag = '"switch-channel"'
+            write_manifest(root / "plugin", "0.5.1")
+            stable_first = run_checker(root / "plugin", root / "data", url)
+            assert "latest 0.5.2" in json.loads(stable_first.stdout)["systemMessage"]
+            write_manifest(root / "plugin", "0.5.3-beta.9")
+            before_headers = len(ManifestHandler.if_none_match)
+            beta_after_switch = run_checker(root / "plugin", root / "data", url)
+            assert "0.5.3-beta.10" in json.loads(beta_after_switch.stdout)["systemMessage"]
+            assert ManifestHandler.if_none_match[before_headers] is None, (
+                "a changed installed channel must invalidate the old ETag and fetch the full release list"
+            )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            ManifestHandler.payload = {"unexpected": "shape"}
+            write_manifest(root / "plugin", "0.5.1")
+            before = ManifestHandler.requests
+            malformed_release = run_checker(root / "plugin", root / "data", url)
+            assert malformed_release.stdout == ""
+            retry_suppressed = run_checker(root / "plugin", root / "data", url)
+            assert retry_suppressed.stdout == ""
+            assert ManifestHandler.requests == before + 1, "a failure must back off briefly, not poll again"
+            clear_retry(root / "data")
+            ManifestHandler.payload = [{"tag_name": "v0.5.2", "prerelease": False, "draft": False}]
+            recovered = run_checker(root / "plugin", root / "data", url)
+            assert "0.5.2" in json.loads(recovered.stdout)["systemMessage"]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            marketplace = "goldilocks-release"
+            codex_home = root / "codex-home"
+            cache_root = codex_home / "plugins" / "cache" / marketplace / "goldilocks" / "0.5.1"
+            snapshot = codex_home / ".tmp" / "marketplaces" / marketplace / "plugins" / "goldilocks"
+            snapshot.mkdir(parents=True)
+            write_manifest(cache_root, "0.5.1")
+            ManifestHandler.payload = [{"tag_name": "v0.5.2", "prerelease": False, "draft": False}]
+            cache_install = run_checker(
+                cache_root, root / "data", url, marketplace=marketplace,
+                source_path=snapshot, listed_version="0.5.1", codex_home=codex_home,
+            )
+            assert "0.5.2" in json.loads(cache_install.stdout)["systemMessage"], (
+                "Git marketplace snapshots and executing cache paths must align by identity/version"
+            )
+
+        ManifestHandler.payload = None
+        ManifestHandler.version = "0.3.2"
+        ManifestHandler.etag = '"release-032"'
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
             plugin_root = root / "plugin"
             data_dir = root / "data"
             write_manifest(plugin_root, "0.3.2+codex.current")
@@ -227,6 +364,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             write_manifest(root / "plugin", "0.3.0")
+            ManifestHandler.payload = None
             ManifestHandler.version = "not-semver"
             ManifestHandler.etag = '"malformed-version"'
             malformed = run_checker(root / "plugin", root / "data", url)
@@ -298,6 +436,7 @@ def main() -> None:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
+            ManifestHandler.payload = None
             ManifestHandler.version = "0.3.2"
             ManifestHandler.etag = '"release-032-safe-source"'
             for index, git_source in enumerate(
@@ -348,8 +487,8 @@ def main() -> None:
         assert "statusMessage" not in update_hooks[0], "normal checks must have no visible startup status"
 
         checker_source = CHECKER.read_text(encoding="utf-8")
-        assert "api.github.com/repos/blackstone2333/goldilocks/contents" in checker_source, (
-            "the default check must bypass stale raw.githubusercontent.com CDN responses"
+        assert "api.github.com/repos/blackstone2333/goldilocks/releases" in checker_source, (
+            "the default check must use GitHub Releases, including published prereleases"
         )
         assert "codex plugin marketplace upgrade" not in checker_source
     finally:

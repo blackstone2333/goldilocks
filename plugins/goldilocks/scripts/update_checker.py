@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Silently check for a newer Goldilocks release at most once per day."""
+"""Silently discover a newer Goldilocks release; never install it."""
 
 from __future__ import annotations
 
@@ -13,16 +13,16 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from functools import total_ordering
 from pathlib import Path
 from typing import Any
 
 
 CHECK_INTERVAL_SECONDS = 24 * 60 * 60
+FAILURE_BACKOFF_SECONDS = 15 * 60
+RESERVATION_SECONDS = 10
 DEFAULT_TIMEOUT_SECONDS = 2.0
-DEFAULT_MANIFEST_URL = (
-    "https://api.github.com/repos/blackstone2333/goldilocks/contents/"
-    "plugins/goldilocks/.codex-plugin/plugin.json?ref=main"
-)
+DEFAULT_RELEASES_URL = "https://api.github.com/repos/blackstone2333/goldilocks/releases?per_page=100"
 DISABLED_VALUES = {"0", "false", "no", "off", "disabled"}
 VERSION_PATTERN = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?$"
@@ -33,6 +33,42 @@ NETWORK_GIT_SOURCE = re.compile(
     r"[A-Za-z0-9][A-Za-z0-9.-]*/[A-Za-z0-9][A-Za-z0-9._/-]*\.git$",
     re.ASCII,
 )
+
+
+@total_ordering
+class SemanticVersion:
+    """A small SemVer comparator, including numeric prerelease identifiers."""
+
+    def __init__(self, major: int, minor: int, patch: int, prerelease: str | None) -> None:
+        self.major, self.minor, self.patch = major, minor, patch
+        self.prerelease = tuple(prerelease.split(".")) if prerelease else ()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SemanticVersion):
+            return NotImplemented
+        return (self.major, self.minor, self.patch, self.prerelease) == (
+            other.major, other.minor, other.patch, other.prerelease
+        )
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, SemanticVersion):
+            return NotImplemented
+        core = (self.major, self.minor, self.patch)
+        other_core = (other.major, other.minor, other.patch)
+        if core != other_core:
+            return core < other_core
+        if not self.prerelease or not other.prerelease:
+            return bool(self.prerelease) and not bool(other.prerelease)
+        for left, right in zip(self.prerelease, other.prerelease):
+            if left == right:
+                continue
+            left_numeric, right_numeric = left.isdigit(), right.isdigit()
+            if left_numeric and right_numeric:
+                return int(left) < int(right)
+            if left_numeric != right_numeric:
+                return left_numeric
+            return left < right
+        return len(self.prerelease) < len(other.prerelease)
 SCP_GIT_SOURCE = re.compile(
     r"^[A-Za-z0-9][A-Za-z0-9._-]*@[A-Za-z0-9][A-Za-z0-9.-]*:[A-Za-z0-9][A-Za-z0-9._/-]*\.git$",
     re.ASCII,
@@ -62,21 +98,34 @@ def plugin_data() -> Path | None:
     return path
 
 
-def parse_version(raw: object) -> tuple[tuple[int, int, int, int, str], str] | None:
+def parse_version(raw: object) -> tuple[SemanticVersion, str] | None:
     public = str(raw or "").split("+", 1)[0]
+    if public.startswith("v"):
+        public = public[1:]
     match = VERSION_PATTERN.fullmatch(public)
     if match is None:
         return None
     major, minor, patch = (int(match.group(index)) for index in range(1, 4))
     prerelease = match.group(4)
-    stable_rank = 1 if prerelease is None else 0
-    return (major, minor, patch, stable_rank, prerelease or ""), public
+    if prerelease:
+        identifiers = prerelease.split(".")
+        if any(not part or (part.isdigit() and len(part) > 1 and part.startswith("0")) for part in identifiers):
+            return None
+    return SemanticVersion(major, minor, patch, prerelease), public
 
 
-def installed_version() -> tuple[tuple[int, int, int, int, str], str] | None:
+def installed_version() -> tuple[SemanticVersion, str] | None:
     manifest = plugin_root() / ".codex-plugin" / "plugin.json"
     payload = json.loads(manifest.read_text(encoding="utf-8"))
     return parse_version(payload.get("version"))
+
+
+def installed_manifest_version() -> str | None:
+    try:
+        payload = json.loads((plugin_root() / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    except (OSError, TypeError, json.JSONDecodeError):
+        return None
+    return payload.get("version") if isinstance(payload.get("version"), str) else None
 
 
 def valid_git_source(value: object) -> str | None:
@@ -89,6 +138,26 @@ def valid_git_source(value: object) -> str | None:
     if SCP_GIT_SOURCE.fullmatch(value):
         return value
     return None
+
+
+def cache_matches_marketplace_snapshot(
+    root: Path, source_path: Path, marketplace: str, listed_version: object
+) -> bool:
+    """Match Codex's Git snapshot listing to the versioned cache running this Hook."""
+
+    manifest_version = installed_manifest_version()
+    if listed_version is not None and listed_version != manifest_version:
+        return False
+    if source_path == root:
+        return True  # Deterministic local-test and older-host shape.
+    home = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser().resolve()
+    expected_snapshot = home / ".tmp" / "marketplaces" / marketplace / "plugins" / "goldilocks"
+    expected_cache_parent = home / "plugins" / "cache" / marketplace / "goldilocks"
+    return (
+        source_path == expected_snapshot
+        and root.parent == expected_cache_parent
+        and root.name == manifest_version
+    )
 
 
 def installed_git_marketplace() -> tuple[str, str, str] | None:
@@ -132,7 +201,7 @@ def installed_git_marketplace() -> tuple[str, str, str] | None:
                 source_path = Path(source["path"]).expanduser().resolve()
             except OSError:
                 continue
-            if source_path == root:
+            if cache_matches_marketplace_snapshot(root, source_path, marketplace, item.get("version")):
                 return "goldilocks", marketplace, remote
     except (OSError, ValueError, TypeError, json.JSONDecodeError, subprocess.SubprocessError):
         return None
@@ -149,37 +218,76 @@ def connect_state(root: Path) -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS update_state (
             singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
             checked_at REAL NOT NULL DEFAULT 0,
+            checked_installed_version TEXT,
+            retry_after REAL NOT NULL DEFAULT 0,
+            reservation_id INTEGER NOT NULL DEFAULT 0,
+            reserved_until REAL NOT NULL DEFAULT 0,
             etag TEXT,
             latest_version TEXT,
+            latest_is_prerelease INTEGER NOT NULL DEFAULT 0,
             notified_version TEXT
         )
         """
     )
+    # Existing installations have the earlier, smaller schema.
+    existing = {row[1] for row in connection.execute("PRAGMA table_info(update_state)")}
+    for name, definition in (
+        ("retry_after", "REAL NOT NULL DEFAULT 0"),
+        ("checked_installed_version", "TEXT"),
+        ("reservation_id", "INTEGER NOT NULL DEFAULT 0"),
+        ("reserved_until", "REAL NOT NULL DEFAULT 0"),
+        ("latest_is_prerelease", "INTEGER NOT NULL DEFAULT 0"),
+    ):
+        if name not in existing:
+            connection.execute(f"ALTER TABLE update_state ADD COLUMN {name} {definition}")
     connection.execute("INSERT OR IGNORE INTO update_state(singleton) VALUES (1)")
     connection.commit()
     return connection
 
 
-def reserve_check(root: Path, checked_at: float) -> dict[str, Any] | None:
+def reserve_check(root: Path, now: float, current_version: str) -> dict[str, Any] | None:
     connection = connect_state(root)
     try:
         connection.execute("BEGIN IMMEDIATE")
         state = connection.execute(
-            "SELECT checked_at, etag, latest_version, notified_version "
+            "SELECT checked_at, checked_installed_version, retry_after, reservation_id, reserved_until, etag, latest_version, "
+            "latest_is_prerelease, notified_version "
             "FROM update_state WHERE singleton = 1"
         ).fetchone()
         if state is None:
             return None
-        elapsed = checked_at - float(state["checked_at"])
-        if elapsed < CHECK_INTERVAL_SECONDS:
+        version_changed = state["checked_installed_version"] != current_version
+        if version_changed:
+            connection.execute(
+                """
+                UPDATE update_state
+                SET checked_at = 0, retry_after = 0, reserved_until = 0, etag = NULL,
+                    latest_version = NULL, latest_is_prerelease = 0, notified_version = NULL,
+                    checked_installed_version = ?
+                WHERE singleton = 1
+                """,
+                (current_version,),
+            )
+            state = dict(state)
+            state.update(
+                checked_at=0, retry_after=0, reserved_until=0, etag=None, latest_version=None,
+                latest_is_prerelease=0, notified_version=None, checked_installed_version=current_version,
+            )
+        if now - float(state["checked_at"]) < CHECK_INTERVAL_SECONDS:
             connection.commit()
             return None
+        if now < float(state["retry_after"]) or now < float(state["reserved_until"]):
+            connection.commit()
+            return None
+        reservation_id = int(state["reservation_id"]) + 1
         connection.execute(
-            "UPDATE update_state SET checked_at = ? WHERE singleton = 1",
-            (checked_at,),
+            "UPDATE update_state SET reservation_id = ?, reserved_until = ?, checked_installed_version = ? WHERE singleton = 1",
+            (reservation_id, now + RESERVATION_SECONDS, current_version),
         )
         connection.commit()
-        return dict(state)
+        reserved = dict(state)
+        reserved["reservation_id"] = reservation_id
+        return reserved
     finally:
         connection.close()
 
@@ -192,16 +300,16 @@ def request_timeout() -> float:
     return min(max(value, 0.1), 3.0)
 
 
-def fetch_manifest(etag: str | None) -> tuple[dict[str, Any] | None, str | None]:
+def fetch_releases(etag: str | None) -> tuple[Any | None, str | None]:
     headers = {
-        "Accept": "application/vnd.github.raw+json",
+        "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "goldilocks-update-checker",
     }
     if etag:
         headers["If-None-Match"] = etag
     request = urllib.request.Request(
-        os.environ.get("GOLDILOCKS_UPDATE_URL", DEFAULT_MANIFEST_URL),
+        os.environ.get("GOLDILOCKS_UPDATE_URL", DEFAULT_RELEASES_URL),
         headers=headers,
     )
     try:
@@ -210,8 +318,8 @@ def fetch_manifest(etag: str | None) -> tuple[dict[str, Any] | None, str | None]
             if len(body) > 65_536:
                 raise ValueError("remote manifest exceeds 64 KiB")
             payload = json.loads(body.decode("utf-8"))
-            if not isinstance(payload, dict):
-                raise ValueError("remote manifest is not an object")
+            if not isinstance(payload, (dict, list)):
+                raise ValueError("remote release response is not an object or list")
             return payload, response.headers.get("ETag")
     except urllib.error.HTTPError as error:
         if error.code == 304:
@@ -219,10 +327,44 @@ def fetch_manifest(etag: str | None) -> tuple[dict[str, Any] | None, str | None]
         raise
 
 
+def select_latest_release(
+    payload: Any,
+    current: tuple[SemanticVersion, str],
+) -> tuple[SemanticVersion, str, bool] | None:
+    """Choose an eligible published release for this installation channel."""
+
+    # A one-object manifest remains supported only as a deterministic local override.
+    if isinstance(payload, dict):
+        parsed = parse_version(payload.get("version"))
+        if parsed is None:
+            return None
+        return parsed[0], parsed[1], bool(parsed[0].prerelease)
+    if not isinstance(payload, list):
+        return None
+    allow_prereleases = bool(current[0].prerelease)
+    candidates: list[tuple[SemanticVersion, str, bool]] = []
+    for release in payload:
+        if not isinstance(release, dict) or release.get("draft") is True:
+            continue
+        is_prerelease = release.get("prerelease") is True
+        if is_prerelease and not allow_prereleases:
+            continue
+        parsed = parse_version(release.get("tag_name"))
+        if parsed is None:
+            continue
+        if not is_prerelease and parsed[0].prerelease:
+            continue
+        candidates.append((parsed[0], parsed[1], is_prerelease))
+    return max(candidates, default=None, key=lambda item: item[0])
+
+
 def record_remote(
     root: Path,
+    reservation_id: int,
+    checked_at: float,
     remote_version: str,
     etag: str | None,
+    is_prerelease: bool,
     *,
     should_notify: bool,
 ) -> bool:
@@ -237,17 +379,40 @@ def record_remote(
             and state is not None
             and state["notified_version"] != remote_version
         )
+        updated = connection.execute(
+            """
+            UPDATE update_state
+            SET checked_at = ?, retry_after = 0, reserved_until = 0, etag = ?, latest_version = ?,
+                latest_is_prerelease = ?,
+                notified_version = CASE WHEN ? THEN ? ELSE notified_version END
+            WHERE singleton = 1 AND reservation_id = ?
+            """,
+            (checked_at, etag, remote_version, int(is_prerelease), int(notify), remote_version, reservation_id),
+        )
+        if updated.rowcount != 1:
+            connection.commit()
+            return False
+        connection.commit()
+        return notify
+    finally:
+        connection.close()
+
+
+def record_failure(root: Path, reservation_id: int, now: float) -> None:
+    """Short retry after failures; an obsolete request cannot erase newer state."""
+
+    connection = connect_state(root)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
         connection.execute(
             """
             UPDATE update_state
-            SET etag = ?, latest_version = ?,
-                notified_version = CASE WHEN ? THEN ? ELSE notified_version END
-            WHERE singleton = 1
+            SET retry_after = ?, reserved_until = 0
+            WHERE singleton = 1 AND reservation_id = ?
             """,
-            (etag, remote_version, int(notify), remote_version),
+            (now + FAILURE_BACKOFF_SECONDS, reservation_id),
         )
         connection.commit()
-        return notify
     finally:
         connection.close()
 
@@ -259,8 +424,9 @@ def emit_notice(current: str, latest: str, plugin: str, marketplace: str, remote
         f"Goldilocks update available: installed {current}, latest {latest}. "
         f"Detected Git marketplace `{marketplace}`, plugin `{selector}`, and source `{remote}`. "
         "This check only discovered the update: no files were changed, and this task "
-        "continues with the installed version. Reply that you approve the update; the "
-        f"installing agent must first verify `{tag}` before mutation with `git ls-remote "
+        "continues with the installed version. Reply that you approve the update; then the "
+        f"installing agent must own the complete verification and upgrade, first verifying `{tag}` "
+        "before mutation with `git ls-remote "
         f"--exit-code --refs {remote} refs/tags/{tag}`, then run `codex plugin marketplace "
         f"remove {marketplace} --json`, `codex plugin marketplace add {remote} --ref {tag} "
         f"--json`, and `codex plugin add {selector} --json`; then run Bootstrap "
@@ -277,7 +443,7 @@ def emit_notice(current: str, latest: str, plugin: str, marketplace: str, remote
                         f"{message} Inform the user once. After explicit approval, verify {tag} "
                         "before removal, then use the displayed remove/add/add sequence and "
                         "$goldilocks-bootstrap for Bootstrap plan/apply/check; do not run an "
-                        "automatic update or trust changed Hooks."
+                        "automatic update, retain approval, or trust changed Hooks."
                     ),
                 },
             },
@@ -298,24 +464,39 @@ def main() -> None:
         current = installed_version()
         if data is None or current is None:
             return
-        state = reserve_check(data, time.time())
+        state = reserve_check(data, time.time(), current[1])
         if state is None:
             return
-        manifest, etag = fetch_manifest(state.get("etag"))
-        latest = parse_version(
-            state.get("latest_version") if manifest is None else manifest.get("version")
-        )
-        if latest is None:
-            return
+        payload, etag = fetch_releases(state.get("etag"))
+        if payload is None:
+            cached = parse_version(state.get("latest_version"))
+            if cached is None:
+                record_failure(data, state["reservation_id"], time.time())
+                return
+            latest = (cached[0], cached[1], bool(state.get("latest_is_prerelease")))
+        else:
+            latest = select_latest_release(payload, current)
+            if latest is None:
+                record_failure(data, state["reservation_id"], time.time())
+                return
         notify = record_remote(
             data,
+            state["reservation_id"],
+            time.time(),
             latest[1],
             etag,
-            should_notify=latest[0] > current[0],
+            latest[2],
+            should_notify=latest[0] > current[0]
+            and (bool(current[0].prerelease) or not latest[2]),
         )
         if notify:
             emit_notice(current[1], latest[1], *selector)
     except (OSError, ValueError, TypeError, json.JSONDecodeError, sqlite3.Error, urllib.error.URLError):
+        try:
+            if "data" in locals() and data is not None and "state" in locals() and state is not None:
+                record_failure(data, state["reservation_id"], time.time())
+        except (OSError, sqlite3.Error, KeyError):
+            pass
         return
 
 

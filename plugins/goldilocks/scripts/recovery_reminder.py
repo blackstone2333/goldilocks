@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.3-beta.4"
+POLICY_VERSION = "0.5.3-beta.5"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 HOOK_HEALTH_TTL_DAYS = 30

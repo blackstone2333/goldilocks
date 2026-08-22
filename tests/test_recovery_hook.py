@@ -259,7 +259,7 @@ def main() -> None:
                     (datetime.now(timezone.utc) - timedelta(days=40)).isoformat(),
                     0,
                     "ok",
-                    "0.5.3-beta.4",
+                    "0.5.3-beta.5",
                 ),
             )
         stale_cleanup = run_hook(

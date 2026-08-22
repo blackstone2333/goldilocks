@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Keep the beta package identity separate from stable install instructions."""
+"""Keep Beta5 identity, bootstrap intent, and stable install guidance coherent."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-BETA = "0.5.3-beta.4"
+BETA = "0.5.3-beta.5"
 STABLE_REF = "v0.5.2"
 
 
@@ -53,26 +53,40 @@ def main() -> None:
         PLUGIN / "skills" / "goldilocks" / "references" / "sol-specialists.md"
     )
 
-    for changelog in (ROOT / "CHANGELOG.md", ROOT / "CHANGELOG.zh-CN.md"):
-        body = read(changelog)
-        assert f"## {BETA}" in body, changelog
-        assert "minimum-sufficient" in body or "最小充分验证" in body, changelog
-        assert "Direct" in body and "Usage" in body and "Hook" in body, changelog
+    root_skill = read(PLUGIN / "skills" / "goldilocks" / "SKILL.md")
+    hygiene = read(PLUGIN / "skills" / "goldilocks" / "references" / "final-output-hygiene.md")
+    notices = read(PLUGIN / "THIRD_PARTY_NOTICES.md")
+    assert "[final-output-hygiene.md](references/final-output-hygiene.md)" in root_skill
+    assert "accepted, verified current state" in hygiene
+    assert "Do not add a freeze, scanner, automatic agent" in hygiene
+    assert "https://github.com/LB623/no-negative-echo" in notices
+    assert "independent, narrowed rewrite" in notices
 
     stable_install_files = (
         ROOT / "README.md",
         ROOT / "README.zh-CN.md",
         ROOT / "docs" / "installation.md",
         ROOT / "docs" / "installation.zh-CN.md",
-        PLUGIN / "skills" / "goldilocks-bootstrap" / "scripts" / "bootstrap.py",
-        PLUGIN / "skills" / "goldilocks-bootstrap" / "references" / "bootstrap.md",
     )
     for path in stable_install_files:
         body = read(path)
-        assert STABLE_REF in body or "locked v0.5.2" in body, path
-        assert BETA not in body, path
+        assert STABLE_REF in body, path
+    for path in stable_install_files[:2]:
+        assert BETA not in read(path), path
 
-    print("Goldilocks 0.5.3-beta.4 release contract passed; stable installs remain v0.5.2.")
+    bootstrap = read(PLUGIN / "skills" / "goldilocks-bootstrap" / "scripts" / "bootstrap.py")
+    bootstrap_reference = read(PLUGIN / "skills" / "goldilocks-bootstrap" / "references" / "bootstrap.md")
+    assert f'"--ref", "v{BETA}", "--json"' in bootstrap
+    assert f"v{BETA} Beta marketplace" in bootstrap_reference
+    assert "v0.5.2 official Sol template" in bootstrap
+
+    for path in (ROOT / "CHANGELOG.md", ROOT / "CHANGELOG.zh-CN.md"):
+        body = read(path)
+        assert f"## {BETA} — 2026-08-22" in body, path
+        assert "scanner" in body and "silent" in body or "扫描器" in body and "静默" in body, path
+        assert "15" in body and "24" in body, path
+
+    print("Goldilocks 0.5.3-beta.5 release contract passed; stable installs remain v0.5.2.")
 
 
 if __name__ == "__main__":

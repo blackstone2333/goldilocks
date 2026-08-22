@@ -109,7 +109,7 @@ def main() -> None:
     ):
         assert required in english, required
 
-    print("Goldilocks 0.5.3-beta.4 compact contract passed.")
+    print("Goldilocks 0.5.3-beta.5 compact contract passed.")
 
 
 if __name__ == "__main__":

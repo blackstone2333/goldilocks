@@ -113,9 +113,9 @@ codex plugin add goldilocks@goldilocks-local
 
 ### 安静的更新感知
 
-原生插件会在 `SessionStart` 时检查 GitHub 上的 Goldilocks 公共清单，但 24 小时内最多请求一次。检查使用短超时、GitHub ETag 和插件数据目录中的 SQLite 状态。已经是最新版、重复启动、响应格式错误、超时或离线时完全无输出；发现更高的语义版本时，每个版本只提醒一次，并显示当前版本、最新版本和更新命令。
+原生插件会在 `SessionStart` 时检查 GitHub Releases API。成功检查保持安静，24 小时内最多一次；失败则使用 15 分钟短退避后再试。检查使用短超时、GitHub ETag 和插件数据目录中的 SQLite 状态。稳定版会忽略预发布版；预发布版可发现更新的预发布版或稳定版。已经是最新版、重复启动、响应格式错误、超时或离线时完全无输出；发现更高的语义版本时，每个版本只提醒一次，并显示当前版本、最新版本和更新指引。
 
-检查器不会下载或执行远端代码，也不会自行安装更新；当前任务始终继续使用已经加载的版本。Goldilocks marketplace 固定到不可变的 release Tag，因此只运行 `marketplace upgrade` 不能升级到新版本。阅读 changelog 并明确批准更新后，按提醒中基于真实安全来源生成的顺序执行：先用 `git ls-remote` 验证新 Tag，再移除旧 marketplace，以同一已验证 Git 来源和 `--ref v<latest>` 重新添加，重新安装 Plugin，运行 Bootstrap plan/apply/check，最后新建任务。来源不安全、属于本地开发或无法核实时，不会给出更新命令。如需完全关闭联网检查，可在 Codex 环境中设置 `GOLDILOCKS_UPDATE_CHECK=0`。
+检查器不会下载或执行远端代码，更不会静默自行升级；当前任务始终继续使用已经加载的版本。Goldilocks marketplace 固定到不可变的 release Tag，因此只运行 `marketplace upgrade` 不能升级到新版本。阅读 changelog 并明确批准更新后，由安装 Agent 一次性按提醒中基于真实安全来源生成的顺序执行：先用 `git ls-remote` 验证新 Tag，再移除旧 marketplace，以同一已验证 Git 来源和 `--ref v<latest>` 重新添加，重新安装 Plugin，运行 Bootstrap plan/apply/check，最后新建任务。来源不安全、属于本地开发或无法核实时，不会给出更新命令。如需完全关闭联网检查，可在 Codex 环境中设置 `GOLDILOCKS_UPDATE_CHECK=0`。
 
 ### Codex 连续性恢复
 

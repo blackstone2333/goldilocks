@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
   "as_of": "2026-08-10",
-  "purpose": "Dated public-evidence seed plus the current v0.5.3-beta.4 OpenAI role profile for post-decomposition, quota-aware routing. Refresh before consequential use.",
+  "purpose": "Dated public-evidence seed plus the current v0.5.3-beta.5 OpenAI role profile for post-decomposition, quota-aware routing. Refresh before consequential use.",
   "production_profile": {
     "as_of": "2026-08-10",
-    "scope": "Goldilocks v0.5.3-beta.4 OpenAI defaults; capability, authority, privacy, modality, and acceptance remain hard gates.",
+    "scope": "Goldilocks v0.5.3-beta.5 OpenAI defaults; capability, authority, privacy, modality, and acceptance remain hard gates.",
     "lead": {"model": "gpt-5.6-sol", "role": "intent, architecture, authority, shared critical interfaces, proportional final acceptance"},
     "standard": {"model": "gpt-5.6-terra", "reasoning_effort": "medium", "role": "primary owner for mixed implementation, bounded judgment, substantive specs, plans, debugging, handoffs, and documents"},
     "fast": {"model": "gpt-5.3-codex-spark", "reasoning_effort": "xhigh", "role": "deterministic coding-only leaf with decisive automated acceptance", "excluded": ["document prose", "continuity records"]},

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.5.3-beta.4"
+POLICY_VERSION = "0.5.3-beta.5"
 
 
 def parser() -> argparse.ArgumentParser:

@@ -30,3 +30,5 @@ English fixed: `ROUTE=<direct|fast|standard|mixed> | TEAM=<main model and actual
 根身份只写 `主模型/main model`；worker 写实际 role。同一 role 多人可逐项重复或写 `N role`，数量必须与实际 starts 一致；这只约束回执事实，不反向决定 dispatch。路线是决策，团队/并发/委派是事实：零启动不强制路线为 Direct；未启动不计 worker，详情写 fallback。不得用 `主代理/Codex/primary agent` 代替主模型。Usage 默认 on-demand；explicit automatic 才自动。
 
 报告 delta 与最短 decisive evidence。Defect 报 evidence-backed CAUSE（或 unknown）、fix、fresh verification。
+
+最终交付只陈述已验收、已验证的当前状态；会话中未采用方案与用户纠正只作控制信息，不回显为交付内容。仅在方案被否或纠正、会话很长/compact/delegated、多交付表面、用户已见负向回声，或要写 commit、PR、release、README、log、handoff 等 durable surface 时，按需读 [final-output-hygiene.md](references/final-output-hygiene.md)。

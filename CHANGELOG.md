@@ -2,6 +2,14 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.3-beta.5 — 2026-08-22
+
+### Final-output hygiene and update awareness repair
+
+- Added an on-demand final-output hygiene reference: durable delivery surfaces now describe only the accepted, verified current state while preserving real removals, migrations, compatibility, safety, audit facts, external actions, and pre-existing user work. This adds no scanner, extra Agent, freeze, or default verification loop.
+- Repaired quiet update awareness to read the GitHub Releases API: successful checks remain 24-hour quiet checks, failures retry after 15 minutes, stable installs ignore prereleases, and prerelease installs can discover newer prereleases or stable releases. Each newer version is still noticed once.
+- The checker never downloads, executes, or silently upgrades code. Hook-definition changes remain subject to user review; after an approved update, verify the Tag, reinstall, run Bootstrap plan/apply/check, and start a new task.
+
 ## 0.5.3-beta.4 — 2026-08-20
 
 ### Compact execution and local diagnostics
