@@ -2,6 +2,14 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.3-beta.6 — 2026-08-25
+
+### Spark quota fallback, visible activity, and session-bound continuity
+
+- Recover a native Spark `usage_limit` terminal result even when the host omits `SubagentStop`. The same parent session will not launch Spark again before the observed reset; it must freshly compare Terra, Luna, and Direct. Only an allowlisted outcome and reset time are retained, never raw error text.
+- Give all nine Goldilocks Hook paths a localized transient activity status. Executable work also receives one compact `Goldilocks | Active` cue and a truthful final route detail for observed routing, recovery, fallback, Night Shift, Usage/update, or acceptance activity. Pure conversation receives no persistent activity line, and Usage remains on-demand by default.
+- Restore continuity only from exactly one same-session ACTIVE frontier in a Git-registered worktree. Wrong-session, ambiguous, forged one-way registry, and symlinked candidates fail silent; Chinese tasks remain Chinese after `PostCompact` recovery.
+
 ## 0.5.3-beta.5 — 2026-08-22
 
 ### Final-output hygiene and update awareness repair

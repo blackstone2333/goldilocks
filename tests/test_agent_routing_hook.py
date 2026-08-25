@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -38,6 +39,8 @@ def run_hook(
     sandbox_policy_type: str = "danger-full-access",
     permission_profile_type: str = "disabled",
     agent_path: str | None = None,
+    session_roots: Path | None = None,
+    extra_payload: dict | None = None,
 ) -> subprocess.CompletedProcess[str]:
     payload = {
         "session_id": session_id,
@@ -70,9 +73,13 @@ def run_hook(
             payload["reasoning_effort"] = reasoning_effort
         if agent_path is not None:
             payload["agent_path"] = agent_path
+    if extra_payload:
+        payload.update(extra_payload)
 
     env = os.environ.copy()
     env["PLUGIN_DATA"] = str(data_dir)
+    if session_roots is not None:
+        env["GOLDILOCKS_SESSION_ROOTS"] = str(session_roots)
     return subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(payload),
@@ -642,6 +649,146 @@ def test_stop_reconnects_by_agent_id(data_dir: Path) -> None:
     assert "already verified" in conflict.stderr
 
 
+def write_usage_limited_spark_rollout(
+    sessions: Path, agent_id: str, reset_at: int
+) -> Path:
+    rollout = sessions / f"rollout-fixture-{agent_id}.jsonl"
+    records = [
+        {
+            "timestamp": "2026-08-24T14:46:57Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "token_count",
+                "info": {"total_token_usage": {"input_tokens": 100}},
+                "rate_limits": {
+                    "limit_name": "GPT-5.3-Codex-Spark",
+                    "primary": {
+                        "used_percent": 100.0,
+                        "window_minutes": 300,
+                        "resets_at": reset_at,
+                    },
+                    "secondary": {
+                        "used_percent": 50.0,
+                        "window_minutes": 10080,
+                        "resets_at": reset_at + 604800,
+                    },
+                },
+            },
+        },
+        {
+            "timestamp": "2026-08-24T14:46:59Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "task_complete",
+                "error": {
+                    "message": "fixture text must not be persisted",
+                    "codex_error_info": "usage_limit_exceeded",
+                },
+            },
+        },
+    ]
+    rollout.write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+    return rollout
+
+
+def test_spark_usage_limit_latches_session_and_requires_fallback(data_dir: Path) -> None:
+    sessions = data_dir / "quota-sessions"
+    sessions.mkdir()
+    session = "spark-quota-session"
+    agent_id = "11111111-2222-4333-8444-555555555555"
+    planned = run_hook(
+        data_dir,
+        "PreToolUse",
+        session_id=session,
+        tool_use_id="quota-first-spark",
+        session_roots=sessions,
+        tool_input={
+            **spawn_input("fast__quota_first", fork_turns="none"),
+            "agent_type": "goldilocks_spark_worker",
+        },
+    )
+    assert hook_output(planned)["updatedInput"]["task_name"] == "fast__quota_first_spark"
+    started = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id=session,
+        agent_id=agent_id,
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
+        session_roots=sessions,
+    )
+    assert_silent(started, "the first Spark route should start normally")
+    write_usage_limited_spark_rollout(sessions, agent_id, int(time.time()) + 3600)
+
+    repeated = run_hook(
+        data_dir,
+        "PreToolUse",
+        session_id=session,
+        tool_use_id="quota-second-spark",
+        session_roots=sessions,
+        tool_input={
+            **spawn_input("fast__quota_second", fork_turns="none"),
+            "agent_type": "goldilocks_spark_worker",
+        },
+    )
+    reason = denial_reason(repeated)
+    assert "usage limit" in reason.lower()
+    assert "Terra" in reason and "Luna" in reason and "Direct" in reason
+    execution = next(
+        row for row in rows(data_dir, "executions") if row["agent_id"] == agent_id
+    )
+    assert execution["terminal_outcome"] == "usage_limit"
+    assert execution["quota_reset_at"] > int(time.time())
+    assert b"fixture text must not be persisted" not in (
+        data_dir / "orchestration.db"
+    ).read_bytes()
+
+    terra = run_hook(
+        data_dir,
+        "PreToolUse",
+        session_id=session,
+        tool_use_id="quota-terra-fallback",
+        session_roots=sessions,
+        tool_input={
+            **spawn_input("standard__quota_fallback", fork_turns="none"),
+            "agent_type": "goldilocks_terra_engineer",
+        },
+    )
+    assert hook_output(terra)["updatedInput"]["task_name"] == "standard__quota_fallback_terra"
+
+    expired_session = "spark-quota-expired-session"
+    expired_agent = "11111111-2222-4333-8444-666666666666"
+    observed = run_hook(
+        data_dir,
+        "SubagentStart",
+        session_id=expired_session,
+        agent_id=expired_agent,
+        model=SPARK_MODEL,
+        reasoning_effort="xhigh",
+        agent_type="goldilocks_spark_worker",
+        agent_path="/root/fast__expired_probe_spark",
+        session_roots=sessions,
+    )
+    assert_silent(observed, "canonical unplanned native Spark should be observable")
+    write_usage_limited_spark_rollout(sessions, expired_agent, 1)
+    after_reset = run_hook(
+        data_dir,
+        "PreToolUse",
+        session_id=expired_session,
+        tool_use_id="quota-after-reset",
+        session_roots=sessions,
+        tool_input={
+            **spawn_input("fast__after_reset", fork_turns="none"),
+            "agent_type": "goldilocks_spark_worker",
+        },
+    )
+    assert hook_output(after_reset)["updatedInput"]["task_name"] == "fast__after_reset_spark"
+
+
 def test_real_mismatch(data_dir: Path) -> None:
     session = "mismatch-session"
     planned = run_hook(
@@ -972,6 +1119,7 @@ def main() -> None:
         test_unique_model_correlation(data_dir)
         test_ambiguous_same_model_correlation(data_dir)
         test_stop_reconnects_by_agent_id(data_dir)
+        test_spark_usage_limit_latches_session_and_requires_fallback(data_dir)
         test_real_mismatch(data_dir)
         test_unplanned_sol_immediate_return(data_dir)
         test_unplanned_native_observation_requires_canonical_name(data_dir)

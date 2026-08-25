@@ -20,7 +20,7 @@ PRESENTATIONS = PLUGIN / "skills" / "goldilocks" / "references" / "presentations
 REPORT = ROOT / "evals" / "results" / "2026-07-25-v040-structured-artifact-pilot.md"
 HOOKS = PLUGIN / "hooks" / "hooks.json"
 REGISTRY = PLUGIN / "skills" / "goldilocks" / "assets" / "model-registry.json"
-EXPECTED_HOOK_HASH = "284ec6cfacb801282fc6ec693c5f635e0e10c9a0ed2d32c7a20c30b4245acdc4"
+EXPECTED_HOOK_HASH = "766c441bc8981ab2d68e046b63fb44e4ca627d259a271e90d15f43cea95c428e"
 
 
 failures: list[str] = []

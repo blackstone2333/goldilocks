@@ -48,9 +48,10 @@ def run_hook(
     turn_id: str = "test-turn",
     session_roots: Path | None = None,
     usage_visibility: str | None = None,
+    session_id: str = "test-session",
 ) -> subprocess.CompletedProcess[str]:
     payload = {
-        "session_id": "test-session",
+        "session_id": session_id,
         "turn_id": turn_id,
         "cwd": str(cwd),
         "hook_event_name": event,
@@ -95,6 +96,125 @@ def main() -> None:
         nested.mkdir(parents=True)
         data_dir = parent / "plugin-data"
         data_dir.mkdir()
+
+        # A host may stay in one registered worktree while the active frontier
+        # lives in another. Recovery must use the host session id and Git's
+        # registry, never a recursive "first ACTIVE wins" scan.
+        registered_container = parent / "registered-container"
+        registered_work = registered_container / "work"
+        registered_work.mkdir(parents=True)
+        registered_main = registered_work / "registered-main"
+        subprocess.run(["git", "init", "-q", str(registered_main)], check=True)
+        subprocess.run(
+            [
+                "git", "-C", str(registered_main), "-c", "user.name=Goldilocks Test",
+                "-c", "user.email=goldilocks@example.invalid", "commit", "--allow-empty",
+                "-q", "-m", "fixture",
+            ],
+            check=True,
+        )
+        registered_a = registered_work / "registered-a"
+        registered_b = registered_work / "registered-b"
+        subprocess.run(
+            ["git", "-C", str(registered_main), "worktree", "add", "-q", "-b", "ledger-a", str(registered_a)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(registered_main), "worktree", "add", "-q", "-b", "ledger-b", str(registered_b)],
+            check=True,
+        )
+
+        ledger_a = registered_a / ".goldilocks" / "ACTIVE.md"
+        ledger_a.parent.mkdir()
+        ledger_a.write_text(
+            "---\nstatus: active\nsession_id: matching-session\n---\n# Active A\n",
+            encoding="utf-8",
+        )
+        # A valid registered backlink may itself use a relative path.
+        linked_gitdir = Path(
+            (registered_a / ".git")
+            .read_text(encoding="utf-8")
+            .split(":", 1)[1]
+            .strip()
+        )
+        (linked_gitdir / "gitdir").write_text(
+            os.path.relpath(registered_a / ".git", linked_gitdir) + "\n",
+            encoding="utf-8",
+        )
+
+        symlink_target = parent / "symlink-frontier"
+        symlink_target.mkdir()
+        (symlink_target / "ACTIVE.md").write_text(
+            "---\nstatus: active\nsession_id: matching-session\n---\n# Do not follow\n",
+            encoding="utf-8",
+        )
+        symlinked_goldilocks = registered_b / ".goldilocks"
+        symlinked_goldilocks.symlink_to(symlink_target, target_is_directory=True)
+        registered_session = run_hook(
+            registered_container, "SessionStart", session_id="matching-session"
+        )
+        assert registered_session.returncode == 0, registered_session.stderr
+        registered_context = json.loads(registered_session.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert str(ledger_a) in registered_context
+        assert "Goldilocks | Active: continuity restored from ACTIVE" in registered_context
+
+        registered_compact = run_hook(
+            registered_container, "PostCompact", session_id="matching-session"
+        )
+        compact_message = json.loads(registered_compact.stdout)["systemMessage"]
+        assert str(ledger_a) in compact_message
+        assert "Goldilocks | Active: continuity restored from ACTIVE" in compact_message
+
+        wrong_session = run_hook(
+            registered_container, "SessionStart", session_id="different-session"
+        )
+        assert wrong_session.returncode == 0, wrong_session.stderr
+        assert wrong_session.stdout == ""
+
+        unregistered = registered_container / "unregistered-child" / ".goldilocks" / "ACTIVE.md"
+        unregistered.parent.mkdir(parents=True)
+        unregistered.write_text(
+            "---\nstatus: active\nsession_id: unregistered-session\n---\n# Ignore me\n",
+            encoding="utf-8",
+        )
+        unregistered_session = run_hook(
+            registered_container, "SessionStart", session_id="unregistered-session"
+        )
+        assert unregistered_session.stdout == ""
+
+        forged_target = parent / "forged-worktree"
+        forged_target.mkdir()
+        (forged_target / ".git").write_text("gitdir: /not/the/registered/entry\n", encoding="utf-8")
+        forged_ledger = forged_target / ".goldilocks" / "ACTIVE.md"
+        forged_ledger.parent.mkdir()
+        forged_ledger.write_text(
+            "---\nstatus: active\nsession_id: forged-session\n---\n# Forged\n",
+            encoding="utf-8",
+        )
+        forged_entry = registered_main / ".git" / "worktrees" / "forged"
+        forged_entry.mkdir()
+        (forged_entry / "gitdir").write_text(
+            str(forged_target / ".git") + "\n", encoding="utf-8"
+        )
+        forged_session = run_hook(
+            registered_container, "SessionStart", session_id="forged-session"
+        )
+        assert forged_session.stdout == "", "one-way registry entries must not be trusted"
+
+        symlinked_goldilocks.unlink()
+        ledger_b = registered_b / ".goldilocks" / "ACTIVE.md"
+        ledger_b.parent.mkdir()
+        ledger_b.write_text(
+            "---\nstatus: active\nsession_id: matching-session\n---\n# Active B\n",
+            encoding="utf-8",
+        )
+        ambiguous = run_hook(
+            registered_container, "SessionStart", session_id="matching-session"
+        )
+        assert ambiguous.returncode == 0, ambiguous.stderr
+        assert ambiguous.stdout == "", "multiple matching frontiers must never be guessed"
         with database(data_dir / "orchestration.db") as connection:
             connection.execute(
                 """
@@ -127,7 +247,7 @@ def main() -> None:
         assert no_ledger_steer.returncode == 0, no_ledger_steer.stderr
         style_output = json.loads(no_ledger_steer.stdout)
         style_context = style_output["hookSpecificOutput"]["additionalContext"]
-        assert len(style_context.split()) <= 280
+        assert len(style_context.split()) <= 350
         assert "Lead with the result" in style_context
         assert "Omit work preambles" in style_context
         assert "Report only changed state" in style_context
@@ -603,6 +723,87 @@ def main() -> None:
             "running-decision": "started",
         }
 
+        quota_data = parent / "quota-recovery-data"
+        quota_data.mkdir()
+        quota_sessions = parent / "quota-recovery-sessions"
+        quota_sessions.mkdir()
+        quota_agent = "11111111-2222-4333-8444-777777777777"
+        quota_reset = int(datetime.now(timezone.utc).timestamp()) + 3600
+        with database(quota_data / "orchestration.db") as connection:
+            connection.execute(
+                "CREATE TABLE decisions (decision_id TEXT PRIMARY KEY, session_id TEXT, "
+                "status TEXT, stopped_at TEXT)"
+            )
+            connection.execute(
+                "CREATE TABLE executions (agent_id TEXT PRIMARY KEY, session_id TEXT, "
+                "decision_id TEXT, actual_model TEXT, started_at TEXT, stopped_at TEXT, "
+                "elapsed_ms INTEGER, terminal_outcome TEXT NOT NULL DEFAULT 'unknown', "
+                "quota_reset_at INTEGER)"
+            )
+            connection.execute(
+                "INSERT INTO decisions VALUES ('quota-decision', 'test-session', 'started', NULL)"
+            )
+            connection.execute(
+                "INSERT INTO executions VALUES (?, 'test-session', 'quota-decision', "
+                "'gpt-5.3-codex-spark', ?, NULL, NULL, 'unknown', NULL)",
+                (quota_agent, started.isoformat()),
+            )
+        quota_rollout = quota_sessions / f"rollout-test-{quota_agent}.jsonl"
+        quota_rollout.write_text(
+            "\n".join(
+                json.dumps(record)
+                for record in (
+                    {
+                        "timestamp": completed.isoformat().replace("+00:00", "Z"),
+                        "type": "event_msg",
+                        "payload": {
+                            "type": "token_count",
+                            "rate_limits": {
+                                "limit_name": "GPT-5.3-Codex-Spark",
+                                "primary": {
+                                    "used_percent": 100.0,
+                                    "resets_at": quota_reset,
+                                },
+                            },
+                        },
+                    },
+                    {
+                        "timestamp": completed.isoformat().replace("+00:00", "Z"),
+                        "type": "event_msg",
+                        "payload": {
+                            "type": "task_complete",
+                            "error": {
+                                "message": "do not persist this fixture text",
+                                "codex_error_info": "usage_limit_exceeded",
+                            },
+                        },
+                    },
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        quota_recovery = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=quota_data,
+            prompt="继续当前实现。",
+            turn_id="quota-recovery-turn",
+            session_roots=quota_sessions,
+        )
+        assert quota_recovery.returncode == 0, quota_recovery.stderr
+        with database(quota_data / "orchestration.db") as connection:
+            quota_row = connection.execute(
+                "SELECT stopped_at, terminal_outcome, quota_reset_at FROM executions "
+                "WHERE agent_id = ?",
+                (quota_agent,),
+            ).fetchone()
+        assert quota_row[0] is not None
+        assert quota_row[1:] == ("usage_limit", quota_reset)
+        assert b"do not persist this fixture text" not in (
+            quota_data / "orchestration.db"
+        ).read_bytes()
+
         simple_change = run_hook(
             nested,
             "UserPromptSubmit",
@@ -806,6 +1007,25 @@ def main() -> None:
         )
         assert "usage_reporter.py" not in json.loads(discussion_compact.stdout)["systemMessage"]
 
+        chinese_turn = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="请修复这个解析器并运行聚焦测试。",
+            turn_id="chinese-survives-compact",
+        )
+        assert chinese_turn.returncode == 0, chinese_turn.stderr
+        chinese_compact = run_hook(
+            nested,
+            "PostCompact",
+            data_dir=data_dir,
+            turn_id="chinese-survives-compact",
+        )
+        chinese_compact_message = json.loads(chinese_compact.stdout)["systemMessage"]
+        assert "Goldilocks｜已启用：" in chinese_compact_message
+        assert "路由=<直接|快速|标准|混合>" in chinese_compact_message
+        assert "Goldilocks | Active:" not in chinese_compact_message
+
         ledger = repo / ".goldilocks" / "ACTIVE.md"
         ledger.parent.mkdir()
         ledger.write_text("# Active task\n", encoding="utf-8")
@@ -894,6 +1114,7 @@ def main() -> None:
             "additionalContext"
         ]
         assert "Goldilocks zero-cost gate" in stable_context
+        assert "confirmed Spark quota failure" in stable_context
 
         assert "用量由宿主侧静默处理" in stable_context
         assert "usage_reporter.py" not in stable_context

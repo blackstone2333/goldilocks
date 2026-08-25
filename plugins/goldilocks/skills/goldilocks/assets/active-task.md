@@ -4,6 +4,7 @@ status: active
 updated_at: YYYY-MM-DDTHH:MM:SSZ
 worktree: <absolute path>
 branch: <branch or none>
+session_id: <host session id>
 ---
 
 # Active task

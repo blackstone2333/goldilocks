@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Keep Beta5 identity, bootstrap intent, and stable install guidance coherent."""
+"""Keep Beta6 identity, bootstrap intent, and stable install guidance coherent."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-BETA = "0.5.3-beta.5"
+BETA = "0.5.3-beta.6"
 STABLE_REF = "v0.5.2"
 
 
@@ -82,11 +82,10 @@ def main() -> None:
 
     for path in (ROOT / "CHANGELOG.md", ROOT / "CHANGELOG.zh-CN.md"):
         body = read(path)
-        assert f"## {BETA} — 2026-08-22" in body, path
-        assert "scanner" in body and "silent" in body or "扫描器" in body and "静默" in body, path
-        assert "15" in body and "24" in body, path
+        assert f"## {BETA} — 2026-08-25" in body, path
+        assert "usage_limit" in body and "worktree" in body and "Goldilocks" in body, path
 
-    print("Goldilocks 0.5.3-beta.5 release contract passed; stable installs remain v0.5.2.")
+    print("Goldilocks 0.5.3-beta.6 release contract passed; stable installs remain v0.5.2.")
 
 
 if __name__ == "__main__":

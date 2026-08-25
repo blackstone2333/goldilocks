@@ -13,8 +13,11 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from native_terminal import read_terminal_state
 
-POLICY_VERSION = "0.5.3-beta.5"
+
+POLICY_VERSION = "0.5.3-beta.6"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 HOOK_HEALTH_TTL_DAYS = 30
@@ -29,7 +32,9 @@ ROUTING_GATE = (
     "If uncertainty, unknown cause, continuity, or useful decomposition exists, "
     "read and use goldilocks:goldilocks; otherwise take its Direct exit. "
     "Visible multi-unit implementation must run its make-or-delegate check before Lead edits; "
-    "Direct remains valid when briefing and review cost more. "
+    "Direct remains valid when briefing and review cost more. After a confirmed Spark quota failure, "
+    "do not retry Spark before its observed reset; compare Terra, Luna, and Direct, and state why "
+    "Direct wins if the main model takes over. "
     "Skip for pure conversation."
 )
 MINIMUM_SUFFICIENT_VERIFICATION = (
@@ -39,23 +44,31 @@ MINIMUM_SUFFICIENT_VERIFICATION = (
     "means diagnose, not retry. Preserve safeguards; auth/data/irreversible/release remain risk-based."
 )
 VISIBLE_RESPONSE_CONTRACT_EN = (
-    "Every executable task, including Direct (`ROUTE=direct`), ends with exactly one localized visible Goldilocks "
+    "Every executable task, Direct included (`ROUTE=direct`), begins its first work update with one localized truthful cue: "
+    "`Goldilocks | Active: <action already selected or observed>`. Coalesce later actual gate/restore/route/delegation/fallback, "
+    "Night Shift, Usage/update, or acceptance events; no raw audit logs. With no intermediate update, use final DETAIL only. "
+    "The task ends with exactly one localized visible Goldilocks "
     "route receipt in this exact field order: `ROUTE=<direct|fast|standard|mixed> | TEAM=<main model and actually started roles> | "
     "CONCURRENCY=<host-confirmed starts/host limit or ?> | DELEGATED=<actual delegated work or none> | "
-    "REASON=<short reason> | DETAIL=<one factual sentence>`. TEAM uses `main model`, never Codex/primary agent. "
+    "REASON=<short reason> | DETAIL=<one factual sentence>`. DETAIL names the actual Goldilocks action that affected execution, "
+    "never an unused capability. TEAM uses `main model`, never Codex/primary agent. "
     "Before spawn self-check (native hosts may bypass PreToolUse): Luna/Spark use `fast__<semantic>_<model>` + `fork_turns=none`; "
     "Terra uses `standard__<semantic>_<model>` + none/1-4; Sol reviewer uses `lead__<semantic>_<model>` + none, fresh review-only/no write/repair/delegate; this never changes user-selected host permissions; only explicit "
     "Lead handoff permits `all`. Usage is host-side and fail-silent: on-demand is the default; after Bootstrap automatic "
-    "opt-in, it runs once for each executable task. Pure conversation has no receipt or Usage."
+    "opt-in, it runs once for each executable task. Pure conversation has no persistent activity cue, receipt, or Usage."
 )
 VISIBLE_RESPONSE_CONTRACT_ZH = (
-    "每个可执行任务（包括直接路径 `路由=直接`）最终都必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执，字段顺序固定："
+    "每个可执行任务（包括直接路径 `路由=直接`）在第一次工作更新显示一次本地化活动行："
+    "`Goldilocks｜已启用：<一个已经选定或观察到、与本任务有关的真实动作>`。只写真实发生的 Direct 门、连续性恢复、"
+    "路由/委派/回退、Night Shift、用量/更新提醒或终验；后续事件合并进正常更新，不倾倒原始审计日志。若不需要中间更新，"
+    "只在最终详情承载该动作。最终必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执，字段顺序固定："
     "`路由=<直接|快速|标准|混合>｜团队=<主模型及实际启动角色>｜并发=<宿主确认启动数/宿主上限或?>｜"
-    "委派=<实际委派任务或无>｜理由=<简短理由>｜详情=<一句事实>`。团队根身份只写 `主模型`，不得写 Codex/主代理。"
+    "委派=<实际委派任务或无>｜理由=<简短理由>｜详情=<一句事实>`。详情必须说明实际发生的 Goldilocks 动作，不写未调用能力。"
+    "团队根身份只写 `主模型`，不得写 Codex/主代理。"
     "每次 spawn 前主模型自检：原生宿主可能绕过 PreToolUse；Luna/Spark 用 `fast__<semantic>_<model>` 且 `fork_turns=none`；"
     "Terra 用 `standard__<semantic>_<model>` 且仅 none/1-4；Sol reviewer 用 `lead__<semantic>_<model>` 且 none、fresh review-only/no write/repair/delegate；绝不修改用户选择的宿主权限；"
     "只有显式 Lead handoff 可用 `all`。用量由宿主侧静默处理：默认按需；Bootstrap 启用自动模式后，"
-    "每个可执行任务自动读取一次。纯对话不显示回执或用量。"
+    "每个可执行任务自动读取一次；按需模式只在用户明确索要时读取。纯对话不显示持久活动行、回执或用量。"
 )
 USAGE_VISIBILITY_MODES = {"on-demand", "automatic"}
 
@@ -562,10 +575,11 @@ def night_shift_context(payload: dict[str, object], cwd: Path, prompt: str) -> s
     return night_shift_message(kind, zh)
 
 
-def visible_response_contract(prompt: str, turn_id: str | None) -> str:
-    cjk = len(re.findall(r"[\u3400-\u9fff]", prompt))
-    latin = len(re.findall(r"[A-Za-z]", prompt))
-    value = VISIBLE_RESPONSE_CONTRACT_ZH if cjk > latin / 3 else VISIBLE_RESPONSE_CONTRACT_EN
+def visible_response_contract(
+    prompt: str, turn_id: str | None, language: str | None = None
+) -> str:
+    zh = language == "zh" if language in {"en", "zh"} else primary_language_is_zh(prompt)
+    value = VISIBLE_RESPONSE_CONTRACT_ZH if zh else VISIBLE_RESPONSE_CONTRACT_EN
     turn_arg = f"--turn-id {turn_id}" if turn_id else ""
     return value.replace("{turn_arg}", turn_arg).replace("  ", " ")
 
@@ -637,6 +651,45 @@ def latest_usage_instruction(payload: dict[str, object], cwd: Path) -> str:
         )
     except (OSError, sqlite3.Error, TypeError, ValueError):
         return ""
+
+
+def latest_response_language(payload: dict[str, object], cwd: Path) -> str:
+    """Restore the latest root-turn language after compaction; English is the safe fallback."""
+
+    try:
+        configured = os.environ.get("PLUGIN_DATA")
+        if not configured:
+            return "en"
+        database = Path(configured).expanduser() / "orchestration.db"
+        if not database.is_file():
+            return "en"
+        uri = f"{database.resolve().as_uri()}?mode=ro"
+        with sqlite3.connect(uri, uri=True, timeout=3) as connection:
+            columns = {
+                str(row[1]) for row in connection.execute("PRAGMA table_info(gate_injections)")
+            }
+            if "usage_language" not in columns:
+                return "en"
+            session_id = str(payload.get("session_id") or "unknown-session")
+            cwd_hash = stable_hash(str(workspace_root(cwd)))
+            explicit_turn_id = str(payload.get("turn_id") or "").strip()
+            if explicit_turn_id:
+                row = connection.execute(
+                    "SELECT usage_language FROM gate_injections "
+                    "WHERE session_id = ? AND cwd_hash = ? AND turn_id = ? "
+                    "ORDER BY injected_at DESC LIMIT 1",
+                    (session_id, cwd_hash, explicit_turn_id),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    "SELECT usage_language FROM gate_injections "
+                    "WHERE session_id = ? AND cwd_hash = ? "
+                    "ORDER BY injected_at DESC LIMIT 1",
+                    (session_id, cwd_hash),
+                ).fetchone()
+        return "zh" if row and row[0] == "zh" else "en"
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return "en"
 
 
 def ensure_gate_schema(connection: sqlite3.Connection) -> None:
@@ -841,6 +894,9 @@ def routing_debt_context(payload: dict[str, object]) -> str:
         with sqlite3.connect(database, timeout=3) as connection:
             connection.row_factory = sqlite3.Row
             reconcile_native_completions(connection, session_id)
+            # Lifecycle recovery is authoritative; optional debt statistics must not
+            # roll it back when an older or reduced audit schema lacks a column.
+            connection.commit()
             tables = {
                 str(row[0])
                 for row in connection.execute(
@@ -867,19 +923,46 @@ def routing_debt_context(payload: dict[str, object]) -> str:
                     ).fetchone()[0]
                 )
             if "executions" in tables:
-                stale = int(
-                    connection.execute(
-                        """
-                        SELECT COUNT(*) FROM executions AS execution
-                        LEFT JOIN decisions AS decision
-                            ON decision.decision_id = execution.decision_id
-                        WHERE execution.session_id = ? AND execution.stopped_at IS NULL
-                          AND (julianday('now') - julianday(execution.started_at)) * 1440
-                              > CASE WHEN decision.tier = 'fast' THEN 30 ELSE 90 END
-                        """,
-                        (session_id,),
-                    ).fetchone()[0]
-                )
+                execution_columns = {
+                    str(row[1])
+                    for row in connection.execute("PRAGMA table_info(executions)")
+                }
+                if {"session_id", "started_at", "stopped_at"}.issubset(
+                    execution_columns
+                ):
+                    decision_columns = (
+                        {
+                            str(row[1])
+                            for row in connection.execute("PRAGMA table_info(decisions)")
+                        }
+                        if "decisions" in tables
+                        else set()
+                    )
+                    can_join_tier = (
+                        "decision_id" in execution_columns
+                        and {"decision_id", "tier"}.issubset(decision_columns)
+                    )
+                    join = (
+                        "LEFT JOIN decisions AS decision "
+                        "ON decision.decision_id = execution.decision_id"
+                        if can_join_tier
+                        else ""
+                    )
+                    threshold = (
+                        "CASE WHEN decision.tier = 'fast' THEN 30 ELSE 90 END"
+                        if can_join_tier
+                        else "90"
+                    )
+                    stale = int(
+                        connection.execute(
+                            "SELECT COUNT(*) FROM executions AS execution "
+                            f"{join} WHERE execution.session_id = ? "
+                            "AND execution.stopped_at IS NULL "
+                            "AND (julianday('now') - julianday(execution.started_at)) * 1440 "
+                            f"> {threshold}",
+                            (session_id,),
+                        ).fetchone()[0]
+                    )
         parts: list[str] = []
         unverified = native_debt + external_debt
         if unverified:
@@ -896,51 +979,6 @@ def routing_debt_context(payload: dict[str, object]) -> str:
         )
     except (OSError, sqlite3.Error, TypeError, ValueError):
         return ""
-
-
-def session_roots() -> list[Path]:
-    configured = os.environ.get("GOLDILOCKS_SESSION_ROOTS")
-    if configured:
-        return [
-            Path(value).expanduser()
-            for value in configured.split(os.pathsep)
-            if value.strip()
-        ]
-    codex_home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
-    return [codex_home / "sessions", codex_home / "archived_sessions"]
-
-
-def rollout_terminal_time(agent_id: str) -> str | None:
-    latest: tuple[str, str] | None = None
-    for root in session_roots():
-        if not root.is_dir():
-            continue
-        try:
-            paths = root.rglob(f"rollout-*-{agent_id}.jsonl")
-            for path in paths:
-                with path.open("rb") as handle:
-                    size = handle.seek(0, os.SEEK_END)
-                    offset = max(0, size - 512 * 1024)
-                    handle.seek(offset)
-                    lines = handle.read().splitlines()
-                if offset and lines:
-                    lines = lines[1:]
-                for raw in lines:
-                    try:
-                        record = json.loads(raw)
-                    except (UnicodeDecodeError, json.JSONDecodeError):
-                        continue
-                    payload = record.get("payload")
-                    if record.get("type") != "event_msg" or not isinstance(payload, dict):
-                        continue
-                    event = str(payload.get("type") or "")
-                    timestamp = str(record.get("timestamp") or "")
-                    if event in {"task_started", "task_complete"} and timestamp:
-                        if latest is None or timestamp > latest[1]:
-                            latest = (event, timestamp)
-        except OSError:
-            continue
-    return latest[1] if latest and latest[0] == "task_complete" else None
 
 
 def reconcile_native_completions(
@@ -975,9 +1013,10 @@ def reconcile_native_completions(
     ).fetchall()
     reconciled = 0
     for row in rows:
-        completed_at = rollout_terminal_time(str(row["agent_id"] or ""))
-        if completed_at is None:
+        terminal = read_terminal_state(str(row["agent_id"] or ""))
+        if terminal is None:
             continue
+        completed_at = terminal.completed_at
         elapsed_ms: int | None = None
         try:
             started = datetime.fromisoformat(str(row["started_at"]).replace("Z", "+00:00"))
@@ -985,22 +1024,35 @@ def reconcile_native_completions(
             elapsed_ms = max(0, int((stopped - started).total_seconds() * 1000))
         except (TypeError, ValueError):
             pass
+        updates = ["stopped_at = ?"]
+        values: list[object] = [completed_at]
         if "elapsed_ms" in execution_columns:
-            connection.execute(
-                "UPDATE executions SET stopped_at = ?, elapsed_ms = ? WHERE agent_id = ?",
-                (completed_at, elapsed_ms, row["agent_id"]),
-            )
-        else:
-            connection.execute(
-                "UPDATE executions SET stopped_at = ? WHERE agent_id = ?",
-                (completed_at, row["agent_id"]),
-            )
+            updates.append("elapsed_ms = ?")
+            values.append(elapsed_ms)
+        if "terminal_outcome" in execution_columns:
+            updates.append("terminal_outcome = ?")
+            values.append(terminal.outcome)
+        if "quota_reset_at" in execution_columns:
+            updates.append("quota_reset_at = ?")
+            values.append(terminal.quota_reset_at)
+        values.append(row["agent_id"])
+        connection.execute(
+            f"UPDATE executions SET {', '.join(updates)} WHERE agent_id = ?",
+            values,
+        )
         if row["decision_id"]:
-            connection.execute(
-                "UPDATE decisions SET status = 'stopped' WHERE decision_id = ? "
-                "AND status IN ('planned', 'started')",
-                (row["decision_id"],),
-            )
+            if "stopped_at" in decision_columns:
+                connection.execute(
+                    "UPDATE decisions SET status = 'stopped', stopped_at = ? "
+                    "WHERE decision_id = ? AND status IN ('planned', 'started')",
+                    (completed_at, row["decision_id"]),
+                )
+            else:
+                connection.execute(
+                    "UPDATE decisions SET status = 'stopped' WHERE decision_id = ? "
+                    "AND status IN ('planned', 'started')",
+                    (row["decision_id"],),
+                )
         reconciled += 1
     return reconciled
 
@@ -1032,13 +1084,167 @@ def has_continuity_debt(payload: dict[str, object], cwd: Path) -> bool:
         return False
 
 
-def find_ledger(cwd: Path) -> Path | None:
+def _git_common_dir(directory: Path) -> Path | None:
+    marker = directory / ".git"
+    try:
+        if marker.is_symlink():
+            return None
+        if marker.is_dir():
+            return marker.resolve()
+        if not marker.is_file():
+            return None
+        first_line = marker.read_text(encoding="utf-8", errors="replace").splitlines()[0]
+        if not first_line.lower().startswith("gitdir:"):
+            return None
+        gitdir = Path(first_line.split(":", 1)[1].strip()).expanduser()
+        if not gitdir.is_absolute():
+            gitdir = (directory / gitdir).resolve()
+        if gitdir.parent.name == "worktrees":
+            return gitdir.parent.parent.resolve()
+        return gitdir.resolve()
+    except (IndexError, OSError, ValueError):
+        return None
+
+
+def _candidate_common_git_dirs(cwd: Path) -> list[Path]:
+    """Find trusted Git registries without recursively scanning the workspace."""
+
+    found: list[Path] = []
     for directory in (cwd, *cwd.parents):
-        candidate = directory / ".goldilocks" / "ACTIVE.md"
-        if candidate.is_file():
-            return candidate
-        if (directory / ".git").exists():
+        common = _git_common_dir(directory)
+        if common is not None:
+            found.append(common)
             break
+    if not found:
+        # Codex workspaces may be a non-Git container whose registered worktrees
+        # live one level below a conventional worktree directory.
+        for container_name in (".worktrees", "worktrees", "work"):
+            container = cwd / container_name
+            try:
+                children = list(container.iterdir()) if container.is_dir() else []
+            except OSError:
+                children = []
+            for child in children:
+                if child.is_symlink() or not child.is_dir():
+                    continue
+                common = _git_common_dir(child)
+                if common is not None:
+                    found.append(common)
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for path in found:
+        key = str(path)
+        if key not in seen:
+            seen.add(key)
+            unique.append(path)
+    return unique
+
+
+def _registered_worktrees(common_git_dir: Path) -> list[Path]:
+    worktrees: list[Path] = []
+    if common_git_dir.name == ".git" and not common_git_dir.is_symlink():
+        worktrees.append(common_git_dir.parent)
+    registry = common_git_dir / "worktrees"
+    try:
+        entries = list(registry.iterdir()) if registry.is_dir() else []
+    except OSError:
+        entries = []
+    for entry in entries:
+        gitdir_file = entry / "gitdir"
+        try:
+            if entry.is_symlink() or gitdir_file.is_symlink() or not gitdir_file.is_file():
+                continue
+            git_marker = Path(gitdir_file.read_text(encoding="utf-8").strip()).expanduser()
+            if not git_marker.is_absolute():
+                git_marker = entry / git_marker
+            if git_marker.name != ".git" or git_marker.is_symlink() or not git_marker.is_file():
+                continue
+            worktree = git_marker.parent
+            if worktree.is_symlink() or not worktree.is_dir():
+                continue
+            first_line = git_marker.read_text(
+                encoding="utf-8", errors="replace"
+            ).splitlines()[0]
+            if not first_line.lower().startswith("gitdir:"):
+                continue
+            backlink = Path(first_line.split(":", 1)[1].strip()).expanduser()
+            if not backlink.is_absolute():
+                backlink = worktree / backlink
+            if backlink.resolve() != entry.resolve():
+                continue
+            worktrees.append(worktree.resolve())
+        except (IndexError, OSError, ValueError):
+            continue
+    return worktrees
+
+
+def _frontier_matches(ledger: Path, session_id: str) -> bool:
+    try:
+        if (
+            ledger.is_symlink()
+            or ledger.parent.is_symlink()
+            or not ledger.parent.is_dir()
+            or not ledger.is_file()
+        ):
+            return False
+        text = ledger.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    if not text.startswith("---\n"):
+        return False
+    end = text.find("\n---", 4)
+    if end < 0:
+        return False
+    fields: dict[str, str] = {}
+    for line in text[4:end].splitlines():
+        key, separator, value = line.partition(":")
+        if separator:
+            fields[key.strip()] = value.strip().strip("'\"")
+    return fields.get("status") == "active" and fields.get("session_id") == session_id
+
+
+def _trusted_local_ledger(ledger: Path) -> bool:
+    try:
+        return bool(
+            not ledger.is_symlink()
+            and not ledger.parent.is_symlink()
+            and ledger.parent.is_dir()
+            and ledger.is_file()
+        )
+    except OSError:
+        return False
+
+
+def find_ledger(cwd: Path, session_id: str | None = None) -> Path | None:
+    local_candidate = cwd / ".goldilocks" / "ACTIVE.md"
+    if _trusted_local_ledger(local_candidate):
+        return local_candidate
+    boundary = next(
+        (directory for directory in (cwd, *cwd.parents) if (directory / ".git").exists()),
+        None,
+    )
+    if boundary is not None and boundary != cwd:
+        for directory in cwd.parents:
+            candidate = directory / ".goldilocks" / "ACTIVE.md"
+            if _trusted_local_ledger(candidate):
+                return candidate
+            if directory == boundary:
+                break
+    if not session_id:
+        return None
+    matches: list[Path] = []
+    seen: set[str] = set()
+    for common in _candidate_common_git_dirs(cwd):
+        for worktree in _registered_worktrees(common):
+            candidate = worktree / ".goldilocks" / "ACTIVE.md"
+            key = str(candidate)
+            if key in seen:
+                continue
+            seen.add(key)
+            if _frontier_matches(candidate, session_id):
+                matches.append(candidate)
+    if len(matches) == 1:
+        return matches[0]
     return None
 
 
@@ -1052,7 +1258,8 @@ def main() -> None:
             return
         started_at = _now_isoformat()
         cwd = Path(payload.get("cwd") or os.getcwd()).expanduser().resolve()
-        ledger = find_ledger(cwd)
+        session_id = str(payload.get("session_id") or "")
+        ledger = find_ledger(cwd, session_id)
         output = None
         if event == "SessionStart":
             if ledger is None:
@@ -1075,6 +1282,8 @@ def main() -> None:
                     "hookSpecificOutput": {
                         "hookEventName": "SessionStart",
                         "additionalContext": (
+                            "Show one localized first-work-update cue (`Goldilocks | Active: continuity restored from ACTIVE` / "
+                            "`Goldilocks｜已启用：已从 ACTIVE 恢复任务`) and do not repeat it. "
                             f"Recovery state exists at {ledger}; read it, reconcile repository evidence, "
                             "honor applied steering and Do not repeat, then continue from Exact next action."
                         ),
@@ -1123,8 +1332,11 @@ def main() -> None:
                 "Goldilocks visible response and verification contracts survived compaction. "
                 + MINIMUM_SUFFICIENT_VERIFICATION
                 + " "
-                + visible_response_contract("", latest_turn_id(payload, cwd))
-                + " Use `--language zh` when the user's primary language is Chinese."
+                + visible_response_contract(
+                    "",
+                    latest_turn_id(payload, cwd),
+                    latest_response_language(payload, cwd),
+                )
             )
             if usage := latest_usage_instruction(payload, cwd):
                 response_recovery += f" {usage}"
@@ -1140,6 +1352,8 @@ def main() -> None:
                     )
             else:
                 system_message = (
+                    "Show one localized first-work-update cue (`Goldilocks | Active: continuity restored from ACTIVE` / "
+                    "`Goldilocks｜已启用：已从 ACTIVE 恢复任务`) and do not repeat it. "
                     f"Goldilocks recovery required: read {ledger}, reconcile repository state, "
                     f"and resume from Exact next action. {response_recovery}"
                 )

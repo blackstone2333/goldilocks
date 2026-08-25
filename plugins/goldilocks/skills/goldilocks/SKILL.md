@@ -21,7 +21,9 @@ align=终态不明；diagnose=unknown cause；build=durable execution/TDD；orch
 
 Standard owns one mutable chain + one ordinary repair；Fast 接 fixed leaf；Lead 留 intent、architecture、shared interfaces、authority/safety、final acceptance，不重复 Owner exploration。
 
-每个 executable task 的最终回答末尾追加且仅追加一条用户语言 receipt；纯对话省略。字段名、顺序和身份词不压缩、不改写。
+每个 executable task 的第一次工作更新先显示一次真实、本地化活动行；中文 `Goldilocks｜已启用：<已选定或已观察到的动作>`，英文 `Goldilocks | Active: <selected or observed action>`。只写实际 Direct 门、连续性恢复、路由/委派/回退、Night Shift、Usage/update 或终验；后续真实事件合并进正常更新，不倾倒内部审计。无需中间更新时只在最终详情承载，避免重复。纯对话只留宿主瞬时状态，不显示持久活动行。
+
+最终回答末尾追加且仅追加一条用户语言 receipt；纯对话省略。字段名、顺序和身份词不压缩、不改写。`详情/DETAIL` 必须说明影响本任务的真实 Goldilocks 动作，不写未调用能力。
 
 中文固定：`路由=<直接|快速|标准|混合>｜团队=<主模型及实际启动角色>｜并发=<宿主确认启动数/宿主上限或?>｜委派=<实际委派任务或无>｜理由=<简短理由>｜详情=<一句事实>`。
 

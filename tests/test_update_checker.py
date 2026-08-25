@@ -484,7 +484,8 @@ def main() -> None:
         update_hooks = [hook for hook in commands if "update_checker.py" in hook.get("command", "")]
         assert len(update_hooks) == 1, "SessionStart must register one update checker"
         assert update_hooks[0]["timeout"] <= 4
-        assert "statusMessage" not in update_hooks[0], "normal checks must have no visible startup status"
+        assert "Goldilocks" in update_hooks[0]["statusMessage"]
+        assert "Updates" in update_hooks[0]["statusMessage"]
 
         checker_source = CHECKER.read_text(encoding="utf-8")
         assert "api.github.com/repos/blackstone2333/goldilocks/releases" in checker_source, (

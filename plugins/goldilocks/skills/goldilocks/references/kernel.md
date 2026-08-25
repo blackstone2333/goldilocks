@@ -14,11 +14,13 @@ Fast 完成 fixed implementation 并执行一次 contract-scoped focused accepta
 
 orchestration 内部 comment 固定：`ROUTE, WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, DETAIL`；reason codes=`lead_faster, shared_surface, critical_judgment, contract_not_ready, route_unavailable, review_cost, parallel_gain, quota_gain`。最终只按 root SKILL 的 protocol island 输出一次用户语言 receipt；不让回执格式反向决定路线。
 
+用户可见性不反向塑造路线：Hook 用带 Goldilocks 名称的瞬时状态显示例行检查，不增加模型调用；首次工作更新只报一个已选定/已观察动作。真实的恢复、委派、回退、Night Shift、Usage/update 和终验在发生时合并进正常更新，最终 `详情/DETAIL` 汇总实际作用；不显示未发生能力或原始审计日志。
+
 ## Models / fallback / Night Shift
 
 核对 native role 与 actual model；cache≠readiness。固定 role 显式 `agent_type`：`goldilocks_spark_worker`=Spark XHigh code/tests；`goldilocks_luna_economy`=Luna Max economy/doc；`goldilocks_terra_engineer`=Terra Medium judgment；`goldilocks_sol_reviewer`=Sol High review-only。suffix 不选 role；不可见则 verified fallback，绝不 silent inherit Lead。visible Sol=`gpt-5.6-sol`。
 
-Night Shift：economy→Luna；urgent deterministic code→Spark；不可用时公开 fallback 至 Terra/Luna/Direct。Spark official USD=N/A；quality/authority/safety 先于 economics。visible Sol 需 authorization；每 root 最多 two active/reserved、无 nested、须 origin return。audit read-only、no delegate/repair。
+Night Shift：economy→Luna；urgent deterministic code→Spark；不可用时公开 fallback 至 Terra/Luna/Direct。确认 Spark quota failure 后锁存至已观测 reset，不重试 Spark；重新比较 Terra/Luna/Direct，主模型接管仅在更省或剩余链路已不可转交时胜出，并公开理由。Spark official USD=N/A；quality/authority/safety 先于 economics。visible Sol 需 authorization；每 root 最多 two active/reserved、无 nested、须 origin return。audit read-only、no delegate/repair。
 
 ## Engines
 
@@ -32,7 +34,7 @@ Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与�
 
 ## Continuity / completion — protocol island
 
-compaction、stage、steering、waiting、delegation、handoff、persistence 时建立/更新 `.goldilocks/ACTIVE.md`。机器字段固定且逐项一次；值可自由表达：
+compaction、stage、steering、waiting、delegation、handoff、persistence 时建立/更新 `.goldilocks/ACTIVE.md`。frontmatter 写当前宿主 `session_id`；恢复只可选择 cwd/祖先的直接 frontier，或同一 Git registry 内 `status: active` 且 `session_id` 精确匹配的唯一 registered-worktree frontier，多个不猜测。机器字段固定且逐项一次；值可自由表达：
 
 `当前 Owner/Current Owner` · `状态/State` · `证据/Evidence` · `决策/Decision` · `下一步/Next action` · `阻塞/Blocker` · `验收/Acceptance` · `交接/Handoff`。
 

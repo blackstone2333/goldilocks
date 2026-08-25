@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Regression contract for the user-visible Goldilocks response receipt."""
+"""Regression contract for visible Goldilocks activation, events, and receipt."""
 
 from __future__ import annotations
 
@@ -53,14 +53,19 @@ def main() -> None:
     for marker in (
         "Every executable",
         "Direct",
+        "first work update",
+        "Goldilocks | Active:",
+        "already selected or observed",
         "exactly one localized visible Goldilocks route receipt",
         "ROUTE=direct",
+        "DETAIL names the actual Goldilocks action",
         "host-side and fail-silent",
         "on-demand is the default",
         "Bootstrap automatic opt-in",
         "each executable task",
-        "<tier>__<semantic>_<model>",
-        "Child task_name",
+        "fast__<semantic>_<model>",
+        "standard__<semantic>_<model>",
+        "lead__<semantic>_<model>",
     ):
         assert marker in english, marker
 
@@ -68,7 +73,8 @@ def main() -> None:
     # internal reason codes may remain machine-oriented elsewhere.
     chinese = context("修复这个小解析器问题，并运行对应的聚焦测试。", "zh-direct")
     for marker in (
-        "每个可执行", "有且仅有一次", "本地化", "用户可见", "回执", "路由=直接", "用量",
+        "每个可执行", "第一次工作更新", "Goldilocks｜已启用：", "已经选定或观察到", "有且仅有一次",
+        "本地化", "用户可见", "回执", "路由=直接", "详情必须说明实际发生的 Goldilocks 动作", "用量",
         "默认按需", "明确索要", "Bootstrap 启用自动模式", "每个可执行任务自动读取一次",
     ):
         assert marker in chinese, marker
@@ -76,7 +82,7 @@ def main() -> None:
     # Conversation is explicitly exempt, rather than relying on the model to
     # guess whether the mandatory executable receipt should be omitted.
     conversation = context("你觉得这个架构思路怎么样？先讨论一下，不要修改。", "zh-chat")
-    assert "纯对话不显示回执或用量" in conversation
+    assert "纯对话不显示持久活动行、回执或用量" in conversation
 
     for model_instruction in ("usage_reporter.py", "codex plugin list"):
         assert model_instruction not in english
@@ -243,6 +249,20 @@ def main() -> None:
     hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]
     submit = json.dumps(hooks["UserPromptSubmit"], ensure_ascii=False)
     assert "usage_reporter.py" in submit
+    visible_hook_count = 0
+    statuses: list[str] = []
+    for event, groups in hooks.items():
+        for group in groups:
+            for hook in group.get("hooks", []):
+                status = hook.get("statusMessage")
+                assert status, f"{event} hook must visibly identify its Goldilocks activity"
+                assert "Goldilocks" in status, f"{event} status must identify Goldilocks"
+                statuses.append(status)
+                visible_hook_count += 1
+    assert visible_hook_count == 9
+    assert any("Usage baseline" in status for status in statuses)
+    assert any("Route candidate audit" in status for status in statuses)
+    assert not any("Receipt audit" in status or "Acceptance" in status for status in statuses)
 
     print("Goldilocks visible Direct receipt and live Usage contract passed.")
 

@@ -86,7 +86,10 @@ def main() -> None:
     compact = hook("PostCompact")
     for message, receipt in ((english, RECEIPT_EN), (chinese, RECEIPT_ZH), (compact, RECEIPT_EN)):
         assert receipt in message
-        assert "Pure conversation has no receipt or Usage" in message or "纯对话不显示回执或用量" in message
+        assert (
+            "Pure conversation has no persistent activity cue, receipt, or Usage" in message
+            or "纯对话不显示持久活动行、回执或用量" in message
+        )
         for required in (
             "Minimum-sufficient verification",
             "Add no hash/frozen contract/baseline/gate",
@@ -109,7 +112,7 @@ def main() -> None:
     ):
         assert required in english, required
 
-    print("Goldilocks 0.5.3-beta.5 compact contract passed.")
+    print("Goldilocks 0.5.3-beta.6 compact contract passed.")
 
 
 if __name__ == "__main__":

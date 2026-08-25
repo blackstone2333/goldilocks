@@ -10,6 +10,7 @@ import os
 import re
 import sqlite3
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,9 +18,10 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_name_suffix, visible_task_name
+from native_terminal import TerminalState, read_terminal_state
 
 
-POLICY_VERSION = "0.5.3-beta.5"
+POLICY_VERSION = "0.5.3-beta.6"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"
@@ -277,6 +279,8 @@ def connect_state() -> sqlite3.Connection | None:
             cached_input_tokens INTEGER,
             output_tokens INTEGER,
             rework_count INTEGER NOT NULL DEFAULT 0,
+            terminal_outcome TEXT NOT NULL DEFAULT 'unknown',
+            quota_reset_at INTEGER,
             FOREIGN KEY(decision_id) REFERENCES decisions(decision_id)
         );
 
@@ -322,6 +326,8 @@ def connect_state() -> sqlite3.Connection | None:
         "cached_input_tokens": "INTEGER",
         "output_tokens": "INTEGER",
         "rework_count": "INTEGER NOT NULL DEFAULT 0",
+        "terminal_outcome": "TEXT NOT NULL DEFAULT 'unknown'",
+        "quota_reset_at": "INTEGER",
     }.items():
         if name not in execution_columns:
             connection.execute(f"ALTER TABLE executions ADD COLUMN {name} {definition}")
@@ -420,6 +426,104 @@ def is_recorded_fast_agent(payload: dict[str, Any]) -> bool:
     return row is not None
 
 
+def terminal_elapsed_ms(started_at: object, stopped_at: str) -> int | None:
+    try:
+        started = datetime.fromisoformat(str(started_at).replace("Z", "+00:00"))
+        stopped = datetime.fromisoformat(stopped_at.replace("Z", "+00:00"))
+        return max(0, int((stopped - started).total_seconds() * 1000))
+    except (TypeError, ValueError):
+        return None
+
+
+def persist_terminal_state(
+    connection: sqlite3.Connection,
+    execution: sqlite3.Row,
+    state: TerminalState,
+) -> None:
+    elapsed_ms = terminal_elapsed_ms(execution["started_at"], state.completed_at)
+    connection.execute(
+        "UPDATE executions SET stopped_at = ?, elapsed_ms = ?, terminal_outcome = ?, "
+        "quota_reset_at = ? WHERE agent_id = ?",
+        (
+            state.completed_at,
+            elapsed_ms,
+            state.outcome,
+            state.quota_reset_at,
+            execution["agent_id"],
+        ),
+    )
+    if execution["decision_id"]:
+        connection.execute(
+            "UPDATE decisions SET status = 'stopped', stopped_at = ? "
+            "WHERE decision_id = ? AND status IN ('planned', 'started')",
+            (state.completed_at, execution["decision_id"]),
+        )
+
+
+def reconcile_native_terminals(
+    connection: sqlite3.Connection, session_id: str
+) -> None:
+    executions = connection.execute(
+        "SELECT * FROM executions WHERE session_id = ? "
+        "AND actual_model = ? AND terminal_outcome = 'unknown'",
+        (session_id, SPARK_MODEL),
+    ).fetchall()
+    for execution in executions:
+        state = read_terminal_state(str(execution["agent_id"] or ""))
+        if state is not None:
+            persist_terminal_state(connection, execution, state)
+
+
+def active_spark_quota_latch(session_id: object) -> int | None:
+    if not session_id:
+        return None
+    connection = connect_state()
+    if connection is None:
+        return None
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        reconcile_native_terminals(connection, str(session_id))
+        rows = connection.execute(
+            "SELECT stopped_at, quota_reset_at FROM executions "
+            "WHERE session_id = ? AND actual_model = ? "
+            "AND terminal_outcome = 'usage_limit' ORDER BY stopped_at DESC",
+            (str(session_id), SPARK_MODEL),
+        ).fetchall()
+        current = int(time.time())
+        for row in rows:
+            reset_at = row["quota_reset_at"]
+            if isinstance(reset_at, int):
+                if reset_at > current:
+                    connection.commit()
+                    return reset_at
+                continue
+            try:
+                stopped = datetime.fromisoformat(
+                    str(row["stopped_at"]).replace("Z", "+00:00")
+                )
+                conservative_reset = int(stopped.timestamp()) + 5 * 60 * 60
+            except (TypeError, ValueError):
+                continue
+            if conservative_reset > current:
+                connection.commit()
+                return conservative_reset
+        connection.commit()
+        return None
+    finally:
+        connection.close()
+
+
+def deny_active_spark_quota(reset_at: int) -> None:
+    reset = datetime.fromtimestamp(reset_at, timezone.utc).isoformat()
+    deny(
+        "Goldilocks confirmed a Spark usage limit for this parent session until "
+        f"{reset}. Do not retry Spark before that reset. Re-evaluate the unfinished "
+        "contract now: prefer Terra for transferable coding with residual judgment, "
+        "Luna for eligible economy/document work, or Direct only when takeover is "
+        "cheaper or the remainder is no longer transferable; surface the chosen fallback reason."
+    )
+
+
 def handle_pre_tool_use(payload: dict[str, Any]) -> None:
     tool_name = str(payload.get("tool_name") or "")
     normalized_tool_name = tool_name.rsplit(".", 1)[-1]
@@ -465,6 +569,11 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
                 f"declares {tier}. Use the matching routing prefix."
             )
             return
+        if expected_model == SPARK_MODEL:
+            reset_at = active_spark_quota_latch(payload.get("session_id"))
+            if reset_at is not None:
+                deny_active_spark_quota(reset_at)
+                return
         if requested_agent_type == "goldilocks_sol_reviewer" and fork_value != "none":
             deny("Goldilocks fresh Sol review requires fork_turns=none.")
             return
@@ -530,6 +639,11 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
         return
 
     requested_model = str(tool_input.get("model") or "").strip()
+    if requested_model == SPARK_MODEL:
+        reset_at = active_spark_quota_latch(payload.get("session_id"))
+        if reset_at is not None:
+            deny_active_spark_quota(reset_at)
+            return
     fixed_role_error = require_fixed_native_role(task_name, requested_model, requested_agent_type)
     if fixed_role_error:
         deny(fixed_role_error)
@@ -933,25 +1047,24 @@ def handle_subagent_stop(payload: dict[str, Any]) -> None:
     if connection is None:
         return
     agent_id = str(payload.get("agent_id") or "")
-    stopped_at = now()
     connection.execute("BEGIN IMMEDIATE")
     execution = connection.execute(
         "SELECT * FROM executions WHERE agent_id = ?",
         (agent_id,),
     ).fetchone()
+    terminal = read_terminal_state(agent_id, payload.get("agent_transcript_path"))
+    stopped_at = terminal.completed_at if terminal is not None else now()
     input_tokens, cached_input_tokens, output_tokens = usage_values(payload)
-    elapsed_ms: int | None = None
-    if execution is not None:
-        try:
-            started = datetime.fromisoformat(str(execution["started_at"]))
-            stopped = datetime.fromisoformat(stopped_at)
-            elapsed_ms = max(0, int((stopped - started).total_seconds() * 1000))
-        except (TypeError, ValueError):
-            elapsed_ms = None
+    elapsed_ms = (
+        terminal_elapsed_ms(execution["started_at"], stopped_at)
+        if execution is not None
+        else None
+    )
     connection.execute(
         """
         UPDATE executions SET stopped_at = ?, elapsed_ms = ?, input_tokens = ?,
-            cached_input_tokens = ?, output_tokens = ? WHERE agent_id = ?
+            cached_input_tokens = ?, output_tokens = ?, terminal_outcome = ?,
+            quota_reset_at = ? WHERE agent_id = ?
         """,
         (
             stopped_at,
@@ -959,6 +1072,8 @@ def handle_subagent_stop(payload: dict[str, Any]) -> None:
             input_tokens,
             cached_input_tokens,
             output_tokens,
+            terminal.outcome if terminal is not None else "unknown",
+            terminal.quota_reset_at if terminal is not None else None,
             agent_id,
         ),
     )
