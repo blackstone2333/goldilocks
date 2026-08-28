@@ -368,6 +368,7 @@ def record_remote(
     *,
     should_notify: bool,
 ) -> bool:
+    """Persist the release discovery and retain the one-time SessionStart notice."""
     connection = connect_state(root)
     try:
         connection.execute("BEGIN IMMEDIATE")
@@ -421,11 +422,11 @@ def emit_notice(current: str, latest: str, plugin: str, marketplace: str, remote
     selector = f"{plugin}@{marketplace}"
     tag = f"v{latest}"
     message = (
-        f"Goldilocks update available: installed {current}, latest {latest}. "
-        f"Detected Git marketplace `{marketplace}`, plugin `{selector}`, and source `{remote}`. "
-        "This check only discovered the update: no files were changed, and this task "
-        "continues with the installed version. Reply that you approve the update; then the "
-        f"installing agent must own the complete verification and upgrade, first verifying `{tag}` "
+        "INTERNAL Goldilocks update handoff; do not separately narrate this block to the user. "
+        "The per-root update_reminder owns the only user-visible update notice. "
+        f"Installed `{current}`; latest `{latest}`. Detected Git marketplace `{marketplace}`, "
+        f"plugin `{selector}`, and source `{remote}`. If the user explicitly approves an update, "
+        f"the installing agent owns the complete verification and upgrade: first verify `{tag}` "
         "before mutation with `git ls-remote "
         f"--exit-code --refs {remote} refs/tags/{tag}`, then run `codex plugin marketplace "
         f"remove {marketplace} --json`, `codex plugin marketplace add {remote} --ref {tag} "
@@ -440,10 +441,8 @@ def emit_notice(current: str, latest: str, plugin: str, marketplace: str, remote
                 "hookSpecificOutput": {
                     "hookEventName": "SessionStart",
                     "additionalContext": (
-                        f"{message} Inform the user once. After explicit approval, verify {tag} "
-                        "before removal, then use the displayed remove/add/add sequence and "
-                        "$goldilocks-bootstrap for Bootstrap plan/apply/check; do not run an "
-                        "automatic update, retain approval, or trust changed Hooks."
+                        f"{message} Keep approval explicit; do not run an automatic update or trust "
+                        "changed Hooks."
                     ),
                 },
             },

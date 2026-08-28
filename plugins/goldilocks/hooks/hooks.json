@@ -92,6 +92,13 @@
             "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" recovery_reminder.py",
             "timeout": 10,
             "statusMessage": "Goldilocks · 请求判断 / Request gate"
+          },
+          {
+            "type": "command",
+            "command": "python3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" update_reminder.py",
+            "commandWindows": "py -3 -c \"import json,os,runpy,subprocess,sys; from pathlib import Path; e=Path(os.environ.get('PLUGIN_ROOT',''))/'scripts'/sys.argv[1]; e=e if e.is_file() else Path(next(x for x in json.loads(subprocess.check_output(['codex','plugin','list','--json']))['installed'] if x['pluginId'].startswith('goldilocks@'))['source']['path'])/'scripts'/sys.argv[1]; runpy.run_path(str(e),run_name='__main__')\" update_reminder.py",
+            "timeout": 3,
+            "statusMessage": "Goldilocks · 更新提醒 / Update reminder"
           }
         ]
       }

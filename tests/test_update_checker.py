@@ -16,6 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHECKER = ROOT / "plugins" / "goldilocks" / "scripts" / "update_checker.py"
+REMINDER = ROOT / "plugins" / "goldilocks" / "scripts" / "update_reminder.py"
 HOOKS = ROOT / "plugins" / "goldilocks" / "hooks" / "hooks.json"
 
 
@@ -153,6 +154,20 @@ def clear_retry(data_dir: Path) -> None:
         connection.execute("UPDATE update_state SET retry_after = 0, reserved_until = 0 WHERE singleton = 1")
 
 
+def run_reminder(
+    plugin_root: Path, data_dir: Path, *, language: str = "zh", turn_id: str = "turn-1"
+) -> subprocess.CompletedProcess[str]:
+    prompt = "请修复这个功能。" if language == "zh" else "Please fix this feature."
+    return subprocess.run(
+        [sys.executable, str(REMINDER)],
+        input=json.dumps({"hook_event_name": "UserPromptSubmit", "session_id": "session-1", "turn_id": turn_id, "prompt": prompt}),
+        text=True,
+        capture_output=True,
+        check=False,
+        env={**os.environ, "PLUGIN_ROOT": str(plugin_root), "PLUGIN_DATA": str(data_dir)},
+    )
+
+
 def main() -> None:
     spec = importlib.util.spec_from_file_location("update_checker", CHECKER)
     assert spec is not None and spec.loader is not None
@@ -204,7 +219,10 @@ def main() -> None:
             assert "goldilocks@goldilocks-release" in message
             assert "goldilocks-release" in message
             assert "https://github.com/blackstone2333/goldilocks.git" in message
-            assert "Reply that you approve the update" in message
+            assert "INTERNAL Goldilocks update handoff" in message
+            assert "do not separately narrate this block" in message
+            assert "per-root update_reminder owns the only user-visible update notice" in message
+            assert "Reply that you approve the update" not in message
             assert "codex plugin marketplace upgrade" not in message
             assert (
                 "git ls-remote --exit-code --refs https://github.com/blackstone2333/goldilocks.git "
@@ -219,6 +237,14 @@ def main() -> None:
             assert message.index("git ls-remote") < message.index("codex plugin marketplace remove")
             assert "Bootstrap plan/apply/check" in context
             assert ManifestHandler.requests == 1
+
+            zh_reminder = run_reminder(plugin_root, data_dir)
+            assert zh_reminder.returncode == 0, zh_reminder.stderr
+            zh_context = json.loads(zh_reminder.stdout)["hookSpecificOutput"]["additionalContext"]
+            assert "⚠️ **Goldilocks 可更新：v0.3.0 → v0.3.1**" in zh_context
+            assert "回复“更新”即可升级；当前任务仍使用 v0.3.0。" in zh_context
+            en_reminder = run_reminder(plugin_root, data_dir, language="en")
+            assert "⚠️ **Goldilocks update available: v0.3.0 → v0.3.1**" in en_reminder.stdout
 
             throttled = run_checker(plugin_root, data_dir, url)
             assert throttled.returncode == 0, throttled.stderr
@@ -271,7 +297,7 @@ def main() -> None:
             ManifestHandler.etag = '"release-api-beta-to-stable"'
             write_manifest(root / "plugin", "0.5.3-beta.9")
             beta_to_stable = run_checker(root / "plugin", root / "data", url)
-            assert "latest 0.5.3." in json.loads(beta_to_stable.stdout)["systemMessage"]
+            assert "latest `0.5.3`" in json.loads(beta_to_stable.stdout)["systemMessage"]
 
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -282,7 +308,7 @@ def main() -> None:
             ManifestHandler.etag = '"switch-channel"'
             write_manifest(root / "plugin", "0.5.1")
             stable_first = run_checker(root / "plugin", root / "data", url)
-            assert "latest 0.5.2" in json.loads(stable_first.stdout)["systemMessage"]
+            assert "latest `0.5.2`" in json.loads(stable_first.stdout)["systemMessage"]
             write_manifest(root / "plugin", "0.5.3-beta.9")
             before_headers = len(ManifestHandler.if_none_match)
             beta_after_switch = run_checker(root / "plugin", root / "data", url)
@@ -479,6 +505,33 @@ def main() -> None:
             assert unaligned.stdout == ""
             assert ManifestHandler.requests == before, "mismatched plugin roots must fail silent"
 
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            plugin_root = root / "plugin"
+            data_dir = root / "data"
+            write_manifest(plugin_root, "0.5.3-beta.5")
+            data_dir.mkdir()
+            connection = checker.connect_state(data_dir)
+            try:
+                connection.execute(
+                    "UPDATE update_state SET latest_version = ?, notified_version = ? WHERE singleton = 1",
+                    ("0.5.3-beta.7", "0.5.3-beta.7"),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            first = run_reminder(plugin_root, data_dir)
+            second = run_reminder(plugin_root, data_dir, turn_id="turn-2")
+            assert first.returncode == 0 and second.returncode == 0
+            assert "⚠️ **Goldilocks 可更新：Beta5 → Beta7**" in first.stdout
+            assert "回复“更新”即可升级；当前任务仍使用 Beta5。" in first.stdout
+            assert first.stdout == second.stdout, "notified_version must not suppress later task reminders"
+            assert "⚠️ **Goldilocks update available: Beta5 → Beta7**" in (
+                run_reminder(plugin_root, data_dir, language="en").stdout
+            )
+            write_manifest(plugin_root, "0.5.3-beta.7")
+            assert run_reminder(plugin_root, data_dir).stdout == "", "installing the target clears the reminder"
+
         hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]["SessionStart"]
         commands = [hook for group in hooks for hook in group.get("hooks", [])]
         update_hooks = [hook for hook in commands if "update_checker.py" in hook.get("command", "")]
@@ -486,6 +539,11 @@ def main() -> None:
         assert update_hooks[0]["timeout"] <= 4
         assert "Goldilocks" in update_hooks[0]["statusMessage"]
         assert "Updates" in update_hooks[0]["statusMessage"]
+        prompt_hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]["UserPromptSubmit"]
+        prompt_commands = [hook for group in prompt_hooks for hook in group.get("hooks", [])]
+        reminders = [hook for hook in prompt_commands if "update_reminder.py" in hook.get("command", "")]
+        assert len(reminders) == 1, "every root prompt must receive the pending-update contract"
+        assert reminders[0]["timeout"] <= 3
 
         checker_source = CHECKER.read_text(encoding="utf-8")
         assert "api.github.com/repos/blackstone2333/goldilocks/releases" in checker_source, (

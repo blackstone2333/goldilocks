@@ -87,5 +87,25 @@ The report's missing employee, Night Shift, External Adapter, and update samples
 - Authoritative version surfaces now agree on `0.5.3-beta.7`; the version-affected contract,
   Bootstrap, route auditor, compact contract, recovery Hook, both Skill validations, Plugin
   validation, and diff whitespace check pass.
-- The remaining release action is exact safe staging, commit/tag/branch push, prerelease creation,
-  and remote convergence verification. The model fixture is not rerun.
+- The initial Beta7 publication completed at commit `e6ebd87`. The user-authorized same-tag
+  refresh retains that commit as the rollback point and makes the refreshed `v0.5.3-beta.7` Tag
+  the authoritative release source.
+- The model fixture was not rerun. The later update-reminder UX change below does not alter the
+  validated routing/verification result above.
+
+## Persistent update-reminder follow-up
+
+- Status: included in the refreshed Beta7 candidate and focused-test validated.
+- Cause: `notified_version` correctly limited the SessionStart discovery notice to once, but that
+  notice could be buried by an active task and no later root task was required to repeat it.
+- Fix: the cached `latest_version` remains subject to the existing 24-hour network-check throttle,
+  while a new root `UserPromptSubmit` Hook injects the exact localized two-line notice into every
+  final answer until the installed version reaches the pending version. Worker tasks remain silent.
+- The SessionStart block still carries verified tag, marketplace, install, Bootstrap, approval,
+  and Hook-trust instructions for the installing agent, but is now explicitly internal so it does
+  not duplicate the concise user notice. Stop Hook output is not used because Codex Desktop does
+  not render it as normal assistant text.
+- `python3 tests/test_update_checker.py` passed with two consecutive Beta5 root turns both showing
+  `Beta5 → Beta7`, English localization, `notified_version` independence, and suppression after
+  installing Beta7. `python3 tests/test_beta7_release_contract.py` and `git diff --check` also
+  passed on the integrated candidate.

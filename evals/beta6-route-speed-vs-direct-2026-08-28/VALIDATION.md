@@ -70,6 +70,7 @@ or a real task still loads `kernel.md` solely because it touches several tiny fi
 ## Release continuation
 
 The current post-thinning Beta6 implementation is the accepted source for `0.5.3-beta.7`.
-Authoritative version surfaces agree and the version-affected packaging checks pass. Release now
-proceeds directly to exact safe staging and remote publication; these results are not rerun or
-reframed as a broader benchmark.
+Authoritative version surfaces agree and the version-affected packaging checks pass. The initial
+Beta7 release was commit `e6ebd87`; the user-authorized same-tag refresh adds only the persistent
+update-reminder UX and bilingual release surfaces. These benchmark results were not rerun or
+reframed as a broader claim.

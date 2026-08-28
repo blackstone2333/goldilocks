@@ -9,6 +9,7 @@
 - Make `route_unavailable` evidence-based: it now requires a retained native or Adapter start attempt and an observed start failure in the current turn. A zero-attempt or plan-only Direct decision reports its actual reason instead, while genuine Adapter start failures remain valid and auditable.
 - Stop Sol verification after one authoritative check provides decisive evidence. Ordinary low-risk work does not repeat equivalent tests, switch interpreters for ceremony, or expand into a full matrix; after a repair it reruns only failed and affected checks, and Lead repeats acceptance only when integration changed the tested surface or integrated evidence is missing.
 - Let several small ready units stay Direct when briefing, review, and integration would add no net value. In one representative quality-passing fixture, the thinned path removed the extra `kernel.md` read and reduced raw tokens by 20.951% and normalized cost by 36.697% versus the pre-thinning Beta6 sample; wall time remains observational because the run contained an unclassified provider/host delay.
+- Keep newer-version reminders visible after discovery: every root task appends one concise localized notice until the installed version catches up. Per-task reminders read only local cached state, preserve the 24-hour remote-check interval, and never bypass explicit approval, Tag verification, reinstall, Bootstrap, or Hook-trust review.
 
 ## 0.5.3-beta.6 — 2026-08-25
 
