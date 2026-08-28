@@ -585,10 +585,9 @@ def main() -> None:
             "additionalContext"
         ]
         for phrase in (
-            "Likely multi-unit work detected",
-            "Read route-card.md",
-            "canonical ROUTE line",
-            "inside an HTML comment",
+            "Multi-unit work",
+            "run one make-or-delegate check",
+            "canonical ROUTE HTML comment",
             "WRITE_READY",
             "READ_READY",
             "EXISTING",
@@ -604,6 +603,10 @@ def main() -> None:
             "never planned",
             "capacity is ? when unknown",
             "Root Direct uses the compact visible response contract",
+            "Small files need no route-card/kernel",
+            "only if delegation may pay",
+            "route_unavailable needs retained native/Adapter start-failure evidence",
+            "zero-attempt/plan-only uses the actual Direct reason",
             "Shared writes",
             "explicit bounded-delegation grant",
             "current official input/cached/output rates",

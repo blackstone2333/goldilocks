@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.3-beta.6"
+POLICY_VERSION = "0.5.3-beta.7"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 TRANSCRIPT_TAIL_BYTES = 16 * 1024 * 1024
 ROUTE_FIELDS = (
@@ -332,6 +332,97 @@ def observed_dispatches(
     return len(observed)
 
 
+def observed_dispatch_attempts(
+    connection: sqlite3.Connection,
+    session_id: str,
+    window_start: datetime,
+    audited_at: datetime,
+) -> int:
+    """Count retained native/Adapter start attempts for this root turn."""
+    observed: set[str] = set()
+    available = tables(connection)
+    if "decisions" in available:
+        required = {"decision_id", "session_id", "planned_at"}
+        if required.issubset(columns(connection, "decisions")):
+            rows = connection.execute(
+                """
+                SELECT DISTINCT decision_id FROM decisions
+                WHERE session_id = ? AND planned_at >= ? AND planned_at <= ?
+                """,
+                (session_id, window_start.isoformat(), audited_at.isoformat()),
+            ).fetchall()
+            observed.update(f"native:{row[0]}" for row in rows if row[0])
+    if "external_routes" in available:
+        required = {"route_id", "parent_session_id", "started_at"}
+        if required.issubset(columns(connection, "external_routes")):
+            rows = connection.execute(
+                """
+                SELECT DISTINCT route_id FROM external_routes
+                WHERE parent_session_id = ? AND started_at >= ? AND started_at <= ?
+                """,
+                (session_id, window_start.isoformat(), audited_at.isoformat()),
+            ).fetchall()
+            observed.update(f"external:{row[0]}" for row in rows if row[0])
+    return len(observed)
+
+
+def observed_start_failures(
+    connection: sqlite3.Connection,
+    session_id: str,
+    window_start: datetime,
+    audited_at: datetime,
+) -> int:
+    """Count retained evidence that a requested native/Adapter route did not start."""
+    failed: set[str] = set()
+    available = tables(connection)
+    if "decisions" in available:
+        decision_columns = columns(connection, "decisions")
+        required = {"decision_id", "session_id", "status", "planned_at"}
+        if required.issubset(decision_columns):
+            if "executions" in available and {
+                "agent_id",
+                "decision_id",
+            }.issubset(columns(connection, "executions")):
+                rows = connection.execute(
+                    """
+                    SELECT DISTINCT decision.decision_id
+                    FROM decisions AS decision
+                    LEFT JOIN executions AS execution
+                      ON execution.decision_id = decision.decision_id
+                    WHERE decision.session_id = ?
+                      AND decision.planned_at >= ? AND decision.planned_at <= ?
+                      AND (
+                        lower(decision.status) IN ('failed', 'start_failed', 'rejected')
+                        OR (decision.status = 'planned' AND execution.agent_id IS NULL)
+                      )
+                    """,
+                    (session_id, window_start.isoformat(), audited_at.isoformat()),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """
+                    SELECT DISTINCT decision_id FROM decisions
+                    WHERE session_id = ? AND planned_at >= ? AND planned_at <= ?
+                      AND lower(status) IN ('failed', 'start_failed', 'rejected')
+                    """,
+                    (session_id, window_start.isoformat(), audited_at.isoformat()),
+                ).fetchall()
+            failed.update(f"native:{row[0]}" for row in rows if row[0])
+    if "external_routes" in available:
+        required = {"route_id", "parent_session_id", "status", "started_at"}
+        if required.issubset(columns(connection, "external_routes")):
+            rows = connection.execute(
+                """
+                SELECT DISTINCT route_id FROM external_routes
+                WHERE parent_session_id = ? AND started_at >= ? AND started_at <= ?
+                  AND lower(status) IN ('failed', 'route_unavailable', 'start_failed', 'rejected')
+                """,
+                (session_id, window_start.isoformat(), audited_at.isoformat()),
+            ).fetchall()
+            failed.update(f"external:{row[0]}" for row in rows if row[0])
+    return len(failed)
+
+
 def available_route_models(
     connection: sqlite3.Connection, cwd_hash: str, route_at: datetime
 ) -> set[str]:
@@ -417,10 +508,17 @@ def audit(payload: dict[str, Any], connection: sqlite3.Connection) -> None:
     existing_count = int(existing)
     planned_count = int(planned)
     audited_at = datetime.now(timezone.utc)
+    window_start = parse_timestamp(row["injected_at"]) or route_at
     cwd_hash = str(row["cwd_hash"])
     active_count = active_agents(connection, cwd_hash, route_at)
     stale_count = stale_native_agents(connection, cwd_hash, route_at)
     observed_count = observed_dispatches(connection, session_id, route_at, audited_at)
+    attempt_count = observed_dispatch_attempts(
+        connection, session_id, window_start, audited_at
+    )
+    start_failure_count = observed_start_failures(
+        connection, session_id, window_start, audited_at
+    )
     route_models = available_route_models(connection, cwd_hash, route_at)
     mentioned = named_models(detail)
     history_conflict = bool(route_models & mentioned) if mentioned else bool(route_models)
@@ -434,6 +532,10 @@ def audit(payload: dict[str, Any], connection: sqlite3.Connection) -> None:
         flags.append("planned_dispatch_mismatch")
     if reason == "route_unavailable" and history_conflict:
         flags.append("route_unavailable_conflicts_with_history")
+    if reason == "route_unavailable" and planned_count == 0 and attempt_count == 0:
+        flags.append("route_unavailable_without_dispatch_attempt")
+    if reason == "route_unavailable" and start_failure_count == 0:
+        flags.append("route_unavailable_without_observed_start_failure")
     if route == "direct" and read_count > 0 and DIRTY_TREE.search(detail):
         flags.append("dirty_tree_rejected_read_only")
     if (

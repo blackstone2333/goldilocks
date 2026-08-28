@@ -14,6 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 HOOK = ROOT / "plugins" / "goldilocks" / "scripts" / "recovery_reminder.py"
 SKILL = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "SKILL.md"
 KERNEL = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "kernel.md"
+PROVE = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "prove.md"
+BUILD = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "build.md"
+DIAGNOSE = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "diagnose.md"
+ORCHESTRATE = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "orchestrate.md"
+ROUTE_CARD = ROOT / "plugins" / "goldilocks" / "skills" / "goldilocks" / "references" / "route-card.md"
 
 
 RECEIPT_EN = (
@@ -47,14 +52,25 @@ def hook(event: str, prompt: str = "Build the feature.") -> str:
 def main() -> None:
     skill = SKILL.read_text(encoding="utf-8")
     kernel = KERNEL.read_text(encoding="utf-8")
+    prove = PROVE.read_text(encoding="utf-8")
+    build = BUILD.read_text(encoding="utf-8")
+    diagnose = DIAGNOSE.read_text(encoding="utf-8")
+    orchestrate = ORCHESTRATE.read_text(encoding="utf-8")
+    route_card = ROUTE_CARD.read_text(encoding="utf-8")
     assert "[kernel.md](references/kernel.md)" in skill
     assert RECEIPT_EN in skill
     assert RECEIPT_ZH in skill
     for required in (
         "minimum-sufficient",
+        "多个 ready units 但各自很小",
+        "不只因多文件读 reference",
+        "至少一条完整可转交",
         "不新增 hash/contract freeze/baseline/gate",
         "无相关变更不重跑已通过项",
         "修复后只重跑失败项与受影响项",
+        "普通低风险改动不新增 hash/contract freeze/baseline/gate",
+        "一次权威 check 已给 decisive evidence 即停止",
+        "不因谨慎重复等价 tests、换 interpreter 或跑 full matrix",
         "原因不明的连续失败转 diagnose",
         "既有 safeguards 不删",
     ):
@@ -64,10 +80,23 @@ def main() -> None:
         "不新增 hash、contract freeze、baseline 或 gate",
         "无相关变更不重跑已通过项",
         "repair 后仅重跑失败项与受影响项",
+        "普通 low-risk change 不新增 hash、contract freeze、baseline 或 gate",
+        "一次 authoritative check 已给 decisive evidence 即停止",
+        "普通 low-risk change 不因谨慎重复等价 tests/checks、换 interpreter 或跑 full matrix",
         "原因不明的连续失败转 diagnose",
         "已有 safeguards 不删",
     ):
         assert required in kernel, required
+    for text, required in (
+        (kernel, "route_unavailable` 仅在本 turn 已保留 native/Adapter 实际启动失败证据时合法"),
+        (orchestrate, "zero attempts or an unexecuted plan cannot use it"),
+        (route_card, "zero attempts or an unexecuted plan must use the actual Direct reason instead"),
+        (prove, "not rerunning an equivalent passing check for ceremony"),
+        (prove, "otherwise it does not repeat an equivalent worker check"),
+        (build, "at most one focused check when current evidence is absent"),
+        (diagnose, "reused rather than repeated for “freshness”"),
+    ):
+        assert required in text, required
     for required in (
         "Luna/Spark=`fast__<semantic>_<model>`",
         "Terra=`standard__<semantic>_<model>`",
@@ -83,6 +112,10 @@ def main() -> None:
 
     english = hook("UserPromptSubmit")
     chinese = hook("UserPromptSubmit", "请修复这个功能。")
+    routed = hook(
+        "UserPromptSubmit",
+        "请完成以下开发任务：\n1、实现 parser。\n2、实现 renderer。\n3、补齐 tests 并集成。",
+    )
     compact = hook("PostCompact")
     for message, receipt in ((english, RECEIPT_EN), (chinese, RECEIPT_ZH), (compact, RECEIPT_EN)):
         assert receipt in message
@@ -99,6 +132,11 @@ def main() -> None:
             "Preserve safeguards",
         ):
             assert required in message, required
+    assert "route_unavailable needs retained native/Adapter start-failure evidence" in routed
+    assert "zero-attempt/plan-only uses the actual Direct reason" in routed
+    assert "run one make-or-delegate check" in routed
+    assert "Small files need no route-card/kernel" in routed
+    assert "only if delegation may pay" in routed
     for required in (
         "fast__<semantic>_<model>",
         "fork_turns=none",
@@ -112,7 +150,7 @@ def main() -> None:
     ):
         assert required in english, required
 
-    print("Goldilocks 0.5.3-beta.6 compact contract passed.")
+    print("Goldilocks 0.5.3-beta.7 compact contract passed.")
 
 
 if __name__ == "__main__":

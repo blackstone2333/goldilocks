@@ -17,7 +17,7 @@ comment. Keep its field names and reason code in English exactly as shown:
 
 `<!-- ROUTE=<direct|fast|standard|mixed> | WRITE_READY=<n> | READ_READY=<n> | EXISTING=<n> | PLANNED_DISPATCH=<n> | LEAD=<nodes> | REASON=<code> | DETAIL=<sentence> -->`
 
-`EXISTING` means host-confirmed running ownership, never UI labels, completed/idle handles, artifacts, or historical `task_started`. `PLANNED_DISPATCH` means intended starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`.
+`EXISTING` means host-confirmed running ownership, never UI labels, completed/idle handles, artifacts, or historical `task_started`. `PLANNED_DISPATCH` means intended starts. Use `lead_faster`, `shared_surface`, `critical_judgment`, `contract_not_ready`, `route_unavailable`, `review_cost`, `parallel_gain`, or `quota_gain`. `route_unavailable` is legal only after a retained native/Adapter start failure in this turn; zero attempts or an unexecuted plan must use the actual Direct reason instead.
 
 After dispatch attempts return—or immediately for a Direct choice made inside
 orchestration—show exactly one short receipt in the user's primary language. Do not show

@@ -27,9 +27,9 @@ Avoid performative agreement, blind implementation, and reflexive dismissal. Rev
 
 ## Completion gate
 
-Immediately before claiming complete, identify the command, runtime observation, or artifact inspection that proves each claim; run it fresh; read the full result; inspect the final diff and repository status. Another agent's report, an earlier pass, or confidence is not fresh evidence.
+Immediately before claiming complete, map each claim to current decisive evidence and inspect the final diff and repository status. Run a check only when no evidence after the last relevant change proves that claim. “Fresh” means current-target evidence produced after the affected change—not rerunning an equivalent passing check for ceremony. Another agent's summary alone or confidence is not evidence; its inspectable result may be reused when integration did not invalidate it.
 
-Workers may write tests and run independent focused checks in parallel. Require concise evidence summaries, inspect their actual diffs or commands, then have the Lead rerun the combined acceptance gate in the integrated workspace.
+Workers may write tests and run independent focused checks in parallel. Require concise evidence summaries and inspect their actual diffs/results. Lead runs one combined acceptance only when integration changed the tested surface or no current integrated evidence exists; otherwise it does not repeat an equivalent worker check.
 
 If the work used durable records, read [continuity.md](continuity.md) and verify the spec, plan status, project map, idea separation, debug links, and handoff are current. Stale documentation is an incomplete handoff, but documentation never substitutes for runtime evidence.
 
@@ -37,7 +37,7 @@ If a check cannot run or is forbidden, state what ran, what did not, why, and th
 
 ## Finish a branch safely
 
-After fresh verification, inspect branch/worktree state and present only applicable integration choices: keep for handoff, push the current branch, open a PR, merge locally, or clean up. Execute only the user's authorized choice. A request to push is not authority to open a PR, merge, release, or deploy.
+After sufficient current verification, inspect branch/worktree state and present only applicable integration choices: keep for handoff, push the current branch, open a PR, merge locally, or clean up. Execute only the user's authorized choice. A request to push is not authority to open a PR, merge, release, or deploy.
 
 Before destructive cleanup, name the branch/worktree and confirm changes are integrated or intentionally discarded. Never automatically delete a branch or worktree. Verify the remote or local result after the chosen action.
 

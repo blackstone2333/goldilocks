@@ -42,7 +42,7 @@ FAST_MODELS = {
 TASK_NAME_PATTERN = re.compile(r"^(?:fast|standard)__[a-z0-9][a-z0-9_-]*$")
 MACOS_APP_CODEX = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
 CAPABILITY_PROFILES = ("project", "minimal", "inherit")
-POLICY_VERSION = "0.5.3-beta.6"
+POLICY_VERSION = "0.5.3-beta.7"
 
 
 def parser() -> argparse.ArgumentParser:

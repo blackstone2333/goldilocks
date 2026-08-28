@@ -21,7 +21,7 @@ from model_naming import model_name_suffix, visible_task_name
 from native_terminal import TerminalState, read_terminal_state
 
 
-POLICY_VERSION = "0.5.3-beta.6"
+POLICY_VERSION = "0.5.3-beta.7"
 SPARK_MODEL = "gpt-5.3-codex-spark"
 LUNA_MODEL = "gpt-5.6-luna"
 TERRA_MODEL = "gpt-5.6-terra"

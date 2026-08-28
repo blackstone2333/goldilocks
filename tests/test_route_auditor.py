@@ -163,6 +163,8 @@ def main() -> None:
             "dirty_tree_rejected_read_only",
             "existing_above_observed_agents",
             "route_unavailable_conflicts_with_history",
+            "route_unavailable_without_dispatch_attempt",
+            "route_unavailable_without_observed_start_failure",
         ]
         raw_database = database.read_bytes()
         assert bad_detail.encode() not in raw_database
@@ -222,10 +224,71 @@ def main() -> None:
         assert row["observed_dispatch"] == 2
         assert json.loads(row["review_flags"]) == []
 
+        with sqlite3.connect(database) as connection:
+            connection.execute(
+                "INSERT INTO gate_injections VALUES "
+                "('gate-c', 'session-1', 'turn-c', ?, 1, "
+                "'routing-rationale-v3.2', 0, '2026-08-05T07:49:00+00:00')",
+                (cwd_hash,),
+            )
+        append_route(
+            transcript,
+            "turn-c",
+            "2026-08-05T07:50:00Z",
+            "ROUTE=direct | WRITE_READY=1 | READ_READY=0 | EXISTING=0 | "
+            "PLANNED_DISPATCH=1 | LEAD=接口与验收 | REASON=route_unavailable | "
+            "DETAIL=计划使用 Spark Adapter，但未观察到实际启动失败。",
+        )
+        third = run(data, transcript, "turn-c")
+        assert third.returncode == 0, third.stderr
+        with sqlite3.connect(database) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                "SELECT * FROM route_audits WHERE turn_id = 'turn-c'"
+            ).fetchone()
+        assert row is not None
+        turn_c_flags = json.loads(row["review_flags"])
+        assert turn_c_flags == [
+            "planned_dispatch_mismatch",
+            "route_unavailable_without_observed_start_failure",
+        ], turn_c_flags
+
+        with sqlite3.connect(database) as connection:
+            connection.execute(
+                "INSERT INTO gate_injections VALUES "
+                "('gate-d', 'session-1', 'turn-d', ?, 1, "
+                "'routing-rationale-v3.2', 0, '2026-08-05T07:59:00+00:00')",
+                (cwd_hash,),
+            )
+            connection.execute(
+                "INSERT INTO external_routes VALUES "
+                "('failed-adapter', 'session-1', ?, 'gpt-5.3-codex-spark', '', "
+                "'failed', '2026-08-05T08:01:00+00:00', "
+                "'2026-08-05T08:02:00+00:00')",
+                (cwd_hash,),
+            )
+        append_route(
+            transcript,
+            "turn-d",
+            "2026-08-05T08:00:00Z",
+            "ROUTE=direct | WRITE_READY=1 | READ_READY=0 | EXISTING=0 | "
+            "PLANNED_DISPATCH=1 | LEAD=接口与验收 | REASON=route_unavailable | "
+            "DETAIL=Spark Adapter 实际启动失败，保留了记录。",
+        )
+        fourth = run(data, transcript, "turn-d")
+        assert fourth.returncode == 0, fourth.stderr
+        with sqlite3.connect(database) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                "SELECT * FROM route_audits WHERE turn_id = 'turn-d'"
+            ).fetchone()
+        assert row is not None
+        assert json.loads(row["review_flags"]) == []
+
         repeated = run(data, transcript, "turn-b")
         assert repeated.returncode == 0 and json.loads(repeated.stdout) == {}
         with sqlite3.connect(database) as connection:
-            assert connection.execute("SELECT COUNT(*) FROM route_audits").fetchone()[0] == 2
+            assert connection.execute("SELECT COUNT(*) FROM route_audits").fetchone()[0] == 4
 
     hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]
     assert "route_auditor.py" in json.dumps(hooks["Stop"])

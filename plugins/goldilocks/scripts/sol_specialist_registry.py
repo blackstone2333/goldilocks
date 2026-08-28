@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.3-beta.6"
+POLICY_VERSION = "0.5.3-beta.7"
 VISIBLE_SOL_ROLE = "visible_sol_specialist"
 MODEL = "gpt-5.6-sol"
 EFFORT = "high"

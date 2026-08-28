@@ -12,7 +12,7 @@ dispatch 前定 dependency、单 writer、interface、integration order、combin
 
 Fast 完成 fixed implementation 并执行一次 contract-scoped focused acceptance 后立即返回，不追加等价验证。Lead 不重新探索或重做 worker 已完成内容。全部 worker 返回后只执行一次 combined authoritative acceptance；组合验收失败最多一次 ordinary repair + re-verification，随后返回或升级，禁止循环。
 
-orchestration 内部 comment 固定：`ROUTE, WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, DETAIL`；reason codes=`lead_faster, shared_surface, critical_judgment, contract_not_ready, route_unavailable, review_cost, parallel_gain, quota_gain`。最终只按 root SKILL 的 protocol island 输出一次用户语言 receipt；不让回执格式反向决定路线。
+orchestration 内部 comment 固定：`ROUTE, WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, DETAIL`；reason codes=`lead_faster, shared_surface, critical_judgment, contract_not_ready, route_unavailable, review_cost, parallel_gain, quota_gain`。`route_unavailable` 仅在本 turn 已保留 native/Adapter 实际启动失败证据时合法；零尝试或只有计划不得使用，改写真实 Direct/transfer 原因。最终只按 root SKILL 的 protocol island 输出一次用户语言 receipt；不让回执格式反向决定路线。
 
 用户可见性不反向塑造路线：Hook 用带 Goldilocks 名称的瞬时状态显示例行检查，不增加模型调用；首次工作更新只报一个已选定/已观察动作。真实的恢复、委派、回退、Night Shift、Usage/update 和终验在发生时合并进正常更新，最终 `详情/DETAIL` 汇总实际作用；不显示未发生能力或原始审计日志。
 
@@ -26,9 +26,9 @@ Night Shift：economy→Luna；urgent deterministic code→Spark；不可用时�
 
 **align** 定 end state。**diagnose** full evidence→reproduce/trace→falsifiable cause→earliest shared fix；第二次 recurrence 写 continuity，三次失败即 escalate。**build** inspect/reuse→最小 fail-first acceptance→最小实现。**prove** fresh evidence + final diff/status；integrated work 要 owner evidence + combined acceptance。**evolve** 只凭 reproducible behavior。**artifact** 定 unit/interface/assembly/acceptance。
 
-Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与验证设施；不新增 hash、contract freeze、baseline 或 gate，除非能指出具体事故，并说明 Git/version/PK/transaction/unique/type/ordinary tests 为何不足。已有 safeguards 不删；auth/data/irreversible/release 按项目风险。
+Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与验证设施；普通 low-risk change 不新增 hash、contract freeze、baseline 或 gate，除非能指出具体事故，并说明 Git/version/PK/transaction/unique/type/ordinary tests 为何不足。一次 authoritative check 已给 decisive evidence 即停止；已有 safeguards 不删；auth/data/irreversible/release 按项目风险。
 
-工具保持自由选择，但禁止逻辑重复：先选项目声明或 host 提供的 authoritative runner。若仅 runner/dependency 不可用，执行一次 logically complete direct bundle，合并 supplied tests、focused edge、compile 与 diff。命令未启动或路径错误可修正并重启同一 bundle；这不增加逻辑验证次数。无相关变更不重跑已通过项；repair 后仅重跑失败项与受影响项。原因不明的连续失败转 diagnose，不靠重复运行碰运气。一旦取得 decisive evidence，立即停止，不再运行等价 tests/checks，不搜索多个 interpreter，不安装测试依赖。功能失败走 ordinary repair/escalation，不冒充环境 fallback。
+工具保持自由选择，但禁止逻辑重复：先选项目声明或 host 提供的 authoritative runner。若仅 runner/dependency 不可用，执行一次 logically complete direct bundle，合并 supplied tests、focused edge、compile 与 diff。命令未启动或路径错误可修正并重启同一 bundle；这不增加逻辑验证次数。无相关变更不重跑已通过项；repair 后仅重跑失败项与受影响项。普通 low-risk change 不因谨慎重复等价 tests/checks、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。一旦取得 decisive evidence，立即停止，不再运行等价 tests/checks，不搜索多个 interpreter，不安装测试依赖。功能失败走 ordinary repair/escalation，不冒充环境 fallback。
 
 编码 contract 边界只按当前 API 实际涉及的事实检查，包括 exact exception type、string/container 歧义、bool/int、空值/重复值、defensive copy 或 mutable return；这不是通用死清单，未涉及者不测。边界检查并入 worker 的一次 focused acceptance 或唯一 combined acceptance，不另开验证轮次。
 
@@ -40,4 +40,4 @@ compaction、stage、steering、waiting、delegation、handoff、persistence 时
 
 机器只固定字段标签，不固定值中的动词或同义词；按事实、语义完整性与 Owner 唯一性验收，不用词汇白名单反向塑造工作流。
 
-fresh session 读文档继续；Direct 默认无状态。遵循仓库惯例。仅在用户要求、惯例要求或不更新会使 operation/ownership 失真时修改既有文件；不为导航、润色或“顺手完整”而扩大范围。新项目/architecture change 可写 `docs/PROJECT.md`；ACTIVE 可安全 ignore。完成前 fresh acceptance + full result + actual diff/status；old pass/report/stopped worker 不是 proof。
+fresh session 读文档继续；Direct 默认无状态。遵循仓库惯例。仅在用户要求、惯例要求或不更新会使 operation/ownership 失真时修改既有文件；不为导航、润色或“顺手完整”而扩大范围。新项目/architecture change 可写 `docs/PROJECT.md`；ACTIVE 可安全 ignore。完成前记录当前 decisive acceptance evidence、full result 与 actual diff/status；不为“fresh”重复已足够的验证。old pass/report/stopped worker 不是 proof。

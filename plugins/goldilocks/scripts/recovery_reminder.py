@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from native_terminal import read_terminal_state
 
 
-POLICY_VERSION = "0.5.3-beta.6"
+POLICY_VERSION = "0.5.3-beta.7"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 HOOK_HEALTH_TTL_DAYS = 30
@@ -208,15 +208,17 @@ def usage_instruction(prompt: str, turn_id: str | None) -> str:
 
     return usage_instruction_for(turn_id, *usage_requirements(prompt))
 ROUTING_RATIONALE_GATE = (
-    "Likely multi-unit work detected. Read route-card.md before implementation and write its canonical ROUTE line "
-    "inside an HTML comment "
+    "Multi-unit work: before Lead edits, run one make-or-delegate check; write one canonical ROUTE HTML comment "
     "with WRITE_READY, READ_READY, EXISTING, PLANNED_DISPATCH, LEAD, REASON, and DETAIL. EXISTING is "
     "current host-confirmed running ownership—not UI labels, idle/completed handles, artifacts, or a "
     "historical task_started; collect finals via host wait/status. PLANNED_DISPATCH is intent; Hooks "
     "count starts. After attempts, show one primary-language receipt: TEAM/CONCURRENCY use host-confirmed "
     "starts/active workers, never planned; capacity is ? when unknown. Root Direct uses the compact "
-    "visible response contract without loading orchestration references. "
-    "Shared writes permit reads. Direct names transfer cost. Audit is silent; create no "
+    "visible response contract without loading orchestration references. Small files need no route-card/kernel; "
+    "load only if delegation may pay or compact fields fail. route_unavailable needs retained native/Adapter "
+    "start-failure evidence; zero-attempt/plan-only uses "
+    "the actual Direct reason. Shared writes permit "
+    "reads. Direct names transfer cost. Audit is silent; create no "
     "extra proof, probe, document, test, or model call. Name every child "
     "<tier>__<semantic>_<model>, where tier is fast, standard, or lead."
 )
