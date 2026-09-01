@@ -267,27 +267,31 @@ def main() -> None:
         assert "REASON=<short reason>" in style_context
         assert "DETAIL=<one factual sentence>" in style_context
         assert "never Codex/primary agent" in style_context
+        assert "CONCURRENCY counts started child specialists only" in style_context
+        assert "no child start is 0, never 1 for the main model" in style_context
         assert "Usage is host-side and fail-silent" in style_context
         assert "on-demand is the default" in style_context
         assert "Bootstrap automatic opt-in" in style_context
         assert "usage_reporter.py" not in style_context
         assert "codex plugin list" not in style_context
-        assert "fast__<semantic>_<model>" in style_context
-        assert "standard__<semantic>_<model>" in style_context
-        assert "lead__<semantic>_<model>" in style_context
-        assert "Luna/Spark" in style_context
-        assert "fork_turns=none" in style_context
-        assert "none/1-4" in style_context
-        assert "fresh review-only/no write/repair/delegate" in style_context
-        assert "never changes user-selected host permissions" in style_context
-        assert "only explicit Lead handoff permits `all`" in style_context
-        assert "native hosts may bypass PreToolUse" in style_context
+        assert "fast__<semantic>_<model>" not in style_context
+        assert "standard__<semantic>_<model>" not in style_context
+        assert "lead__<semantic>_<model>" not in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
         assert "before any specialist Skill" in style_context
         assert "goldilocks:goldilocks" in style_context
-        assert "otherwise take its Direct exit" in style_context
+        assert "Routine bounded work with clear scope and acceptance takes Direct" in style_context
+        assert "without loading goldilocks:goldilocks or its references" in style_context
+        assert "benefit clearly repays briefing, review, and integration" in style_context
         assert "pure conversation" in style_context
         assert "Minimum-sufficient verification" in style_context
+        assert "optional probes fail soft" in style_context
+        assert "no match neither fails nor gates known reads" in style_context
+        assert "never warrants an equivalent retry" in style_context
+        assert "choose one authoritative evidence bundle" in style_context
+        assert "in one tool call" in style_context
+        assert "not extra model rounds" in style_context
+        assert "Compile only if tests/CLI do not import every changed Python surface" in style_context
         assert "Add no hash/frozen contract/baseline/gate" in style_context
         assert "Without relevant change, do not rerun a pass" in style_context
         assert "after repair run only failed/affected checks" in style_context
@@ -608,14 +612,25 @@ def main() -> None:
             "route_unavailable needs retained native/Adapter start-failure evidence",
             "zero-attempt/plan-only uses the actual Direct reason",
             "Shared writes",
-            "explicit bounded-delegation grant",
-            "current official input/cached/output rates",
-            "persistent explicit-user authorization",
-            "<tier>__<semantic>_<model>",
-            "Evaluate every ready unit for Fast before Standard",
-            "missing native role alone is not route_unavailable",
-            "all delegated units use Terra",
-            "why Fast is ineligible",
+            "Bounded-delegation grant active",
+            "official input/cached/output rates",
+            "persistent explicit authorization",
+            "fast__<semantic>_<model>",
+            "standard__<semantic>_<model>",
+            "lead__<semantic>_<model>",
+            "fork_turns=none",
+            "none/1-4",
+            "fresh review-only/no write/repair/delegate",
+            "Host permissions stay unchanged",
+            "only explicit Lead handoff permits `all`",
+            "native hosts may bypass PreToolUse",
+            "Spark-quota-failed",
+            "no retry until observed reset",
+            "compare Terra/Luna/Direct",
+            "Fast-check ready unit before Standard",
+            "absence alone ≠ route_unavailable",
+            "All-Terra DETAIL",
+            "Fast blocker",
         ):
             assert phrase in rationale_context, phrase
         assert len(rationale_context.split()) <= 420
@@ -1117,12 +1132,14 @@ def main() -> None:
             "additionalContext"
         ]
         assert "Goldilocks zero-cost gate" in stable_context
-        assert "confirmed Spark quota failure" in stable_context
+        assert "confirmed Spark quota failure" not in stable_context
 
         assert "用量由宿主侧静默处理" in stable_context
         assert "usage_reporter.py" not in stable_context
         assert "codex plugin list" not in stable_context
         assert "路由=直接" in stable_context
+        assert "未启动子智能体就是 0" in stable_context
+        assert "绝不把主模型计为 1" in stable_context
 
     print("Goldilocks recovery hook contract passed.")
 

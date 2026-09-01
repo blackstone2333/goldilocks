@@ -1,17 +1,19 @@
 ---
 name: goldilocks
-description: Adaptive execution kernel for Direct work, diagnosis, builds, routing, continuity, and acceptance.
+description: Adaptive orchestration and continuity for work with uncertainty, unknown cause, persistence, meaningful delegation, cross-unit artifacts, or an explicit Goldilocks request; clear routine Direct work uses the lightweight host gate without loading this skill.
 ---
 
 # Goldilocks
 
 默认 Direct。守住 quality、authority、safety、acceptance；只增加改变结果的流程。
 
+清晰的例行 Direct 由宿主 Hook 的短合同承载，不为确认 Direct 加载本文件。仅在零成本门发现 uncertainty、unknown cause、persistence、可能有净收益的委派/多单元 artifact，或用户显式调用 Goldilocks 时进入本 Skill。
+
 ## Direct gate
 
 检查 architecture、authority、safety、irreversibility、causality、continuity、ready units。tiny/inseparable 且清晰，或虽有多个 ready units 但各自很小、briefing+review/integration 无净收益，即 **Direct**：先做一次紧凑 make-or-delegate 判断，不只因多文件读 reference/其他 Goldilocks skill，不建 state；做最小改动与 decisive check。发现 ambiguity、unknown cause、persistence，或至少一条完整可转交且实施明显重于 briefing+review 的 mutable chain，退出 Direct，只读 [kernel.md](references/kernel.md)。退出只比较路线，不预设委派。
 
-验证遵循 minimum-sufficient：默认复用已有 checks；普通低风险改动不新增 hash/contract freeze/baseline/gate。只有能指出具体事故，并说明 Git、版本号、主键、事务、唯一约束、类型与普通测试为何不足时才增加。无相关变更不重跑已通过项；修复后只重跑失败项与受影响项；一次权威 check 已给 decisive evidence 即停止，不因谨慎重复等价 tests、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。既有 safeguards 不删；认证、数据安全、不可逆操作与正式发布仍按风险执行。
+验证遵循 minimum-sufficient：可选探测无匹配是正常结果，不得阻断已知必要读取或触发等价重试。首次验证前一次选定权威 evidence bundle；可安全组合时，只把适用的 tests、未覆盖 focused edge 与 diff/status 放进同一工具调用，不把已知验证包串行成额外模型轮次。仅当 tests/CLI 未实际导入全部变更 Python 表面时才 compile。默认复用已有 checks；普通低风险改动不新增 hash/contract freeze/baseline/gate。只有能指出具体事故，并说明 Git、版本号、主键、事务、唯一约束、类型与普通测试为何不足时才增加。无相关变更不重跑已通过项；修复后只重跑失败项与受影响项；一次权威 check 已给 decisive evidence 即停止，不因谨慎重复等价 tests、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。既有 safeguards 不删；认证、数据安全、不可逆操作与正式发布仍按风险执行。
 
 ## One engine
 

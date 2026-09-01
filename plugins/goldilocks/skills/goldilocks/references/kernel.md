@@ -28,7 +28,7 @@ Night Shift：economy→Luna；urgent deterministic code→Spark；不可用时�
 
 Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与验证设施；普通 low-risk change 不新增 hash、contract freeze、baseline 或 gate，除非能指出具体事故，并说明 Git/version/PK/transaction/unique/type/ordinary tests 为何不足。一次 authoritative check 已给 decisive evidence 即停止；已有 safeguards 不删；auth/data/irreversible/release 按项目风险。
 
-工具保持自由选择，但禁止逻辑重复：先选项目声明或 host 提供的 authoritative runner。若仅 runner/dependency 不可用，执行一次 logically complete direct bundle，合并 supplied tests、focused edge、compile 与 diff。命令未启动或路径错误可修正并重启同一 bundle；这不增加逻辑验证次数。无相关变更不重跑已通过项；repair 后仅重跑失败项与受影响项。普通 low-risk change 不因谨慎重复等价 tests/checks、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。一旦取得 decisive evidence，立即停止，不再运行等价 tests/checks，不搜索多个 interpreter，不安装测试依赖。功能失败走 ordinary repair/escalation，不冒充环境 fallback。
+工具保持自由选择，但禁止逻辑重复：先选项目声明或 host 提供的 authoritative runner。可选 discovery 无匹配是正常结果，不得阻断已知必要读取或触发等价 probe。首次验证前一次选全当前必要验收目标；可安全组合时，只把适用的 supplied tests、focused uncovered edge 与 diff/status 放进同一工具调用，不把已知验证包串行成额外模型轮次；仅当 tests/CLI 未实际导入全部变更 Python 表面时才 compile。若仅 runner/dependency 不可用，执行一次 logically complete direct bundle。命令未启动或路径错误可修正并重启同一 bundle；这不增加逻辑验证次数。无相关变更不重跑已通过项；repair 后仅重跑失败项与受影响项。普通 low-risk change 不因谨慎重复等价 tests/checks、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。一旦取得 decisive evidence，立即停止，不再运行等价 tests/checks，不搜索多个 interpreter，不安装测试依赖。功能失败走 ordinary repair/escalation，不冒充环境 fallback。
 
 编码 contract 边界只按当前 API 实际涉及的事实检查，包括 exact exception type、string/container 歧义、bool/int、空值/重复值、defensive copy 或 mutable return；这不是通用死清单，未涉及者不测。边界检查并入 worker 的一次 focused acceptance 或唯一 combined acceptance，不另开验证轮次。
 

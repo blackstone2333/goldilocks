@@ -826,7 +826,7 @@ print(module.discover_native_plugin('codex') or '')
         assert partial_plan["native_plugin"] == "absent"
         assert partial_plan["hook_trust_handoff"]["status"] == "skipped"
         assert partial_plan["plugin_actions"] == [
-            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.5.3-beta.7", "--json"],
+            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.5.3-beta.8", "--json"],
             ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
         ]
         assert partial_plan["portable_cleanup"]["executed_by_bootstrap"] is False
@@ -848,7 +848,7 @@ print(module.discover_native_plugin('codex') or '')
         assert upgraded["experience"] == "full" and upgraded["status"] == "installed"
         assert [row["command"] for row in upgraded["plugin_action_results"]] == partial_plan["plugin_actions"]
         calls = (root / "codex.log").read_text(encoding="utf-8")
-        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.5.3-beta.7 --json" in calls
+        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.5.3-beta.8 --json" in calls
         assert "plugin add goldilocks@goldilocks-local --json" in calls
         assert "npx" not in calls
         assert output(

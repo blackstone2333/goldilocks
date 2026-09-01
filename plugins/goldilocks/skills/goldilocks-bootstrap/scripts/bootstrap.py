@@ -774,7 +774,7 @@ def plugin_actions(host: str, verified_plugin: bool) -> list[list[str]]:
     return [
         [
             "codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks",
-            "--ref", "v0.5.3-beta.7", "--json",
+            "--ref", "v0.5.3-beta.8", "--json",
         ],
         ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
     ]

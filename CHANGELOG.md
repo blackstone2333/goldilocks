@@ -2,6 +2,15 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.3-beta.8 — 2026-09-01
+
+### Faster Direct entry with full orchestration on demand
+
+- Keep routine bounded Direct work in the compact Hook instead of loading the root Skill merely to confirm Direct. Ambiguity, unknown cause, continuity, profitable delegation, cross-unit artifacts, and explicit Goldilocks requests still load the complete workflow.
+- Make optional discovery fail soft and compose only applicable acceptance evidence. Python compilation is skipped when tests or CLI execution already imports every changed surface; failed or affected checks remain the only checks rerun.
+- Keep visible activation, route receipts, Usage modes, Night Shift, Spark/Luna/Terra fallback, Owner routing, Sol specialists, continuity, and final acceptance. Zero child starts now report concurrency `0` rather than counting the main model.
+- In one representative quality-passing confirmation versus released Beta7, the candidate observed wall time **−10.64%**, Raw Token **−1.36%**, and normalized comparison cost **−3.5%**, with zero root Skill reads. Wall time and cache behavior remain observational; this is not a general performance guarantee.
+
 ## 0.5.3-beta.7 — 2026-08-28
 
 ### Evidence-grounded routing and minimum-sufficient verification

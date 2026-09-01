@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from native_terminal import read_terminal_state
 
 
-POLICY_VERSION = "0.5.3-beta.7"
+POLICY_VERSION = "0.5.3-beta.8"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 HOOK_HEALTH_TTL_DAYS = 30
@@ -29,16 +29,20 @@ MICRO_STYLE = (
 )
 ROUTING_GATE = (
     "For executable work, silently apply the Goldilocks zero-cost gate before any specialist Skill. "
-    "If uncertainty, unknown cause, continuity, or useful decomposition exists, "
-    "read and use goldilocks:goldilocks; otherwise take its Direct exit. "
+    "Routine bounded work with clear scope and acceptance takes Direct without loading "
+    "goldilocks:goldilocks or its references. Load it only for unresolved "
+    "ambiguity/cause, required continuity, or delegation/artifact decomposition whose implementation "
+    "benefit clearly repays briefing, review, and integration. "
     "Visible multi-unit implementation must run its make-or-delegate check before Lead edits; "
-    "Direct remains valid when briefing and review cost more. After a confirmed Spark quota failure, "
-    "do not retry Spark before its observed reset; compare Terra, Luna, and Direct, and state why "
-    "Direct wins if the main model takes over. "
+    "Direct remains valid when briefing and review cost more. "
     "Skip for pure conversation."
 )
 MINIMUM_SUFFICIENT_VERIFICATION = (
-    "Minimum-sufficient verification: reuse existing checks. Add no hash/frozen contract/baseline/gate "
+    "Minimum-sufficient verification: optional probes fail soft; no match neither fails nor gates known "
+    "reads, and never warrants an equivalent retry. Before validation, choose one authoritative evidence "
+    "bundle; compose applicable checks in one tool call, not extra model rounds. Compile only "
+    "if tests/CLI do not import every changed Python surface. Reuse existing checks. "
+    "Add no hash/frozen contract/baseline/gate "
     "unless a named failure escapes Git/version/key/transaction/constraint/type/tests. Without relevant "
     "change, do not rerun a pass; after repair run only failed/affected checks. Unexplained recurrence "
     "means diagnose, not retry. Preserve safeguards; auth/data/irreversible/release remain risk-based."
@@ -51,10 +55,9 @@ VISIBLE_RESPONSE_CONTRACT_EN = (
     "route receipt in this exact field order: `ROUTE=<direct|fast|standard|mixed> | TEAM=<main model and actually started roles> | "
     "CONCURRENCY=<host-confirmed starts/host limit or ?> | DELEGATED=<actual delegated work or none> | "
     "REASON=<short reason> | DETAIL=<one factual sentence>`. DETAIL names the actual Goldilocks action that affected execution, "
-    "never an unused capability. TEAM uses `main model`, never Codex/primary agent. "
-    "Before spawn self-check (native hosts may bypass PreToolUse): Luna/Spark use `fast__<semantic>_<model>` + `fork_turns=none`; "
-    "Terra uses `standard__<semantic>_<model>` + none/1-4; Sol reviewer uses `lead__<semantic>_<model>` + none, fresh review-only/no write/repair/delegate; this never changes user-selected host permissions; only explicit "
-    "Lead handoff permits `all`. Usage is host-side and fail-silent: on-demand is the default; after Bootstrap automatic "
+    "never an unused capability. TEAM uses `main model`, never Codex/primary agent. CONCURRENCY counts "
+    "started child specialists only: no child start is 0, never 1 for the main model. "
+    "Usage is host-side and fail-silent: on-demand is the default; after Bootstrap automatic "
     "opt-in, it runs once for each executable task. Pure conversation has no persistent activity cue, receipt, or Usage."
 )
 VISIBLE_RESPONSE_CONTRACT_ZH = (
@@ -64,10 +67,8 @@ VISIBLE_RESPONSE_CONTRACT_ZH = (
     "只在最终详情承载该动作。最终必须有且仅有一次本地化、用户可见的 Goldilocks 路由回执，字段顺序固定："
     "`路由=<直接|快速|标准|混合>｜团队=<主模型及实际启动角色>｜并发=<宿主确认启动数/宿主上限或?>｜"
     "委派=<实际委派任务或无>｜理由=<简短理由>｜详情=<一句事实>`。详情必须说明实际发生的 Goldilocks 动作，不写未调用能力。"
-    "团队根身份只写 `主模型`，不得写 Codex/主代理。"
-    "每次 spawn 前主模型自检：原生宿主可能绕过 PreToolUse；Luna/Spark 用 `fast__<semantic>_<model>` 且 `fork_turns=none`；"
-    "Terra 用 `standard__<semantic>_<model>` 且仅 none/1-4；Sol reviewer 用 `lead__<semantic>_<model>` 且 none、fresh review-only/no write/repair/delegate；绝不修改用户选择的宿主权限；"
-    "只有显式 Lead handoff 可用 `all`。用量由宿主侧静默处理：默认按需；Bootstrap 启用自动模式后，"
+    "团队根身份只写 `主模型`，不得写 Codex/主代理；并发只数宿主确认启动的子智能体，未启动子智能体就是 0，绝不把主模型计为 1。"
+    "用量由宿主侧静默处理：默认按需；Bootstrap 启用自动模式后，"
     "每个可执行任务自动读取一次；按需模式只在用户明确索要时读取。纯对话不显示持久活动行、回执或用量。"
 )
 USAGE_VISIBILITY_MODES = {"on-demand", "automatic"}
@@ -219,17 +220,18 @@ ROUTING_RATIONALE_GATE = (
     "start-failure evidence; zero-attempt/plan-only uses "
     "the actual Direct reason. Shared writes permit "
     "reads. Direct names transfer cost. Audit is silent; create no "
-    "extra proof, probe, document, test, or model call. Name every child "
-    "<tier>__<semantic>_<model>, where tier is fast, standard, or lead."
+    "extra proof, probe, document, test, or model call. Spawn self-check—native hosts may bypass PreToolUse: "
+    "Luna/Spark=`fast__<semantic>_<model>`,fork_turns=none; Terra=`standard__<semantic>_<model>`,none/1-4; "
+    "SolReviewer=`lead__<semantic>_<model>`,none,fresh review-only/no write/repair/delegate. Host permissions "
+    "stay unchanged; only explicit Lead handoff permits `all`. Spark-quota-failed: no retry until observed "
+    "reset; compare Terra/Luna/Direct; explain main-model takeover."
 )
 AUTHORIZED_DISPATCH_GATE = (
-    "An explicit bounded-delegation grant applies. Compare current official input/cached/output rates, "
-    "time, raw tokens, acceptance, and retry; cheaper may be slightly slower. Keep billing pools "
-    "separate when remaining budgets are unknown. This is not a delegation quota. Evaluate every ready "
-    "unit for Fast before Standard. Luna uses dispatch_codex_worker.py when native roles omit it; missing "
-    "native role alone is not route_unavailable. If all delegated units use Terra, DETAIL states why Fast "
-    "is ineligible: residual judgment, tools, authority, or acceptance. New-model discovery is read-only; "
-    "first use requires persistent explicit-user authorization."
+    "Bounded-delegation grant active, not quota. Compare official input/cached/output rates, time/raw, "
+    "acceptance, retry; cheaper may be slower; unknown pools stay separate. Fast-check ready "
+    "unit before Standard. Luna uses dispatch_codex_worker.py if native omits it; absence alone ≠ "
+    "route_unavailable. All-Terra DETAIL names Fast blocker: judgment/tools/authority/acceptance. "
+    "New-model discovery is read-only; first use needs persistent explicit authorization."
 )
 CONTINUITY_GATE = (
     "Repeated-failure continuity boundary detected. Before another fix, read the Goldilocks "
