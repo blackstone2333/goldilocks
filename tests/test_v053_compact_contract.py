@@ -67,14 +67,19 @@ def main() -> None:
         "至少一条完整可转交",
         "不新增 hash/contract freeze/baseline/gate",
         "无相关变更不重跑已通过项",
-        "修复后只重跑失败项与受影响项",
+        "产品修复后只重跑失败项与受影响项",
         "普通低风险改动不新增 hash/contract freeze/baseline/gate",
-        "可选探测无匹配是正常结果",
-        "不得阻断已知必要读取或触发等价重试",
-        "首次验证前一次选定权威 evidence bundle",
-        "同一工具调用",
-        "不把已知验证包串行成额外模型轮次",
-        "仅当 tests/CLI 未实际导入全部变更 Python 表面时才 compile",
+        "首次检查在一个工具调用内用存在性守卫",
+        "`[ -f \"$f\" ]`",
+        "读取现有 instructions/相关 source/tests",
+        "读取项目元数据或 `python3 --version`",
+        "不二次探测",
+        "以声明或当前运行时为语法下限",
+        "Python <3.10 禁止 `X | None`",
+        "一个能传递失败状态的 evidence call",
+        "probe 预期先推导",
+        "tests/CLI 已导入变更时不再 compile",
+        "错误 probe 只修 probe，不改产品、不追加等价 check",
         "一次权威 check 已给 decisive evidence 即停止",
         "不因谨慎重复等价 tests、换 interpreter 或跑 full matrix",
         "原因不明的连续失败转 diagnose",
@@ -85,14 +90,19 @@ def main() -> None:
         "Verification 用 minimum-sufficient",
         "不新增 hash、contract freeze、baseline 或 gate",
         "无相关变更不重跑已通过项",
-        "repair 后仅重跑失败项与受影响项",
+        "产品 repair 后仅重跑失败项与受影响项",
         "普通 low-risk change 不新增 hash、contract freeze、baseline 或 gate",
-        "可选 discovery 无匹配是正常结果",
-        "不得阻断已知必要读取或触发等价 probe",
-        "首次验证前一次选全当前必要验收目标",
-        "同一工具调用",
-        "不把已知验证包串行成额外模型轮次",
-        "仅当 tests/CLI 未实际导入全部变更 Python 表面时才 compile",
+        "首次检查在一个工具调用内用存在性守卫",
+        "`[ -f \"$f\" ]`",
+        "读取现有 instructions/相关 source/tests",
+        "读取项目元数据或 `python3 --version`",
+        "不二次 discovery",
+        "以声明或当前运行时为语法下限",
+        "Python <3.10 禁止 `X | None`",
+        "一个能传递失败状态的 evidence call",
+        "probe 预期先推导",
+        "tests/CLI 已导入变更时不再 compile",
+        "错误 probe 只修 probe，不改产品、不追加等价 check",
         "一次 authoritative check 已给 decisive evidence 即停止",
         "普通 low-risk change 不因谨慎重复等价 tests/checks、换 interpreter 或跑 full matrix",
         "原因不明的连续失败转 diagnose",
@@ -137,16 +147,21 @@ def main() -> None:
         )
         for required in (
             "Minimum-sufficient verification",
-            "optional probes fail soft",
-            "no match neither fails nor gates known reads",
-            "choose one authoritative evidence bundle",
-            "in one tool call",
-            "not extra model rounds",
-            "Compile only if tests/CLI do not import every changed Python surface",
-            "Add no hash/frozen contract/baseline/gate",
-            "Without relevant change, do not rerun a pass",
-            "after repair run only failed/affected checks",
-            "diagnose, not retry",
+            "in one first call",
+            "`[ -f \"$f\" ]`",
+            "instructions/relevant source/tests",
+            "`python3 --version`",
+            "no second discovery",
+            "syntax floor",
+            "Python <3.10: no `X | None`",
+            "One fail-propagating evidence call",
+            "one uncovered probe",
+            "derive expectations first",
+            "Skip compile when tests/CLI import changes",
+            "no new hash/freeze/baseline/gate",
+            "After product repair rerun only failed/affected checks",
+            "fix faulty probes without product changes or equivalent checks",
+            "Recurring unknowns mean diagnose, not retry",
             "Preserve safeguards",
         ):
             assert required in message, required
@@ -155,11 +170,11 @@ def main() -> None:
     assert "run one make-or-delegate check" in routed
     assert "Small files need no route-card/kernel" in routed
     assert "only if delegation may pay" in routed
-    assert "Routine bounded work with clear scope and acceptance takes Direct" in english
+    assert "Clear bounded work takes Direct" in english
     assert "without loading goldilocks:goldilocks or its references" in english
-    assert "benefit clearly repays briefing, review, and integration" in english
-    assert "CONCURRENCY counts started child specialists only" in english
-    assert "no child start is 0, never 1 for the main model" in english
+    assert "implementation gain clearly exceeds briefing, review, and integration" in english
+    assert "CONCURRENCY counts host-confirmed child starts" in english
+    assert "none is 0, never 1 for the main model" in english
     assert "未启动子智能体就是 0" in chinese
     assert "绝不把主模型计为 1" in chinese
     for required in (

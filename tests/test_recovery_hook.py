@@ -258,7 +258,7 @@ def main() -> None:
         assert "explicitly unknown" in style_context
         assert "fix and verification" in style_context
         assert "Every executable" in style_context
-        assert "exactly one localized visible Goldilocks route receipt" in style_context
+        assert "exactly one localized receipt" in style_context
         assert "in this exact field order" in style_context
         assert "ROUTE=<direct|fast|standard|mixed>" in style_context
         assert "TEAM=<main model and actually started roles>" in style_context
@@ -267,10 +267,10 @@ def main() -> None:
         assert "REASON=<short reason>" in style_context
         assert "DETAIL=<one factual sentence>" in style_context
         assert "never Codex/primary agent" in style_context
-        assert "CONCURRENCY counts started child specialists only" in style_context
-        assert "no child start is 0, never 1 for the main model" in style_context
+        assert "CONCURRENCY counts host-confirmed child starts" in style_context
+        assert "none is 0, never 1 for the main model" in style_context
         assert "Usage is host-side and fail-silent" in style_context
-        assert "on-demand is the default" in style_context
+        assert "on-demand by default" in style_context
         assert "Bootstrap automatic opt-in" in style_context
         assert "usage_reporter.py" not in style_context
         assert "codex plugin list" not in style_context
@@ -278,24 +278,28 @@ def main() -> None:
         assert "standard__<semantic>_<model>" not in style_context
         assert "lead__<semantic>_<model>" not in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
-        assert "before any specialist Skill" in style_context
+        assert "before specialist Skills" in style_context
         assert "goldilocks:goldilocks" in style_context
-        assert "Routine bounded work with clear scope and acceptance takes Direct" in style_context
+        assert "Clear bounded work takes Direct" in style_context
         assert "without loading goldilocks:goldilocks or its references" in style_context
-        assert "benefit clearly repays briefing, review, and integration" in style_context
+        assert "implementation gain clearly exceeds briefing, review, and integration" in style_context
         assert "pure conversation" in style_context
         assert "Minimum-sufficient verification" in style_context
-        assert "optional probes fail soft" in style_context
-        assert "no match neither fails nor gates known reads" in style_context
-        assert "never warrants an equivalent retry" in style_context
-        assert "choose one authoritative evidence bundle" in style_context
-        assert "in one tool call" in style_context
-        assert "not extra model rounds" in style_context
-        assert "Compile only if tests/CLI do not import every changed Python surface" in style_context
-        assert "Add no hash/frozen contract/baseline/gate" in style_context
-        assert "Without relevant change, do not rerun a pass" in style_context
-        assert "after repair run only failed/affected checks" in style_context
-        assert "diagnose, not retry" in style_context
+        assert "in one first call" in style_context
+        assert "`[ -f \"$f\" ]`" in style_context
+        assert "instructions/relevant source/tests" in style_context
+        assert "`python3 --version`" in style_context
+        assert "no second discovery" in style_context
+        assert "syntax floor" in style_context
+        assert "Python <3.10: no `X | None`" in style_context
+        assert "One fail-propagating evidence call" in style_context
+        assert "one uncovered probe" in style_context
+        assert "derive expectations first" in style_context
+        assert "Skip compile when tests/CLI import changes" in style_context
+        assert "no new hash/freeze/baseline/gate" in style_context
+        assert "After product repair rerun only failed/affected checks" in style_context
+        assert "fix faulty probes without product changes or equivalent checks" in style_context
+        assert "Recurring unknowns mean diagnose, not retry" in style_context
         assert "Preserve safeguards" in style_context
         assert "Likely multi-unit work detected" not in style_context
 

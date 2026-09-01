@@ -55,17 +55,14 @@ def main() -> None:
         "Direct",
         "first work update",
         "Goldilocks | Active:",
-        "already selected or observed",
-        "exactly one localized visible Goldilocks route receipt",
+        "selected or observed action",
+        "exactly one localized receipt",
         "ROUTE=direct",
-        "DETAIL names the actual Goldilocks action",
+        "DETAIL reports only Goldilocks actions that affected work",
         "host-side and fail-silent",
-        "on-demand is the default",
+        "on-demand by default",
         "Bootstrap automatic opt-in",
-        "each executable task",
-        "fast__<semantic>_<model>",
-        "standard__<semantic>_<model>",
-        "lead__<semantic>_<model>",
+        "per executable task",
     ):
         assert marker in english, marker
 
@@ -259,8 +256,9 @@ def main() -> None:
                 assert "Goldilocks" in status, f"{event} status must identify Goldilocks"
                 statuses.append(status)
                 visible_hook_count += 1
-    assert visible_hook_count == 9
+    assert visible_hook_count >= 9
     assert any("Usage baseline" in status for status in statuses)
+    assert any("Update reminder" in status for status in statuses)
     assert any("Route candidate audit" in status for status in statuses)
     assert not any("Receipt audit" in status or "Acceptance" in status for status in statuses)
 

@@ -13,7 +13,7 @@ description: Adaptive orchestration and continuity for work with uncertainty, un
 
 检查 architecture、authority、safety、irreversibility、causality、continuity、ready units。tiny/inseparable 且清晰，或虽有多个 ready units 但各自很小、briefing+review/integration 无净收益，即 **Direct**：先做一次紧凑 make-or-delegate 判断，不只因多文件读 reference/其他 Goldilocks skill，不建 state；做最小改动与 decisive check。发现 ambiguity、unknown cause、persistence，或至少一条完整可转交且实施明显重于 briefing+review 的 mutable chain，退出 Direct，只读 [kernel.md](references/kernel.md)。退出只比较路线，不预设委派。
 
-验证遵循 minimum-sufficient：可选探测无匹配是正常结果，不得阻断已知必要读取或触发等价重试。首次验证前一次选定权威 evidence bundle；可安全组合时，只把适用的 tests、未覆盖 focused edge 与 diff/status 放进同一工具调用，不把已知验证包串行成额外模型轮次。仅当 tests/CLI 未实际导入全部变更 Python 表面时才 compile。默认复用已有 checks；普通低风险改动不新增 hash/contract freeze/baseline/gate。只有能指出具体事故，并说明 Git、版本号、主键、事务、唯一约束、类型与普通测试为何不足时才增加。无相关变更不重跑已通过项；修复后只重跑失败项与受影响项；一次权威 check 已给 decisive evidence 即停止，不因谨慎重复等价 tests、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。既有 safeguards 不删；认证、数据安全、不可逆操作与正式发布仍按风险执行。
+验证遵循 minimum-sufficient：首次检查在一个工具调用内用存在性守卫（`[ -f "$f" ]`）读取现有 instructions/相关 source/tests，并读取项目元数据或 `python3 --version`；不二次探测。以声明或当前运行时为语法下限（Python <3.10 禁止 `X | None`）。首次验证使用一个能传递失败状态的 evidence call，只含适用 tests、一个未覆盖 probe 与 diff/status；probe 预期先推导。tests/CLI 已导入变更时不再 compile。默认复用已有 checks；普通低风险改动不新增 hash/contract freeze/baseline/gate。只有能指出具体事故，并说明 Git、版本号、主键、事务、唯一约束、类型与普通测试为何不足时才增加。无相关变更不重跑已通过项；产品修复后只重跑失败项与受影响项；错误 probe 只修 probe，不改产品、不追加等价 check。一次权威 check 已给 decisive evidence 即停止，不因谨慎重复等价 tests、换 interpreter 或跑 full matrix。原因不明的连续失败转 diagnose，不靠重复运行碰运气。既有 safeguards 不删；认证、数据安全、不可逆操作与正式发布仍按风险执行。
 
 ## One engine
 

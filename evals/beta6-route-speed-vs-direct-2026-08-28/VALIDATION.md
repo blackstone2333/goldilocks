@@ -168,6 +168,93 @@ normalized-cost difference at most `10%`, equal passing quality, zero retry, and
 reads. The observed consecutive differences were wall `+3.970%`, Raw `+3.007%`, and normalized
 cost `+9.764%`; every bound passed.
 
-Release decision: publish `0.5.3-beta.8` as a prerelease. The evidence supports stable removal of
-the avoidable routine-Direct root-Skill round on this representative fixture; it does not claim a
-universal wall-time or cost advantage over Direct.
+Historical release action: this evidence was used to publish `0.5.3-beta.8`, which was later
+explicitly withdrawn. The GitHub prerelease and local/remote tags were removed; the candidate
+branch remains. This section no longer authorizes publication.
+
+## Withdrawn Beta8 reoptimization
+
+The withdrawn candidate was reworked against one fresh Direct arm. Three avoidable model rounds
+were isolated rather than attributed to complete orchestration: fail-hard optional-path discovery,
+Python syntax newer than the active 3.9 runtime, and incorrect self-authored probe expectations.
+The compact Hook now performs guarded discovery, relevant reads, and runtime detection in one
+first call; it treats the declared/current runtime as the syntax floor and requires one
+fail-propagating evidence call with expectations derived first.
+
+Two consecutive runs of the final contract used one attempt, zero host retry, no child, and no
+root-Skill read. All external visible, hidden, compile, diff, scope, and frozen-file gates passed.
+
+| Arm | Quality | Wall* | Raw | Normalized USD | Tools | Evidence calls | Root Skill reads |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Fresh Direct | PASS | 96.213 s | 78,332 | $0.254610 | 4 | 1 | 0 |
+| Final candidate A | PASS | 94.182 s | 70,245 | $0.302006 | 3 | 1* | 0 |
+| Final candidate B | PASS | 94.593 s | 69,699 | $0.231591 | 3 | 1* | 0 |
+
+Candidate A versus Direct observed wall `-2.1%`, Raw `-10.3%`, and one fewer tool call. Candidate B
+observed wall `-1.7%`, Raw `-11.0%`, normalized cost `-9.0%`, and one fewer tool call. Between the
+two candidates, wall differed by `0.4%` and Raw by `0.8%`; both traces contained exactly one
+guarded inspection, one implementation patch, and one combined evidence call, with none of the
+three avoidable repair rounds.
+
+Normalized cost was not stable between the candidates: A was `+18.6%` versus Direct while B was
+`-9.0%`. A cached `46.9%` of input versus `68.6%` for Direct; B cached `68.4%`. This is retained as
+cache variance, not reframed as workflow work or a universal cost claim. `*` The current telemetry
+regex reports these combined calls as zero because their command is stored with escaped newlines;
+the raw traces show one `set -e` evidence call in each run.
+
+Decision: the final candidate restores the first speed candidate's Direct-level wall/Raw behavior
+without removing Goldilocks capabilities. Publication and local installation remain paused; no
+additional rollout is justified solely to obtain a more favorable cache sample.
+
+## Beta8 two-task release gate — frozen before execution
+
+The user authorized two different fresh tests followed by publication only if both remain stable.
+The gate uses one existing-code bug fix (`beta8-bugfix`) and one new bounded feature
+(`beta8-feature`). Each task runs one Direct cell and one current-candidate cell with Sol/xhigh,
+requested standard service, one attempt, and zero host retry. Execution is counterbalanced:
+bugfix Direct → bugfix candidate → feature candidate → feature Direct.
+
+The release gate was fixed before model calls:
+
+- all four infrastructure and external quality results pass;
+- each candidate emits a Direct receipt, reads no root Skill, and starts no child;
+- per task, candidate wall and Raw are no more than `10%` above same-task Direct;
+- per task, candidate tool calls do not exceed same-task Direct; and
+- normalized cost is reported but not gated because cached input depends on provider state.
+
+Any failed criterion stops publication without retrying a cell. Passing both tasks authorizes only
+focused version/packaging checks, remote publication verification, and local installation; it does
+not authorize another performance rollout.
+
+### Final-gate result
+
+All four cells completed with one attempt, zero retry, valid identity, and passing external quality.
+Both candidate cells selected Direct, emitted the canonical receipt, read no root Skill, started no
+child, and avoided second discovery, runtime-compatibility repair, and probe-expectation repair.
+
+| Task / arm | Quality | Wall* | Raw | Normalized USD | Tools | Root Skill reads |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Bugfix Direct | PASS | 58.574 s | 86,924 | $0.121724 | 5 | 0 |
+| Bugfix candidate | PASS | 60.757 s | 65,992 | $0.171664 | 3 | 0 |
+| Feature candidate | PASS | 56.557 s | 65,501 | $0.170967 | 3 | 0 |
+| Feature Direct | PASS | 50.067 s | 72,012 | $0.152919 | 4 | 0 |
+
+The bugfix gate passed: candidate wall `+3.727%`, Raw `-24.081%`, and two fewer tool calls. The
+feature gate failed only the predeclared wall bound: candidate wall `+12.963%` exceeded the `10%`
+limit, while Raw was `-9.042%`, tool calls were one lower, and every structural/quality condition
+passed. The trace contains no workflow repair round that explains the extra 6.490 seconds; the
+remaining wall cause is unknown/model-provider variance, not evidence for another product repair.
+
+Release decision: `release_eligible=false`. Do not publish, tag, package, install, or rerun a cell
+under this frozen gate. Changing the wall tolerance after observing the result requires a new user
+decision rather than a retrospective benchmark rewrite.
+
+### User-authorized prerelease decision
+
+On 2026-09-01, after reviewing the frozen result, the user explicitly accepted a `15%` wall
+tolerance for this prerelease and authorized publication without another performance rerun. The
+original `10%` gate and its failed feature-wall result above remain unchanged. Under the newly
+authorized boundary, both task cells are within tolerance, all quality/structure conditions remain
+passing, and the release chain is eligible. This decision authorizes only focused packaging checks,
+GitHub prerelease publication, and local installation; it does not turn either task observation
+into a general performance guarantee.

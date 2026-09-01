@@ -10,6 +10,7 @@
 - Make optional discovery fail soft and compose only applicable acceptance evidence. Python compilation is skipped when tests or CLI execution already imports every changed surface; failed or affected checks remain the only checks rerun.
 - Keep visible activation, route receipts, Usage modes, Night Shift, Spark/Luna/Terra fallback, Owner routing, Sol specialists, continuity, and final acceptance. Zero child starts now report concurrency `0` rather than counting the main model.
 - In one representative quality-passing confirmation versus released Beta7, the candidate observed wall time **−10.64%**, Raw Token **−1.36%**, and normalized comparison cost **−3.5%**, with zero root Skill reads. Wall time and cache behavior remain observational; this is not a general performance guarantee.
+- In the final two-task comparison against Direct, all four cells passed quality and infrastructure with one attempt and zero retry. The Beta8 bug-fix cell observed wall **+3.727%**, Raw Token **−24.081%**, and two fewer tool calls; the bounded-feature cell observed wall **+12.963%**, Raw Token **−9.042%**, and one fewer tool call. These task-level observations define the prerelease evidence boundary, not a universal speed claim.
 
 ## 0.5.3-beta.7 — 2026-08-28
 
