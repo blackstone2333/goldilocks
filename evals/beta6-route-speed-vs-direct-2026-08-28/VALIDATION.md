@@ -12,7 +12,8 @@ confirmation proved that structural and token/cost reduction. No further sample 
 
 This is one mature independent-parallel development fixture, not a general benchmark claim.
 Every model attempt used `gpt-5.6-sol` at high effort, requested standard service tier, ran in an
-isolated repository/HOME/CODEX_HOME, and received zero retry.
+isolated repository/HOME/CODEX_HOME, and received zero retry. Later Beta7/Beta8 candidate sections
+record their own frozen runtime settings and release gates.
 
 ## Results
 
@@ -148,5 +149,25 @@ expected word total; the external visible, hidden, compile, diff, scope, and fro
 passed.
 
 This one-task evidence supports the release decision but is not a general performance guarantee.
-The successful direction satisfies the user's conditional Beta8 publication gate; no additional
-behavioral run is authorized or needed.
+It became the first member of a stricter consecutive-stability gate; publication remained paused
+until a second candidate-only run met the predeclared bounds below.
+
+## Consecutive Beta8 stability gate
+
+The user required two consecutive quality-passing candidate runs before publication. A unique
+candidate-only stability mode then ran once in the existing dedicated test conversation. Direct
+was not rerun, there was no host retry, and the root Skill remained unread on both candidate runs.
+
+| Candidate run | Quality | Wall* | Raw | Normalized USD | Tools | Verification | Root Skill reads |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Refined confirmation | PASS | 121.000 s | 146,841 | $0.320499 | 7 | 0 | 0 |
+| Stability confirmation | PASS | 125.804 s | 151,256 | $0.351791 | 7 | 1 | 0 |
+
+The frozen acceptance bounds were wall difference at most `15%`, Raw difference at most `10%`,
+normalized-cost difference at most `10%`, equal passing quality, zero retry, and zero root Skill
+reads. The observed consecutive differences were wall `+3.970%`, Raw `+3.007%`, and normalized
+cost `+9.764%`; every bound passed.
+
+Release decision: publish `0.5.3-beta.8` as a prerelease. The evidence supports stable removal of
+the avoidable routine-Direct root-Skill round on this representative fixture; it does not claim a
+universal wall-time or cost advantage over Direct.
