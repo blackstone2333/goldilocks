@@ -515,7 +515,7 @@ def main() -> None:
             try:
                 connection.execute(
                     "UPDATE update_state SET latest_version = ?, notified_version = ? WHERE singleton = 1",
-                    ("0.5.3-beta.8", "0.5.3-beta.8"),
+                    ("0.5.3-beta.9", "0.5.3-beta.9"),
                 )
                 connection.commit()
             finally:
@@ -523,13 +523,13 @@ def main() -> None:
             first = run_reminder(plugin_root, data_dir)
             second = run_reminder(plugin_root, data_dir, turn_id="turn-2")
             assert first.returncode == 0 and second.returncode == 0
-            assert "⚠️ **Goldilocks 可更新：Beta5 → Beta8**" in first.stdout
+            assert "⚠️ **Goldilocks 可更新：Beta5 → Beta9**" in first.stdout
             assert "回复“更新”即可升级；当前任务仍使用 Beta5。" in first.stdout
             assert first.stdout == second.stdout, "notified_version must not suppress later task reminders"
-            assert "⚠️ **Goldilocks update available: Beta5 → Beta8**" in (
+            assert "⚠️ **Goldilocks update available: Beta5 → Beta9**" in (
                 run_reminder(plugin_root, data_dir, language="en").stdout
             )
-            write_manifest(plugin_root, "0.5.3-beta.8")
+            write_manifest(plugin_root, "0.5.3-beta.9")
             assert run_reminder(plugin_root, data_dir).stdout == "", "installing the target clears the reminder"
 
         hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]["SessionStart"]

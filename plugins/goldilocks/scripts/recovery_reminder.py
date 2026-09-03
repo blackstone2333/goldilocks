@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from native_terminal import read_terminal_state
 
 
-POLICY_VERSION = "0.5.3-beta.8"
+POLICY_VERSION = "0.5.3-beta.9"
 ROUTING_EXPERIMENT_ID = "routing-rationale-v3.2"
 GLOBAL_GRANT_KEY = "__global__"
 HOOK_HEALTH_TTL_DAYS = 30
@@ -28,12 +28,11 @@ MICRO_STYLE = (
     "For defects: evidence-backed cause—or explicitly unknown—fix and verification; expand when asked."
 )
 ROUTING_GATE = (
-    "For executable work, silently apply the Goldilocks zero-cost gate before specialist Skills. "
-    "Clear bounded work takes Direct without loading goldilocks:goldilocks or its references. "
-    "Load it only for unresolved ambiguity/cause, required continuity, or delegation/artifact "
-    "decomposition whose implementation gain clearly exceeds briefing, review, and integration. "
-    "Visible multi-unit implementation runs make-or-delegate before Lead edits; Direct remains valid "
-    "when transfer cost is higher. Skip pure conversation."
+    "For executable work, silently apply the Goldilocks zero-cost gate before Goldilocks orchestration. "
+    "Direct skips only goldilocks:goldilocks and its references; task-matching domain Skills load normally. "
+    "Load Goldilocks for ambiguity/cause, continuity, or delegation/artifact decomposition when "
+    "implementation gain clearly exceeds briefing, review, and integration. For visible multi-unit implementation, "
+    "make-or-delegate before Lead edits; Direct is valid when transfer costs more. Skip pure conversation."
 )
 MINIMUM_SUFFICIENT_VERIFICATION = (
     "Minimum-sufficient verification: in one first call, guard optional files (`[ -f \"$f\" ]`) while reading existing "

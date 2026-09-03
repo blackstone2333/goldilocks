@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Keep Beta8 identity, bootstrap intent, and stable install guidance coherent."""
+"""Keep Beta9 identity, domain-Skill compatibility, and stable guidance coherent."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-BETA = "0.5.3-beta.8"
+BETA = "0.5.3-beta.9"
 STABLE_REF = "v0.5.2"
 
 
@@ -54,6 +54,7 @@ def main() -> None:
     )
 
     root_skill = read(PLUGIN / "skills" / "goldilocks" / "SKILL.md")
+    recovery = read(PLUGIN / "scripts" / "recovery_reminder.py")
     hygiene = read(PLUGIN / "skills" / "goldilocks" / "references" / "final-output-hygiene.md")
     notices = read(PLUGIN / "THIRD_PARTY_NOTICES.md")
     assert "[final-output-hygiene.md](references/final-output-hygiene.md)" in root_skill
@@ -61,6 +62,10 @@ def main() -> None:
     assert "Do not add a freeze, scanner, automatic agent" in hygiene
     assert "https://github.com/LB623/no-negative-echo" in notices
     assert "independent, narrowed rewrite" in notices
+    assert "任务匹配的 domain Skill" in root_skill
+    assert "Direct" in root_skill and "Goldilocks orchestration" in root_skill
+    assert "task-matching domain Skill" in recovery
+    assert "Direct" in recovery and "Goldilocks orchestration" in recovery
 
     stable_install_files = (
         ROOT / "README.md",
@@ -82,10 +87,10 @@ def main() -> None:
 
     for path in (ROOT / "CHANGELOG.md", ROOT / "CHANGELOG.zh-CN.md"):
         body = read(path)
-        assert f"## {BETA} — 2026-09-01" in body, path
-        assert "route_unavailable" in body and "Direct" in body and "decisive" in body, path
+        assert f"## {BETA} — 2026-09-03" in body, path
+        assert "Direct" in body and "Skill" in body, path
 
-    print("Goldilocks 0.5.3-beta.8 release contract passed; stable installs remain v0.5.2.")
+    print("Goldilocks 0.5.3-beta.9 release contract passed; stable installs remain v0.5.2.")
 
 
 if __name__ == "__main__":

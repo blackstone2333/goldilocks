@@ -2,6 +2,14 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.5.3-beta.9 — 2026-09-03
+
+### Domain Skills remain active on Direct
+
+- Scope Direct precisely: it skips only the full Goldilocks orchestration path. Task-matching domain Skills—such as design, frontend, and document Skills—still load normally under the host's Skill-selection rules after routing.
+- Add focused regression coverage for this compatibility boundary while retaining Beta8's lightweight Direct entry, visible activation and route receipt, on-demand Usage, fallback, continuity, and minimum-sufficient verification behavior.
+- This is a focused compatibility fix from the clean `v0.5.3-beta.8` baseline; the existing Beta8 performance evidence remains the applicable benchmark boundary.
+
 ## 0.5.3-beta.8 — 2026-09-01
 
 ### Faster Direct entry with full orchestration on demand

@@ -7,7 +7,7 @@ description: Adaptive orchestration and continuity for work with uncertainty, un
 
 默认 Direct。守住 quality、authority、safety、acceptance；只增加改变结果的流程。
 
-清晰的例行 Direct 由宿主 Hook 的短合同承载，不为确认 Direct 加载本文件。仅在零成本门发现 uncertainty、unknown cause、persistence、可能有净收益的委派/多单元 artifact，或用户显式调用 Goldilocks 时进入本 Skill。
+清晰的例行 Direct 由宿主 Hook 的短合同承载，不为确认 Direct 加载本文件。Direct 只跳过 Goldilocks orchestration；路由后仍按常规加载任务匹配的 domain Skill，绝不得因 Direct 抑制它。仅在零成本门发现 uncertainty、unknown cause、persistence、可能有净收益的委派/多单元 artifact，或用户显式调用 Goldilocks 时进入本 Skill。
 
 ## Direct gate
 

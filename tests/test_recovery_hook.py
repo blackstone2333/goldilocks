@@ -278,10 +278,10 @@ def main() -> None:
         assert "standard__<semantic>_<model>" not in style_context
         assert "lead__<semantic>_<model>" not in style_context
         assert "silently apply the Goldilocks zero-cost gate" in style_context
-        assert "before specialist Skills" in style_context
+        assert "before Goldilocks orchestration" in style_context
         assert "goldilocks:goldilocks" in style_context
-        assert "Clear bounded work takes Direct" in style_context
-        assert "without loading goldilocks:goldilocks or its references" in style_context
+        assert "Direct skips only goldilocks:goldilocks and its references" in style_context
+        assert "task-matching domain Skills load normally" in style_context
         assert "implementation gain clearly exceeds briefing, review, and integration" in style_context
         assert "pure conversation" in style_context
         assert "Minimum-sufficient verification" in style_context
@@ -413,6 +413,19 @@ def main() -> None:
         )
         cohesive_context = json.loads(cohesive.stdout)["hookSpecificOutput"]["additionalContext"]
         assert "Likely multi-unit work detected" not in cohesive_context
+
+        direct_design = run_hook(
+            nested,
+            "UserPromptSubmit",
+            data_dir=data_dir,
+            prompt="Design a focused settings page using the apple-design domain Skill.",
+            turn_id="direct-design-domain-skill",
+        )
+        direct_design_context = json.loads(direct_design.stdout)["hookSpecificOutput"][
+            "additionalContext"
+        ]
+        assert "Direct skips only goldilocks:goldilocks and its references" in direct_design_context
+        assert "task-matching domain Skills load normally" in direct_design_context
 
         night_shift_discussion = run_hook(
             nested,

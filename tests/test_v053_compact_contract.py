@@ -170,8 +170,8 @@ def main() -> None:
     assert "run one make-or-delegate check" in routed
     assert "Small files need no route-card/kernel" in routed
     assert "only if delegation may pay" in routed
-    assert "Clear bounded work takes Direct" in english
-    assert "without loading goldilocks:goldilocks or its references" in english
+    assert "Direct skips only goldilocks:goldilocks and its references" in english
+    assert "task-matching domain Skills load normally" in english
     assert "implementation gain clearly exceeds briefing, review, and integration" in english
     assert "CONCURRENCY counts host-confirmed child starts" in english
     assert "none is 0, never 1 for the main model" in english
@@ -190,7 +190,7 @@ def main() -> None:
     ):
         assert required in routed, required
 
-    print("Goldilocks 0.5.3-beta.8 compact contract passed.")
+    print("Goldilocks 0.5.3-beta.9 compact contract passed.")
 
 
 if __name__ == "__main__":
