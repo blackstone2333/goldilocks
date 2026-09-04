@@ -1,4 +1,4 @@
-# Goldilocks 0.6.1 plan
+# Goldilocks 0.6.1 执行计划
 
 ```yaml
 version: 0.6.1
@@ -7,7 +7,8 @@ owner: main_model
 updated: 2026-09-04
 ```
 
-1. [x] Replace fixed inserted-message labels with the two-entry, material-impact rule in the root workflow, ACTIVE template, and references. **Owner:** implementation chain.
-2. [x] Update workflow diagrams, release documentation, version metadata, and Bootstrap stable-ref behavior. **Owner:** documentation/release chain.
-3. [x] Run the focused steering, release, Bootstrap, ACTIVE/compact, Skill, Plugin, JSON, and diff contracts after integration. **Owner:** main model. **Evidence:** all passed on 2026-09-04.
-4. [ ] Commit, push `release/v0.6.1` and `main`, create immutable `v0.6.1`, publish a non-prerelease Latest Release, and verify the remote result. **Owner:** main model.
+1. [x] 在根工作流、ACTIVE 模板与相关参考中，用双入口和“实质影响”规则替换固定的插入消息标签。**Owner：** implementation chain。
+2. [x] 更新中英文流程图、发布文档、版本元数据与 Bootstrap 稳定版本行为。**Owner：** documentation/release chain。
+3. [x] 为项目记录增加语言策略：人类可读内容跟随用户工作语言，稳定技术/机器标识保留英文，内部记录不自动双语重复。**Owner：** main model。
+4. [x] 整合后运行聚焦的 steering、release、Bootstrap、ACTIVE/compact、Skill、Plugin、JSON 与 diff 合同。**Owner：** main model。**Evidence：** 2026-09-04 全部通过。
+5. [ ] 提交并推送 `release/v0.6.1` 与 `main`，按用户明确授权覆盖 `v0.6.1` Tag，发布非 prerelease 的 Latest Release，并核对远端结果。**Owner：** main model。

@@ -35,7 +35,7 @@ Later text must never silently erase an uncompleted objective. Explicit language
 
 ## Record event contract
 
-The trigger is a real state event, not a keyword. When an event applies, update the project's existing record; when it does not, do not create or read a file for ceremony. Link evidence instead of copying conversations or logs.
+The trigger is a real state event, not a keyword. When an event applies, update the project's existing record; when it does not, do not create or read a file for ceremony. Link evidence instead of copying conversations or logs. Human-readable record prose follows the work unit's aligned user language under [continuity.md](continuity.md); stable technical and machine identifiers remain English, without automatic bilingual duplication.
 
 | Record | Unit and purpose | Read trigger | Write trigger | Completion behavior |
 |---|---|---|---|---|

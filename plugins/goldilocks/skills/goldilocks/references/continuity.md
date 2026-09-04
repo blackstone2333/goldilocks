@@ -4,6 +4,8 @@ Preserve the minimum durable context another competent human or agent needs to c
 
 The event and read/write source of truth is [task-lifecycle.md](task-lifecycle.md). This reference supplies persistence mechanics. Spec and Plan belong to an acceptance-bearing work unit, not each user message and not one ever-growing project file.
 
+Write human-readable record prose in the language used to align the work unit with the user. Preserve an established repository convention or an existing record's dominant language unless the user asks to change it; a stray inserted phrase does not switch the record language. Keep filenames, paths, YAML keys and status enums, code identifiers, commands, API/model names, and stable protocol terms such as `Direct`, `TDD`, `Lead`, `Fast`, and `acceptance` in English. Do not duplicate the same record bilingually unless it is a public bilingual surface or the user explicitly requests both languages. This keeps the operating language dense without weakening technical anchors.
+
 ## Determine project records
 
 | Work shape | Durable record |

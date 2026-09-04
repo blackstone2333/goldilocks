@@ -160,6 +160,8 @@ docs/
 └── ACTIVE.md           # compact execution frontier for recovery
 ```
 
+Human-readable record prose follows the language used to align that work unit with the user. Stable filenames, machine fields, code and commands, API/model names, and compact protocol terms stay in English. Goldilocks does not duplicate every record bilingually unless the surface is public or the user explicitly asks for both languages.
+
 `ACTIVE.md` records completed work, the exact next action, pending or consumed steering, repository evidence, verification, and the do-not-repeat boundary. After compaction, repository state wins over stale memory. A new task continues from the documents directly; it does not automatically recruit a second owner.
 
 ## Ownership-based orchestration
@@ -313,6 +315,6 @@ These results support replacing Superpowers on the tested workflow surface; they
 
 ## Status
 
-This package is the stable Goldilocks `v0.6.1` no-Hook, event-triggered workflow. It separates a normal task entry from execution-time steering: a casual interruption is answered and execution resumes; only a message that materially affects the current goal, scope, order, authority, or acceptance triggers semantic re-evaluation. The release-candidate smoke test passed the same quality gate as Beta9 and Direct while observing 11.017% lower wall time and 23.740% fewer Raw Tokens than Direct on that single frozen task; this is task-specific evidence, not a universal performance promise. Earlier [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.md) and [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.md) comparisons remain historical evidence with their original limits.
+This package is the stable Goldilocks `v0.6.1` no-Hook, event-triggered workflow. It separates a normal task entry from execution-time steering: a casual interruption is answered and execution resumes; only a message that materially affects the current goal, scope, order, authority, or acceptance triggers semantic re-evaluation. Project records now follow the user's working language while stable technical terms remain English, preserving the compact mixed-language kernel without bilingual duplication. The release-candidate smoke test passed the same quality gate as Beta9 and Direct while observing 11.017% lower wall time and 23.740% fewer Raw Tokens than Direct on that single frozen task; this is task-specific evidence, not a universal performance promise. Earlier [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.md) and [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.md) comparisons remain historical evidence with their original limits.
 
 MIT licensed. Developed by Charles Roc and contributors. Goldilocks is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail, Caveman, and ADHD; those projects do not endorse it.

@@ -53,6 +53,8 @@ def main() -> None:
 
     root_skill = read(PLUGIN / "skills" / "goldilocks" / "SKILL.md")
     hygiene = read(PLUGIN / "skills" / "goldilocks" / "references" / "final-output-hygiene.md")
+    lifecycle = read(PLUGIN / "skills" / "goldilocks" / "references" / "task-lifecycle.md")
+    continuity = read(PLUGIN / "skills" / "goldilocks" / "references" / "continuity.md")
     notices = read(PLUGIN / "THIRD_PARTY_NOTICES.md")
     assert "[final-output-hygiene.md](references/final-output-hygiene.md)" in root_skill
     assert "accepted, verified current state" in hygiene
@@ -65,6 +67,10 @@ def main() -> None:
     assert "Usage 仅 on-demand，无 automatic 模式" in root_skill
     assert "explicit automatic" not in root_skill
     assert not (PLUGIN / "hooks" / "hooks.json").exists()
+    assert "work unit's aligned user language" in lifecycle
+    assert "language used to align the work unit with the user" in continuity
+    assert "a stray inserted phrase does not switch the record language" in continuity
+    assert "Do not duplicate the same record bilingually" in continuity
 
     readme = read(ROOT / "README.md")
     readme_zh = read(ROOT / "README.zh-CN.md")
@@ -85,6 +91,8 @@ def main() -> None:
     assert "是否实质影响当前目标" in readme_zh
     assert "归类 NEW / QUESTION / ADD" not in readme_zh
     assert "每个可执行任务都会" not in readme_zh
+    assert "Human-readable record prose follows the language used to align that work unit" in readme
+    assert "项目记录中的人类可读内容，默认跟随该工作单元与用户对齐时使用的语言" in readme_zh
     assert "has no automatic mode, Hook, or background recorder" in guide
     assert "no Goldilocks root load" in guide
 

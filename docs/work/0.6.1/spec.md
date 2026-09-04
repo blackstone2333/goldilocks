@@ -1,27 +1,32 @@
-# Goldilocks 0.6.1 specification
+# Goldilocks 0.6.1 规格说明
 
 ```yaml
 version: 0.6.1
-status: confirmed
+status: accepted
 date: 2026-09-04
 ```
 
-## Outcome
+## 目标
 
-Make execution-time steering natural without weakening the existing Direct-first, no-Hook workflow.
+在不削弱 Direct-first、无 Hook 工作流的前提下，让执行中引导更自然，并让项目记录采用用户的工作语言。
 
-- A new task enters alignment, then the minimum necessary route.
-- A message received while work is in progress is not treated as a second new task.
-- If it does not materially affect the current goal, scope, order, authority, or acceptance, answer or absorb it and resume the same execution point.
-- If it does, interpret its meaning in context: pause, stop, change, strengthen, or re-plan. Ask only when a material ambiguity remains; update only records affected by that decision.
+- 新任务先完成需求对齐，再进入最小必要路线。
+- 工作进行中收到的消息不被当成第二个新任务。
+- 如果消息不实质影响当前目标、范围、顺序、权限或验收，直接回答或吸收，然后回到同一执行位置。
+- 如果产生实质影响，则结合语境判断暂停、停止、改变、加强或重排；只有关键歧义仍存在时才提问，并且只更新受该决定影响的记录。
+- Spec、Plan、ACTIVE、handoff、debug、ideas 与 CHANGELOG 中的人类可读内容跟随工作单元对齐时的用户语言；文件名、机器字段、代码/命令、API/模型名及 `Direct`、`TDD`、`Lead`、`Fast`、`acceptance` 等稳定术语保留英文。
+- 除公开双语材料或用户明确要求外，不重复生成中英文两套内部记录。
 
-## Non-goals
+## 非目标
 
-- Do not restore Hook, global compaction prompts, automatic reminders, or a user-visible fixed message taxonomy.
-- Do not change Direct's independent domain-Skill matching or the existing record-event boundaries.
+- 不恢复 Hook、全局 compaction prompt、自动提醒或面向用户的固定消息分类。
+- 不改变 Direct 对领域 Skill 的独立匹配，也不改变现有记录事件边界。
+- 不把某个临时插入消息的语言当成整个工作单元切换语言的依据。
 
-## Acceptance
+## 验收标准
 
-- Root workflow wording and both public diagrams express the two-entry model and the material-impact threshold.
-- No public `NEW / QUESTION / ADD` formula remains as an operating requirement.
-- Plugin, marketplace, Bootstrap, installation instructions, changelog, and release contract consistently identify `0.6.1`.
+- 根工作流与中英文公开流程图都表达双入口模型和实质影响门槛。
+- 公开规则不再把 `NEW / QUESTION / ADD` 公式作为运行要求。
+- 记录生命周期明确采用用户工作语言，并保留稳定英文技术锚点，不自动复制双语内容。
+- 本版 Spec/Plan 以中文为人类可读语言，机器字段和稳定协议术语保留英文。
+- Plugin、marketplace、Bootstrap、安装说明、更新记录与发布合同统一标识为 `0.6.1`。
