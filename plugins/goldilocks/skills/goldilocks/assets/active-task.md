@@ -13,7 +13,7 @@ session_id: <host session id>
 
 ## Objective
 
-<Original requested end state. Change only for an explicit REPLACE or CANCEL.>
+<Original requested end state. Change only when the user materially changes or stops it.>
 
 ## Scope and non-goals
 
@@ -21,11 +21,11 @@ session_id: <host session id>
 - Non-goals:
 - Acceptance / terminal condition link:
 
-## Steering ledger
+## Material steering ledger
 
-| ID | Type | State | Instruction and effect |
-|---|---|---|---|
-| S001 | ADD / REPLACE / CANCEL / QUESTION | pending / applied / superseded | <short effect> |
+| ID | State | Decision and effect |
+|---|---|---|
+| S001 | pending / applied / superseded | <pause, stop, change, strengthen, re-plan, or other material effect> |
 
 ## Execution frontier
 

@@ -728,7 +728,7 @@ def plugin_actions(host: str, verified_plugin: bool, clean_install: bool = False
     actions: list[list[str]] = []
     if verified_plugin and clean_install:
         # Let Codex unregister the active plugin rather than mutating registry
-        # state ourselves; the subsequent add installs the sole v0.6.0 entry.
+        # state ourselves; the subsequent add installs the sole v0.6.1 entry.
         plugin_id = str((registry or {}).get("plugin_id") or "goldilocks@goldilocks-local")
         actions.append(["codex", "plugin", "remove", plugin_id, "--json"])
         # A local marketplace already has a registered source; refresh its
@@ -739,7 +739,7 @@ def plugin_actions(host: str, verified_plugin: bool, clean_install: bool = False
     actions.extend([
         [
             "codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks",
-            "--ref", "v0.6.0", "--json",
+            "--ref", "v0.6.1", "--json",
         ],
         ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
     ])
@@ -1197,8 +1197,8 @@ def clean_plugin_postcondition(record: dict[str, Any] | None, old_targets: list[
     source = Path(record["path"])
     if not native_pack(source):
         return "Codex registry source is no longer a valid Goldilocks plugin after refresh."
-    if native_plugin_version(source) != "0.6.0":
-        return "enabled Goldilocks plugin is not version 0.6.0 after refresh."
+    if native_plugin_version(source) != "0.6.1":
+        return "enabled Goldilocks plugin is not version 0.6.1 after refresh."
     return None
 
 

@@ -1,4 +1,4 @@
-# Goldilocks v0.6.0: Agent Guide
+# Goldilocks v0.6.1: Agent Guide
 
 This guide is for an AI agent that has been given the Goldilocks repository and needs
 to decide—quickly but with evidence—whether to recommend, install, use, or verify it.
@@ -11,7 +11,7 @@ external/destructive action.
 
 | Project fact | Value |
 |---|---|
-| Current package | Stable `v0.6.0` |
+| Current package | Stable `v0.6.1` |
 | Primary host path | Native Codex Plugin |
 | Portable path | Skills-compatible hosts and temporary Bootstrap fallback |
 | Normal default | Host Direct, with no Goldilocks root load, workflow state, or synthetic receipt |
@@ -180,7 +180,7 @@ user files, and may append the four missing official `[agents.*]` registrations 
 `config.toml` while preserving all other settings and comments. It never installs a
 global `compact_prompt`; explicit clean install may remove only an exact recognized
 Goldilocks legacy prompt and preserves custom or experimental compaction settings. On Codex, it prefers a valid enabled native
-plugin, otherwise can present locked v0.6.0 stable plugin actions. It never self-removes a
+plugin, otherwise can present locked v0.6.1 stable plugin actions. It never self-removes a
 portable Skill; it emits a cleanup handoff only after native plugin and agents verify.
 
 The historical v0.5.2 patch restored Python 3.9 compatibility for valid repeated

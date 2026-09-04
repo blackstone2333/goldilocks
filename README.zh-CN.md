@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.6.0-2563eb" alt="版本 0.6.0">
+  <img src="https://img.shields.io/badge/version-0.6.1-2563eb" alt="版本 0.6.1">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
@@ -38,7 +38,7 @@ Goldilocks 是面向 Codex、Claude Code 和其他兼容 Skills 宿主的 Direct
 把下面这段直接发给你正在使用的 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.6.0 正式版，并锁定 Git ref v0.6.0。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.6.1 正式版，并锁定 Git ref v0.6.1。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
 ```
 
 ### Codex CLI 或 Desktop
@@ -46,7 +46,7 @@ Goldilocks 是面向 Codex、Claude Code 和其他兼容 Skills 宿主的 Direct
 优先安装原生 Plugin。它会带上根门禁、按需 Usage 统计，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。路由、连续性和恢复由 Skill 及其事件触发 ACTIVE 状态承载。Goldilocks 不安装 Hook，也不设置全局压缩提示；Codex 继续使用原生压缩行为。
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.6.0
+codex plugin marketplace add blackstone2333/goldilocks@v0.6.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -106,8 +106,8 @@ max_concurrent_threads_per_session = 6
 
 ```mermaid
 flowchart TD
-    A["收到消息"] --> B["归类 NEW / QUESTION / ADD / …<br/>独立匹配适用的领域 Skill"]
-    B --> C{"终态、权限和验收是否清楚，且没有<br/>实质不确定性、连续性、风险或有效委派？"}
+    A["新任务"] --> B["对齐终态、权限和验收；<br/>匹配适用的领域 Skill"]
+    B --> C{"是否清楚且低风险，且没有实质不确定性、<br/>连续性需求或有效委派？"}
     C -- "是" --> D["宿主 Direct<br/>不加载 Goldilocks 根 Skill；<br/>领域 Skill 继续生效"]
     C -- "否" --> E["加载 Goldilocks"]
     E --> F["对齐尚未解决的选择"]
@@ -115,13 +115,20 @@ flowchart TD
     G --> H["只按需要计划和路由：<br/>Lead、Standard、Fast、Economy 或 Direct"]
     D --> I["执行"]
     H --> I
-    I --> J{"中途是否出现新的不确定性、<br/>持久化需求或有效委派？"}
-    J -- "是" --> E
-    J -- "否" --> K["最小充分验收"]
-    K --> L{"是否触发了持久记录事件？"}
-    L -- "是" --> M["只更新对应记录；<br/>如存在 ACTIVE 则关闭"]
-    L -- "否" --> N["完成，不留下流程垃圾"]
-    M --> N
+    I --> O{"中途是否出现新的不确定性、<br/>持久化需求或有效委派？"}
+    I -. "仅在收到新消息时" .-> J["执行中收到新消息"]
+    J --> K{"是否实质影响当前目标、范围、顺序、<br/>权限或验收？"}
+    K -- "否" --> L["直接回答或吸收信息，<br/>回到原执行位置"]
+    L --> I
+    K -- "是" --> M["按语义判断暂停、停止、改变、加强或重排；<br/>只有关键歧义才提问"]
+    M --> N["只更新受影响记录，然后继续"]
+    N --> I
+    O -- "是" --> E
+    O -- "否" --> P["最小充分验收"]
+    P --> Q{"是否触发了持久记录事件？"}
+    Q -- "是" --> R["只更新对应记录；<br/>如存在 ACTIVE 则关闭"]
+    Q -- "否" --> S["完成，不留下流程垃圾"]
+    R --> S
 ```
 
 不变的是最终质量，而不是流程数量，也不是谁亲手写代码。Goldilocks 不会因为工具箱里有 spec、plan、worktree、子智能体或连续性文档，就强行创建它们。
@@ -306,6 +313,6 @@ Spark 没有公开数值费率。统一比较采用官方已知模型价格，�
 
 ## 当前状态
 
-当前包是 Goldilocks `v0.6.0` 正式版，采用无 Hook、按事件触发的轻量工作流。发布候选在同一冻结任务上与 Beta9、Direct 均通过质量门，并相对 Direct 观察到耗时降低 11.017%、Raw Token 降低 23.740%；这只是该任务的实测结果，不构成普遍提速承诺。更早的 [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md) 与 [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md) 对比仍按原边界保留为历史证据。
+当前包是 Goldilocks `v0.6.1` 正式版，采用无 Hook、按事件触发的轻量工作流。它把正常新任务与执行中插话分开：随口插话直接答完并回到原位置；只有实质影响当前目标、范围、顺序、权限或验收的内容，才进入语义判断与必要的重排。发布候选在同一冻结任务上与 Beta9、Direct 均通过质量门，并相对 Direct 观察到耗时降低 11.017%、Raw Token 降低 23.740%；这只是该任务的实测结果，不构成普遍提速承诺。更早的 [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md) 与 [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md) 对比仍按原边界保留为历史证据。
 
 MIT 许可证。由 Charles Roc 和贡献者开发。Goldilocks 是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。

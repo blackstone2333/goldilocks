@@ -45,7 +45,7 @@ def output(result: subprocess.CompletedProcess[str]) -> dict:
 def make_native_plugin(root: Path) -> Path:
     native = root / "native-plugin"
     (native / ".codex-plugin").mkdir(parents=True)
-    (native / ".codex-plugin" / "plugin.json").write_text('{"name":"goldilocks","version":"0.6.0"}\n')
+    (native / ".codex-plugin" / "plugin.json").write_text('{"name":"goldilocks","version":"0.6.1"}\n')
     (native / "skills" / "goldilocks").mkdir(parents=True)
     (native / "skills" / "goldilocks" / "SKILL.md").write_text("# Goldilocks\n")
     (native / "scripts").mkdir()
@@ -817,7 +817,7 @@ print(module.discover_native_plugin('codex') or '')
         assert partial_plan["native_plugin"] == "absent"
         assert "hook_trust_handoff" not in partial_plan
         assert partial_plan["plugin_actions"] == [
-            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.6.0", "--json"],
+            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.6.1", "--json"],
             ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
         ]
         assert partial_plan["portable_cleanup"]["executed_by_bootstrap"] is False
@@ -841,7 +841,7 @@ print(module.discover_native_plugin('codex') or '')
         assert upgraded["experience"] == "full" and upgraded["status"] == "installed"
         assert [row["command"] for row in upgraded["plugin_action_results"]] == partial_plan["plugin_actions"]
         calls = (root / "codex.log").read_text(encoding="utf-8")
-        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.6.0 --json" in calls
+        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.6.1 --json" in calls
         assert "plugin add goldilocks@goldilocks-local --json" in calls
         assert "npx" not in calls
         assert output(
@@ -964,7 +964,7 @@ print(module.discover_native_plugin('codex') or '')
     for rebuild, expected in ((True, "installed"), (False, "partial")):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); home = root / "codex"
-            cache = make_native_plugin(home / "plugins" / "cache" / "goldilocks-local" / "goldilocks" / "0.6.0")
+            cache = make_native_plugin(home / "plugins" / "cache" / "goldilocks-local" / "goldilocks" / "0.6.1")
             source = make_native_plugin(root / "marketplace-source")
             env = stateful_marketplace_codex(root, cache, source, rebuild=rebuild)
             env["CODEX_HOME"] = str(home); env["PLUGIN_ROOT"] = str(source)
@@ -972,7 +972,7 @@ print(module.discover_native_plugin('codex') or '')
             result = output(command("--apply", "--yes", "--json", "--clean-install", "--host", "codex", "--target-dir", str(target), "--state-dir", str(state), env=env))
             assert result["status"] == expected, result
             if rebuild:
-                assert cache.exists() and bootstrap_module().native_plugin_version(cache) == "0.6.0"
+                assert cache.exists() and bootstrap_module().native_plugin_version(cache) == "0.6.1"
                 checked = output(command("--check", "--json", "--host", "codex", "--target-dir", str(target), "--state-dir", str(state), env=env))
                 assert checked["status"] == "current" and checked["experience"] == "full"
             else:

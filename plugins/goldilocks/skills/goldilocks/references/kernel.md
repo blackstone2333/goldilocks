@@ -1,6 +1,6 @@
 # Kernel
 
-Enter routing only after message classification and outcome alignment. Direct is a post-alignment ownership choice, never a shortcut around unresolved requirements. For non-simple or steered work, follow [task-lifecycle.md](task-lifecycle.md); a Plan describes execution because the work needs it, not as paperwork to justify a route.
+Enter routing only after new-task outcome alignment, or after a material in-flight message has been semantically understood and the affected outcome is aligned. Direct is a post-alignment ownership choice, never a shortcut around unresolved requirements. For non-simple or materially steered work, follow [task-lifecycle.md](task-lifecycle.md); a Plan describes execution because the work needs it, not as paperwork to justify a route.
 
 ## Route / Owner
 
@@ -26,7 +26,7 @@ Night Shift：economy→Luna；urgent deterministic code→Spark；不可用时�
 
 ## Engines
 
-**lifecycle** 定 classify→align→record→plan/route→execute/continuity→accept/update/handoff/archive 顺序。**align** 定 end state。**diagnose** full evidence→reproduce/trace→falsifiable cause→earliest shared fix；第二次 recurrence 写 continuity，三次失败即 escalate。**build** inspect/reuse→最小 fail-first acceptance→最小实现。**prove** fresh evidence + final diff/status；integrated work 要 owner evidence + combined acceptance。**evolve** 只凭 reproducible behavior。**artifact** 定 unit/interface/assembly/acceptance。
+**lifecycle** 定新任务 `align→record→plan/route→execute/continuity→accept/update/handoff/archive` 顺序；执行中插话只先作一次实质影响判断，无影响则回答/吸收并回到原位置，有影响才按语义调整并对齐受影响结果。**align** 定 end state。**diagnose** full evidence→reproduce/trace→falsifiable cause→earliest shared fix；第二次 recurrence 写 continuity，三次失败即 escalate。**build** inspect/reuse→最小 fail-first acceptance→最小实现。**prove** fresh evidence + final diff/status；integrated work 要 owner evidence + combined acceptance。**evolve** 只凭 reproducible behavior。**artifact** 定 unit/interface/assembly/acceptance。
 
 Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与验证设施；普通 low-risk change 不新增 hash、contract freeze、baseline 或 gate，除非能指出具体事故，并说明 Git/version/PK/transaction/unique/type/ordinary tests 为何不足。一次 authoritative check 已给 decisive evidence 即停止；已有 safeguards 不删；auth/data/irreversible/release 按项目风险。
 
@@ -36,7 +36,7 @@ Verification 用 minimum-sufficient：默认复用已有 evidence、runner 与�
 
 ## Continuity / completion — protocol island
 
-work 必须跨越 compaction/session、explicit PAUSE/RESUME、long wait、delegation/handoff，或插话的返回点否则会丢失时，才建立/更新 `.goldilocks/ACTIVE.md`；普通 prompt、QUESTION 或短 Direct 不建。frontmatter 写当前宿主 `session_id`；恢复只可选择 cwd/祖先或同一 Git registry 的 registered worktree 中，与当前 objective/repository 匹配、`status: active`、`session_id` 精确匹配的唯一 frontier；多个或无精确匹配均不猜测。文件仅存在不得触发读取。机器字段固定且逐项一次；值可自由表达：
+work 必须跨越 compaction/session、真实 pause/resume、long wait、delegation/handoff，或实质插话的返回点否则会丢失时，才建立/更新 `.goldilocks/ACTIVE.md`；普通 prompt、简单插话或短 Direct 不建。frontmatter 写当前宿主 `session_id`；恢复只可选择 cwd/祖先或同一 Git registry 的 registered worktree 中，与当前 objective/repository 匹配、`status: active`、`session_id` 精确匹配的唯一 frontier；多个或无精确匹配均不猜测。文件仅存在不得触发读取。机器字段固定且逐项一次；值可自由表达：
 
 `当前 Owner/Current Owner` · `状态/State` · `证据/Evidence` · `决策/Decision` · `下一步/Next action` · `阻塞/Blocker` · `验收/Acceptance` · `交接/Handoff`。
 

@@ -1,4 +1,4 @@
-# Sol Specialists (0.6.0 host contract)
+# Sol Specialists (0.6.1 host contract)
 
 Require explicit user authorization. It is a visible Codex task/thread at Sol/high—not
 a hidden native subagent, external worker, or

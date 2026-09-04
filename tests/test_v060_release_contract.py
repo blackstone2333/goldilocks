@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Keep the 0.6.0 identity and no-Hook guidance coherent."""
+"""Keep the 0.6.1 identity and no-Hook guidance coherent."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins" / "goldilocks"
-RELEASE = "0.6.0"
+RELEASE = "0.6.1"
 RELEASE_REF = f"v{RELEASE}"
 
 
@@ -72,10 +72,18 @@ def main() -> None:
     assert "explicitly established earlier" in readme
     assert "no Hook or background process records one automatically" in readme
     assert "does not load the Goldilocks root Skill" in readme
+    assert 'I -. "Only if a new message arrives" .-> J["Execution-time message"]' in readme
+    assert 'I --> J["Execution-time steering arrives"]' not in readme
+    assert "Does it materially affect the current goal" in readme
+    assert "Classify NEW / QUESTION / ADD" not in readme
     assert "Every executable turn now shows" not in readme
     assert "先前已经显式建立可用基线" in readme_zh
     assert "没有 Hook 或后台流程自动记录基线" in readme_zh
     assert "不加载 Goldilocks 根 Skill" in readme_zh
+    assert 'I -. "仅在收到新消息时" .-> J["执行中收到新消息"]' in readme_zh
+    assert 'I --> J["执行中收到插话"]' not in readme_zh
+    assert "是否实质影响当前目标" in readme_zh
+    assert "归类 NEW / QUESTION / ADD" not in readme_zh
     assert "每个可执行任务都会" not in readme_zh
     assert "has no automatic mode, Hook, or background recorder" in guide
     assert "no Goldilocks root load" in guide
@@ -89,7 +97,7 @@ def main() -> None:
     for path in current_install_files:
         body = read(path)
         assert RELEASE_REF in body or RELEASE in body, path
-        assert "v0.6.0-beta.1" not in body, path
+        assert "v0.6.1-beta.1" not in body, path
 
     bootstrap = read(PLUGIN / "skills" / "goldilocks-bootstrap" / "scripts" / "bootstrap.py")
     bootstrap_reference = read(PLUGIN / "skills" / "goldilocks-bootstrap" / "references" / "bootstrap.md")
@@ -102,7 +110,7 @@ def main() -> None:
         assert f"## {RELEASE} — 2026-09-04" in body, path
         assert "Direct" in body and "Skill" in body, path
 
-    print("Goldilocks 0.6.0 release contract passed; stable identity is coherent.")
+    print("Goldilocks 0.6.1 release contract passed; stable identity is coherent.")
 
 
 if __name__ == "__main__":

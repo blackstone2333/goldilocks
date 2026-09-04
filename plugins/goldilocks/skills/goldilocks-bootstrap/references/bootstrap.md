@@ -28,7 +28,7 @@ When the enabled plugin comes from the local Goldilocks marketplace, clean insta
 that existing marketplace entry: it unregisters the entry, clears the identified old
 Goldilocks cache/state, then adds the same marketplace entry again and independently
 checks Codex's enabled-plugin registry. A published Git install instead remains locked
-to stable `v0.6.0`; Bootstrap never assumes an unreleased remote tag exists.
+to stable `v0.6.1`; Bootstrap never assumes an unreleased remote tag exists.
 
 Bootstrap does not rely on the earlier plan during apply: it re-reads role declarations
 before any template write, completes safe registration before copying a template, reads
@@ -44,7 +44,7 @@ provides the Skill, companion agents, and usage reporter; Goldilocks ships no Ho
 feature or source. Routing and continuity remain in the Skill and `ACTIVE.md`. A
 portable-only Codex plan is
 `experience=partial`: its initial
-plan visibly includes the stable v0.6.0 marketplace and plugin actions, which run
+plan visibly includes the stable v0.6.1 marketplace and plugin actions, which run
 only after the first `--yes`. Failure leaves
 the portable Skill and installed agents intact as partial; Bootstrap never self-removes.
 Apply returns a newly read final state, not its old plan: a registration-only repair is

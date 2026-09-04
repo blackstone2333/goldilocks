@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-POLICY_VERSION = "0.6.0"
+POLICY_VERSION = "0.6.1"
 GLOBAL_GRANT_KEY = "__global__"
 
 

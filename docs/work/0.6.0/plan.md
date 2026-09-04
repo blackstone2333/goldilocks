@@ -2,8 +2,8 @@
 
 ```yaml
 version: 0.6.0
-status: active
-current_phase: 7
+status: complete
+current_phase: complete
 overall_owner: main_model
 integration_owner: main_model
 updated: 2026-09-04
@@ -169,13 +169,13 @@ updated: 2026-09-04
 
 ## 阶段 7：发布 `0.6.0`
 
-**Owner：主模型。依赖：阶段 1–6 的决定性检查已通过；真实 ACTIVE 续接保留上述已授权的宿主证据缺口。当前状态：active。**
+**Owner：主模型。依赖：阶段 1–6 的决定性检查已通过；真实 ACTIVE 续接保留上述已授权的宿主证据缺口。当前状态：complete。**
 
-- [ ] 将已验证的用户可见变化写入中英文 CHANGELOG 和 README；不写未实现方案。
-- [ ] 检查发布 diff 不含临时 fixture、凭据、缓存、原始日志或用户项目文件。
-- [ ] 创建版本提交和 `0.6.0` 标签，并推送至已授权的 Goldilocks 仓库。
-- [ ] 发布非 prerelease 的正式版，随后从远端/安装入口复核版本和安装结果。
-- [ ] 将本 Plan 标记 `complete`，关闭对应 ACTIVE；留下决定性测试记录的链接。
+- [x] 将已验证的用户可见变化写入中英文 CHANGELOG 和 README；不写未实现方案。
+- [x] 检查发布 diff 不含临时 fixture、凭据、缓存、原始日志或用户项目文件。
+- [x] 创建版本提交和 `0.6.0` 标签，并将发布分支、`main` 与标签推送至已授权的 Goldilocks 仓库。
+- [x] 发布非 prerelease 的正式版，随后从远端/安装入口复核版本和安装结果。
+- [x] 将本 Plan 标记 `complete`，关闭对应 ACTIVE；留下决定性测试记录的链接。
 
 ## 验收证据索引
 
@@ -189,7 +189,7 @@ updated: 2026-09-04
 | 聚焦组合验收 | 20 个活动合同脚本、3 个 Skill 校验、Plugin 校验、runner self-test/preflight、diff check | pass |
 | Beta9/v0.6.0 候选/纯 Direct 对照 | `evals/results/2026-09-04-v060-beta1-release-smoke.md` | pass |
 | 全局 prompt 移除与 ACTIVE 恢复 | 静态/清洁安装合同 pass；真实续接探针因宿主首轮未结束为 unknown，已授权转实机观察 | accepted_unknown |
-| 远端发布与安装复核 | 尚未执行 | active |
+| 远端发布与安装复核 | `main`、`release/v0.6.0` 与 `v0.6.0` 指向发布提交；GitHub `v0.6.0` 为非 prerelease 的正式 Latest Release，本机 registry 已识别 0.6.0 | pass |
 
 ## Plan 变更规则
 

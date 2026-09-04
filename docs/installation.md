@@ -2,14 +2,14 @@
 
 For Codex CLI and Desktop, Goldilocks is installed as a native Plugin by default. Portable Agent Skills are for other compatible hosts or a temporary Bootstrap source.
 
-## Recommended stable release: install v0.6.0 as a native Codex Plugin
+## Recommended stable release: install v0.6.1 as a native Codex Plugin
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.6.0
+codex plugin marketplace add blackstone2333/goldilocks@v0.6.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
-The exact Git ref selects the stable `0.6.0` release. A local plugin cache can still contain an older build and `~/.codex/agents` can still contain earlier companion templates, so upgrades should run Bootstrap once and then start a new task.
+The exact Git ref selects the stable `0.6.1` release. A local plugin cache can still contain an older build and `~/.codex/agents` can still contain earlier companion templates, so upgrades should run Bootstrap once and then start a new task.
 
 For a first install, upgrade, or installation repair only, invoke the independent `$goldilocks-bootstrap` Skill. It is never part of ordinary task routing. From a repository checkout root, its script is:
 
@@ -48,11 +48,11 @@ The main `goldilocks` root router does not load Bootstrap during ordinary work. 
 
 The open-source [`skills` CLI](https://github.com/vercel-labs/skills) supports Claude Code, Cursor, OpenCode, GitHub Copilot, Gemini CLI, and other compatible hosts. On Codex, use it only when the native Plugin is not yet available or as a temporary Bootstrap source.
 
-The [skills.sh listing](https://skills.sh/blackstone2333/goldilocks/goldilocks) follows the repository's default branch as its stable channel. Install only one channel. The unpinned commands below follow stable `main`; historical tags remain available for reproduction. For an exact portable `v0.6.0` pin, install both Skills from their tagged paths:
+The [skills.sh listing](https://skills.sh/blackstone2333/goldilocks/goldilocks) follows the repository's default branch as its stable channel. Install only one channel. The unpinned commands below follow stable `main`; historical tags remain available for reproduction. For an exact portable `v0.6.1` pin, install both Skills from their tagged paths:
 
 ```bash
-npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.6.0/plugins/goldilocks/skills/goldilocks --skill goldilocks
-npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.6.0/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.6.1/plugins/goldilocks/skills/goldilocks --skill goldilocks
+npx skills add https://github.com/blackstone2333/goldilocks/tree/v0.6.1/plugins/goldilocks/skills/goldilocks-bootstrap --skill goldilocks-bootstrap
 ```
 
 Interactive installation:
@@ -101,7 +101,7 @@ The Skills installer intentionally does not execute arbitrary post-install code.
 ## Codex native Plugin details
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.6.0
+codex plugin marketplace add blackstone2333/goldilocks@v0.6.1
 codex plugin add goldilocks@goldilocks-local
 ```
 

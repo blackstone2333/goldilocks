@@ -2,7 +2,7 @@
 
 Reuse a verified execution pattern when doing so avoids repeating orchestration judgment. This is a selective project playbook, not a transcript, release changelog, or excuse to preserve every task.
 
-## Look up before classifying again
+## Look up before routing again
 
 Search the repository's existing work notes first. If none exist and recurring routes have durable value, use `docs/work/execution-patterns.md` or the project's equivalent. Match task shape, subsystem, risk, tools, acceptance, and dependency pattern—not wording alone.
 

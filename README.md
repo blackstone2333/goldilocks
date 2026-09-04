@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.6.0-2563eb" alt="Version 0.6.0">
+  <img src="https://img.shields.io/badge/version-0.6.1-2563eb" alt="Version 0.6.1">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="Install from skills.sh"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT License">
 </p>
@@ -38,7 +38,7 @@ This page is written for people. If you are an AI agent evaluating the repositor
 Copy this into your current agent:
 
 ```text
-Install Goldilocks v0.6.0 from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.6.0. Detect the host first. Use the native Plugin on Codex CLI or Desktop; use the native Plugin on Claude Code; use portable Skills on another compatible host. Do not enable Goldilocks with Superpowers. Invoke $goldilocks-bootstrap only for first install, upgrade, or repair. Show its plan, request approval only when required, then apply and check. Report unsupported host capabilities as skipped and leave unrelated configuration unchanged.
+Install Goldilocks v0.6.1 from https://github.com/blackstone2333/goldilocks using the exact Git ref v0.6.1. Detect the host first. Use the native Plugin on Codex CLI or Desktop; use the native Plugin on Claude Code; use portable Skills on another compatible host. Do not enable Goldilocks with Superpowers. Invoke $goldilocks-bootstrap only for first install, upgrade, or repair. Show its plan, request approval only when required, then apply and check. Report unsupported host capabilities as skipped and leave unrelated configuration unchanged.
 ```
 
 ### Codex CLI or Desktop
@@ -46,7 +46,7 @@ Install Goldilocks v0.6.0 from https://github.com/blackstone2333/goldilocks usin
 Use the native Plugin. It provides the root gate, on-demand Usage reporting, and the Sol/Terra/Spark/Luna companion agents. Routing, continuity, and recovery are carried by the Skill and its event-triggered ACTIVE state. Goldilocks installs neither Hooks nor a global compaction prompt; Codex keeps its native compaction behavior.
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.6.0
+codex plugin marketplace add blackstone2333/goldilocks@v0.6.1
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -106,8 +106,8 @@ This is the complete workflow surface, not seven separate public Skills. The sin
 
 ```mermaid
 flowchart TD
-    A["Incoming message"] --> B["Classify NEW / QUESTION / ADD / …<br/>Match applicable domain Skills independently"]
-    B --> C{"End state, authority, and acceptance clear;<br/>no material uncertainty, continuity, risk,<br/>or useful delegation?"}
+    A["New task"] --> B["Align outcome, authority, and acceptance;<br/>match applicable domain Skills"]
+    B --> C{"Clear and low-risk, with no material uncertainty,<br/>continuity need, or useful delegation?"}
     C -- "Yes" --> D["Host Direct<br/>Do not load Goldilocks root;<br/>domain Skills remain active"]
     C -- "No" --> E["Load Goldilocks"]
     E --> F["Align unresolved choices"]
@@ -115,13 +115,20 @@ flowchart TD
     G --> H["Plan and route only as needed:<br/>Lead, Standard, Fast, Economy, or Direct"]
     D --> I["Execute"]
     H --> I
-    I --> J{"Did new uncertainty, persistence,<br/>or useful delegation appear?"}
-    J -- "Yes" --> E
-    J -- "No" --> K["Minimum-sufficient acceptance"]
-    K --> L{"Did a durable record event fire?"}
-    L -- "Yes" --> M["Update only the matching record<br/>and close ACTIVE if present"]
-    L -- "No" --> N["Finish without workflow residue"]
-    M --> N
+    I --> O{"Did new uncertainty, persistence,<br/>or useful delegation appear?"}
+    I -. "Only if a new message arrives" .-> J["Execution-time message"]
+    J --> K{"Does it materially affect the current goal,<br/>scope, order, authority, or acceptance?"}
+    K -- "No" --> L["Answer or absorb it, then return<br/>to the same execution point"]
+    L --> I
+    K -- "Yes" --> M["Interpret semantically: pause, stop,<br/>change, strengthen, or re-plan;<br/>ask only when ambiguity matters"]
+    M --> N["Update only affected records, then continue"]
+    N --> I
+    O -- "Yes" --> E
+    O -- "No" --> P["Minimum-sufficient acceptance"]
+    P --> Q{"Did a durable record event fire?"}
+    Q -- "Yes" --> R["Update only the matching record<br/>and close ACTIVE if present"]
+    Q -- "No" --> S["Finish without workflow residue"]
+    R --> S
 ```
 
 The invariant is final quality, not process volume or who typed the code. Goldilocks will not create a spec, plan, worktree, subagent, or continuity file merely because one exists in the toolkit.
@@ -306,6 +313,6 @@ These results support replacing Superpowers on the tested workflow surface; they
 
 ## Status
 
-This package is the stable Goldilocks `v0.6.0` no-Hook, event-triggered workflow. The release-candidate smoke test passed the same quality gate as Beta9 and Direct while observing 11.017% lower wall time and 23.740% fewer Raw Tokens than Direct on that single frozen task; this is task-specific evidence, not a universal performance promise. Earlier [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.md) and [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.md) comparisons remain historical evidence with their original limits.
+This package is the stable Goldilocks `v0.6.1` no-Hook, event-triggered workflow. It separates a normal task entry from execution-time steering: a casual interruption is answered and execution resumes; only a message that materially affects the current goal, scope, order, authority, or acceptance triggers semantic re-evaluation. The release-candidate smoke test passed the same quality gate as Beta9 and Direct while observing 11.017% lower wall time and 23.740% fewer Raw Tokens than Direct on that single frozen task; this is task-specific evidence, not a universal performance promise. Earlier [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.md) and [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.md) comparisons remain historical evidence with their original limits.
 
 MIT licensed. Developed by Charles Roc and contributors. Goldilocks is an independent implementation influenced by Superpowers, Grill-style decision-frontier questioning, Ponytail, Caveman, and ADHD; those projects do not endorse it.

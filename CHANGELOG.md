@@ -2,6 +2,14 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.6.1 — 2026-09-04
+
+### Natural execution-time steering
+
+- Separate a normal task entry from a message that arrives during execution. A casual question or compatible detail is answered or absorbed and work returns to the same execution point.
+- Replace user-facing `NEW / QUESTION / ADD / …` message labels with one practical threshold: only steering that materially affects the current goal, scope, order, authority, or acceptance enters semantic interpretation. The model then decides whether to pause, stop, change, strengthen, or re-plan, and asks only when a material ambiguity remains.
+- Update the public workflow diagrams and stable installation identity to `v0.6.1`. This keeps Direct-first, no-Hook behavior, event-triggered records, and independently matched domain Skills unchanged.
+
 ## 0.6.0 — 2026-09-04
 
 ### Lean no-Hook workflow with event-triggered project evidence
