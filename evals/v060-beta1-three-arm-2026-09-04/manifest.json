@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "experiment": "v060-beta1-three-arm-2026-09-04",
+  "status": "protocol-ready",
+  "claim_boundary": "One bounded coding smoke test; not a general quality, latency, or cost claim.",
+  "model_calls_when_executed": 3,
+  "attempts_per_arm": 1,
+  "automatic_host_retries": 0,
+  "authorized_infrastructure_replacements_max": 1,
+  "execution_order": [
+    "v053_beta9",
+    "v060_beta1",
+    "direct"
+  ],
+  "runtime": {
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "high",
+    "requested_service_tier": "standard",
+    "sandbox": "danger-full-access",
+    "approval_policy": "never"
+  },
+  "arms": {
+    "direct": {
+      "label": "Direct (no Goldilocks or workflow plugin)",
+      "source": null,
+      "expected_version": null
+    },
+    "v053_beta9": {
+      "label": "Goldilocks 0.5.3-beta.9",
+      "source": "../../../goldilocks-release-v053-beta9",
+      "expected_version": "0.5.3-beta.9"
+    },
+    "v060_beta1": {
+      "label": "Goldilocks 0.6.0-beta.1 candidate",
+      "source": "../..",
+      "expected_version": "0.6.0-beta.1"
+    }
+  },
+  "task": {
+    "id": "tag-index-normalization",
+    "prompt": "task/TASK.md",
+    "template": "task/template",
+    "hidden_acceptance": "task/hidden/test_acceptance.py",
+    "oracle": "task/oracle",
+    "allowed_changes": [
+      "src/tag_index.py",
+      "tests/test_tag_index.py"
+    ],
+    "frozen_paths": [
+      "README.md"
+    ]
+  },
+  "release_smoke_gate": {
+    "quality": "all three arms complete and pass the same external acceptance once",
+    "attempts": "one model attempt and zero host retry per arm",
+    "oververification": "0.6.0-beta.1 has zero unnecessary same-generation verification repeats after the verifier actually ran; a single 126/127 runner recovery is counted separately",
+    "beta1_direct_behavior": "no delegation, no unnecessary state or workflow documents, no background work, and no unnecessary repeated verification",
+    "cache_comparability": "compare observed normalized cost only when exact cache hit/write exposure differs by no more than 5 percentage points; otherwise retain observed cost but gate on cache-neutral cost with all input charged at the uncached rate",
+    "versus_beta9": "single-sample wall time, Raw Token, and selected cost basis: at least two deltas are no more than +3% (equivalent/not worse) and none is more than +10%",
+    "versus_direct": "wall time and the selected cost basis are each no more than 15% worse; Raw Token is reported separately and is not an additional hard gate",
+    "infrastructure": "an auth, quota, provider, transport, host, or unclassified execution failure is not a product failure; one explicitly authorized replacement may replace only the affected cell while retaining the original"
+  }
+}

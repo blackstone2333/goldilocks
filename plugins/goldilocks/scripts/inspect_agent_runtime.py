@@ -27,7 +27,7 @@ PROFILES = (
 )
 ROUTE_PREFIXES = {"fast__": "fast", "standard__": "standard", "lead__": "lead"}
 SEMANTIC_NAME = re.compile(r"[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$")
-POLICY_VERSION = "0.5.3-beta.9"
+POLICY_VERSION = "0.6.0"
 
 
 def canonical_native_name(agent_path: object, profile: dict[str, object]) -> str:

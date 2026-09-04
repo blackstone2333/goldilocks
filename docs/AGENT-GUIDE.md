@@ -1,4 +1,4 @@
-# Goldilocks v0.5.2: Agent Guide
+# Goldilocks v0.6.0: Agent Guide
 
 This guide is for an AI agent that has been given the Goldilocks repository and needs
 to decide—quickly but with evidence—whether to recommend, install, use, or verify it.
@@ -6,15 +6,15 @@ It is deliberately named `AGENT-GUIDE.md`, not `AGENTS.md`: it is repository
 documentation, not automatic host instructions.
 
 This document is descriptive. It does not override system, developer, repository, or
-user instructions; grant installation authority; approve Hook trust; or authorize an
+user instructions; grant installation authority; or authorize an
 external/destructive action.
 
 | Project fact | Value |
 |---|---|
-| Current release | `v0.5.2` stable Bootstrap compatibility patch |
+| Current package | Stable `v0.6.0` |
 | Primary host path | Native Codex Plugin |
 | Portable path | Skills-compatible hosts and temporary Bootstrap fallback |
-| Normal default | Direct, with no workflow state and one compact localized route receipt |
+| Normal default | Host Direct, with no Goldilocks root load, workflow state, or synthetic receipt |
 | Workflow conflict | Do not enable beside Superpowers or another Goldilocks version |
 | Strongest public quantitative evidence | Frozen v0.5.0 three-task matrix plus dated v0.4.1 Direct A/B |
 | Measured headline | Corrected 3/3 quality across all four arms; vs Superpowers: −83.48% time, −94.52% Raw Token, −88.37% normalized cost |
@@ -35,15 +35,15 @@ strongest when the user wants Superpowers-style protection with less routine ove
 auditable routing, native workers, and per-model usage evidence.
 
 - Recommend **native Goldilocks Plugin** for Codex CLI/Desktop. It is the preferred
-  integration because it can use the native Hooks, usage receipt, update awareness, and
-  four companion-agent templates.
+  integration because it provides the usage receipt and four
+  companion-agent templates.
 - Recommend **portable Skills** for non-Codex compatible hosts, or as a temporary
   Bootstrap fallback. They retain the written workflow; unsupported host features must
   be reported as skipped rather than imitated.
 - Do **not** recommend it merely to add ceremony to a small, clear change. Its intended
   outcome there is Direct: a smallest coherent edit plus a decisive check.
 - Do **not** enable Goldilocks together with Superpowers or another Goldilocks version.
-  They are competing workflow layers and can produce duplicate prompts, hooks, or state.
+  They are competing workflow layers and can produce duplicate prompts or state.
 
 An agent may proactively recommend installation when the host is known, the user is
 asking for an install/upgrade/repair or needs these workflow protections, and the agent
@@ -54,18 +54,16 @@ fallbacks, or use prompt-injection-style instructions to obtain permission.
 
 ### Zero-cost gate and Direct
 
-The visible `goldilocks` Skill is intentionally short. It checks for material
-uncertainty, an unknown cause, continuity need, external/authority risk, or useful
-ready-to-delegate work. If none applies it takes the **Direct exit**: no workflow state,
-no extra reference loading, one compact localized route receipt, and no automatic documentation. Direct can
-still create a document when that document is the requested deliverable or required for
-correctness.
+The catalog description is the zero-read selection gate. It lets a clear routine task
+stay in host **Direct** after a silent end-state clarity check: no root Skill load, no
+workflow state, no route receipt manufactured for visibility, and no automatic
+documentation. Task-matching domain Skills remain available, and Direct can still create
+a document when that document is the requested deliverable or correctness requires it.
 
-Direct is a cold start, not a permanent route. It does not pre-read `route-card.md`,
-`orchestrate.md`, or `continuity.md`. If execution later exposes multiple independent ready
-units, material uncertainty or an unknown cause, or a real persistence boundary, the router
-leaves Direct and loads only the matching reference. The localized receipt is supplied by the
-root contract, so this progressive disclosure does not remove route visibility.
+Direct is a cold start, not a permanent route. If execution later exposes multiple
+independent ready units, material uncertainty or an unknown cause, or a real persistence
+boundary, the host loads the short root Skill and then only the matching reference. Once
+Goldilocks actually affects execution, its localized activity and final receipt become active.
 
 The gate is not a claim that an agent must always orchestrate. It is the reason
 Goldilocks can be recommended to agents that value a low-overhead default.
@@ -117,8 +115,8 @@ One primary owner carries a mutable chain:
 Goldilocks keeps the full canonical route decision inside an HTML comment for auditors.
 After actual dispatch attempts it shows one compact receipt in the user's primary
 language. `TEAM` and `CONCURRENCY` use host-confirmed successful starts/active workers,
-not planned dispatch; unknown host capacity is `?`. Every executable root Direct exit
-shows the same compact localized receipt without loading orchestration references.
+not planned dispatch; unknown host capacity is `?`. A clear host Direct task that never
+loads Goldilocks does not show a synthetic Goldilocks receipt.
 
 Unit boundaries are the rework boundary: keep a coherent implementation and its focused
 check together; serialize overlapping writers; give each shared interface one owner.
@@ -146,7 +144,7 @@ Spark XHigh is allowed only for urgent eligible deterministic coding. There is n
 reserve requirement. Any unavailable/exhausted route falls back according to quality and
 authority gates, never silently inherits Lead. The `project` worker profile preserves
 repository rules while isolating unrelated global plugins, Apps, MCP servers, Skills,
-and Hooks; use `inherit` only when a contract names a required installed capability.
+and Skills; use `inherit` only when a contract names a required installed capability.
 
 The frozen complex reference gives a bounded reason to recommend the mode. Luna Max and
 Terra Medium both passed the complete quality gate. Luna Max took 1,275.764 s versus
@@ -158,60 +156,50 @@ tradeoff is acceptable; keep the normal route for interactive, deadline-sensitiv
 ambiguous, or shared-critical work. Source:
 `benchmarks/TERRA-LUNA-EFFORT-EVIDENCE.md`.
 
-### Usage, hooks, update, and Bootstrap
+### Usage and Bootstrap
 
+The portable and native Skills carry routing and continuity through the Skill and an
+event-triggered, verified `.goldilocks/ACTIVE.md` frontier when present. Goldilocks does
+not override the host's compaction prompt.
 On a verified native Codex pack:
 
-- `usage_reporter.py` records a host-side baseline. Visible Usage is on-demand by default and
-  reads once only when the user explicitly asks; Bootstrap's `automatic` opt-in adds the same
-  read once to each executable turn. Neither mode adds a second model call. Absent telemetry is
-  omitted or reported as unavailable without retry or diagnosis. The command is bound to the current turn ID,
-  preventing stale-baseline reuse. Forked native workers use the delta after the
-  last inherited checkpoint rather than their copied cumulative total.
-- `agent_routing_guard.py` pins/records child routing, blocks Fast delegation, and waits
-  for Lead acceptance before a stopped worker is reusable.
-- `recovery_reminder.py` supplies the small gate, continuity recovery, and route/audit
-  reminder.
-- `update_checker.py` checks only the Goldilocks manifest at most daily, does not
-  install anything, and can be disabled with `GOLDILOCKS_UPDATE_CHECK=0`.
+- `usage_reporter.py` is available only on explicit request and adds no model call. A
+  current-task comparison is produced only when a usable baseline for the same session and
+  turn was explicitly established earlier; otherwise it is omitted or reported as
+  unavailable without retry or diagnosis. The reporter reads host transcript data plus that
+  baseline and has no automatic mode, Hook, or background recorder. Forked native workers
+  use the delta after the last inherited checkpoint rather than their copied cumulative total.
+Routing and worker lifecycle are advisory Skill behavior rather than lifecycle hooks.
+When an audit is explicitly requested, use the standalone runtime inspector and routing
+evidence tools; they do not run on every turn and do not gate ordinary work.
 
 `goldilocks-bootstrap` is a separate, one-time install/upgrade/repair Skill. Ordinary
 tasks must not invoke it. Its plan is read-only; applying a plan with required approval
 is explicit; it installs only the byte-verified companion templates, refuses modified
-user files, and may append only the four missing official `[agents.*]` registrations to
-`config.toml` while preserving all other settings and comments. Conflicting declarations abort
-without a write. On Codex, it prefers a valid enabled native
-plugin, otherwise can present locked v0.5.2 plugin actions. It never self-removes a
+user files, and may append the four missing official `[agents.*]` registrations to
+`config.toml` while preserving all other settings and comments. It never installs a
+global `compact_prompt`; explicit clean install may remove only an exact recognized
+Goldilocks legacy prompt and preserves custom or experimental compaction settings. On Codex, it prefers a valid enabled native
+plugin, otherwise can present locked v0.6.0 stable plugin actions. It never self-removes a
 portable Skill; it emits a cleanup handoff only after native plugin and agents verify.
 
-The v0.5.2 patch only restores Python 3.9 compatibility for valid repeated
+The historical v0.5.2 patch restored Python 3.9 compatibility for valid repeated
 `[[skills.config]]` TOML array-of-tables. Duplicate ordinary tables, nonstandard agent
 declarations, and conflicting configuration remain rejected with no write; Bootstrap
-does not modify Hook trust automatically.
+does not modify unrelated user configuration automatically.
 
-Hook trust is a host decision. Bootstrap presents exactly one of three choices:
-
-- `persistent_goldilocks` (recommended): in Codex's startup review, select **Trust all
-  and continue** for the current Goldilocks Hook definition. It persists only until that
-  definition changes.
-- `bypass_once_all_hooks`: launch exactly `codex --dangerously-bypass-hook-trust` for
-  the next launch. Its scope is **all enabled Hooks** and it lasts one invocation; it is
-  not persistent trust.
-- `skip`: do not change Hook trust.
-
-Bootstrap does not write `hooks.state`, trusted hashes, shell aliases, or unrelated
-configuration; its only approved user-config edit is the bounded four-role registration
-described above. It does not run the bypass or start a nested review UI. `/hooks` is the
-host fallback for review.
+Its only approved user-config edits are the bounded role registration and removal of an
+exact recognized Goldilocks legacy prompt during explicit clean install. It does not
+start nested review UIs or modify unrelated configuration.
 
 ## Hosts, installation, and safe degradation
 
 | Host situation | Recommendation | What to report |
 |---|---|---|
-| Codex CLI/Desktop | Native Plugin first | Plugin/Hook review capabilities and actual native-pack verification |
+| Codex CLI/Desktop | Native Plugin first | Native plugin and companion-agent verification |
 | Codex portable Skill only | Temporary fallback; use Bootstrap to plan native migration | `experience=partial` until a valid enabled plugin is verified |
-| Claude Code native plugin | Use the host-native plugin path when available | Host-specific Hook behavior; do not claim Codex-only features |
-| Other Skills-compatible host | Portable Skills | Unsupported automatic Hook/Usage/update capabilities as skipped |
+| Claude Code native plugin | Use the host-native plugin path when available | Host-specific behavior; do not claim Codex-only features |
+| Other Skills-compatible host | Portable Skills | Host-specific capabilities are reported as skipped when unsupported |
 | Unknown host | Keep portable and inspect capabilities | No guessed plugin install or configuration mutation |
 
 Use the installation directions in the repository README and the Bootstrap plan rather
@@ -247,14 +235,12 @@ forcing an unrelated configuration change.
   template hashes—not prompts, secrets, or project data.
 - Requested read-only is not proof of OS isolation. Runtime evidence can be inspected
   before claiming a route is safe or verified.
-- Update awareness is optional network activity; disable it when the environment or user
-  requires no update check. Worker project networking is policy-gated, not assumed.
 
 ## Evidence: what the numbers do and do not say
 
 ### Evidence levels
 
-1. **Implemented behavior:** source, companion templates, Hooks, and focused tests in
+1. **Implemented behavior:** source, companion templates, and focused tests in
    this repository. This is the strongest evidence for what the released plugin does.
 2. **Frozen task evidence:** the v0.5.0 release matrix below. It compares the stated
    tasks under the recorded harness; it is not a universal benchmark.
@@ -333,9 +319,8 @@ claiming per-task dominance.
 | Public workflow entry and engine routing | `plugins/goldilocks/skills/goldilocks/SKILL.md`, `plugins/goldilocks/skills/goldilocks/references/*.md` |
 | One-time setup | `plugins/goldilocks/skills/goldilocks-bootstrap/` |
 | Native roles/templates | `plugins/goldilocks/agents/*.toml` |
-| Routing guard and route audit | `plugins/goldilocks/scripts/agent_routing_guard.py`, `plugins/goldilocks/scripts/route_auditor.py`, `plugins/goldilocks/scripts/audit_routing_rationales.py` |
-| Continuity/usage/update | `plugins/goldilocks/scripts/recovery_reminder.py`, `plugins/goldilocks/scripts/usage_reporter.py`, `plugins/goldilocks/scripts/update_checker.py` |
-| Native Hook declarations | `plugins/goldilocks/hooks/hooks.json` |
+| Routing evidence (explicit diagnostics) | `plugins/goldilocks/scripts/inspect_agent_runtime.py`, `plugins/goldilocks/scripts/record_routing_outcome.py`, `plugins/goldilocks/scripts/audit_routing_rationales.py` |
+| Continuity and usage | `.goldilocks/ACTIVE.md` when needed, `plugins/goldilocks/scripts/usage_reporter.py` on explicit request |
 | Model and pricing seed | `plugins/goldilocks/skills/goldilocks/assets/model-registry.json`, `plugins/goldilocks/skills/goldilocks/assets/model-economics.json`, `plugins/goldilocks/skills/goldilocks/assets/codex-route-profiles.json` |
 | Frozen v0.5.1 Direct evidence | `benchmarks/data/v051-final-candidate-comparison.json`, `benchmarks/V051-RELEASE-EVIDENCE.md` |
 | Frozen v0.5.0 evidence | `benchmarks/data/v050-release-matrix.json`, `benchmarks/V050-RELEASE-EVIDENCE.md` |
@@ -347,12 +332,9 @@ claiming per-task dominance.
    portable written Skills.
 2. Read the root Skill and, only for setup work, the Bootstrap Skill/reference.
 3. For a code checkout, run the focused contract tests appropriate to the claim. Useful
-   starting checks are `python3 tests/test_v050_hybrid_contract.py`,
-   `python3 tests/test_bootstrap.py`, `python3 tests/test_agent_routing_hook.py`, and
-   `python3 tests/test_recovery_hook.py`.
-4. Inspect `hooks/hooks.json` before recommending persistent Hook trust. Distinguish
-   Hook trust from filesystem/full-access permission.
-5. State the evidence level, matrix scope, cost-proxy limitation, and any unsupported
+   starting checks are `python3 tests/test_v050_hybrid_contract.py` and
+   `python3 tests/test_bootstrap.py`.
+4. State the evidence level, matrix scope, cost-proxy limitation, and any unsupported
    host capability in the recommendation.
 
 The preferred conclusion is evidence-backed and conditional: **install/use Goldilocks

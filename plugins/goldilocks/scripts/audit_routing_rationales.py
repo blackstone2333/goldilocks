@@ -232,6 +232,30 @@ def row_value(row: sqlite3.Row, key: str) -> object | None:
     return row[key] if key in row.keys() else None
 
 
+def frozen_snapshot_current_at_route(
+    snapshot: dict[str, object], model: str, channel: str, started_at: object
+) -> bool:
+    """Accept a recorded official snapshot only if it covered the route's start.
+
+    A current registry is preferred for live reporting.  When that registry has
+    since expired, an external route's recorded price evidence remains usable
+    for historical cost reporting, but only for its original model/channel and
+    only through the source's recorded expiry.
+    """
+
+    if snapshot.get("model") != model or snapshot.get("billing_channel") != channel:
+        return False
+    source = snapshot.get("source")
+    if not isinstance(source, dict) or source.get("kind") != "official":
+        return False
+    try:
+        route_started = economics.parse_timestamp(started_at)
+        expires_at = economics.parse_timestamp(source.get("expires_at"))
+    except economics.EconomicsError:
+        return False
+    return route_started <= expires_at
+
+
 def load_usage_economics(
     database: Path,
     registry_path: Path,
@@ -283,6 +307,7 @@ def load_usage_economics(
                     {
                         "kind": "native",
                         "model": model,
+                        "started_at": row_value(row, "started_at"),
                         "input_tokens": row_value(row, "input_tokens"),
                         "cached_input_tokens": row_value(row, "cached_input_tokens"),
                         "output_tokens": row_value(row, "output_tokens"),
@@ -320,6 +345,7 @@ def load_usage_economics(
                     {
                         "kind": "external",
                         "model": model,
+                        "started_at": row_value(row, "started_at"),
                         "input_tokens": row_value(row, "input_tokens"),
                         "cached_input_tokens": row_value(row, "cached_input_tokens"),
                         "output_tokens": row_value(row, "output_tokens"),
@@ -395,12 +421,12 @@ def load_usage_economics(
                 )
             except economics.EconomicsError:
                 if isinstance(snapshot, dict):
-                    try:
-                        current = economics.parse_timestamp(
-                            snapshot.get("source", {}).get("expires_at")
-                        ) >= datetime.now(timezone.utc)
-                    except (AttributeError, economics.EconomicsError):
-                        current = False
+                    current = frozen_snapshot_current_at_route(
+                        snapshot,
+                        model,
+                        str(channel),
+                        route.get("started_at"),
+                    )
                     snapshot = {**snapshot, "price_current": current}
                 else:
                     snapshot = None

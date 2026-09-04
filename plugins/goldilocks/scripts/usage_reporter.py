@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from model_naming import model_display_label
 
 
-POLICY_VERSION = "0.5.3-beta.9"
+POLICY_VERSION = "0.6.0"
 TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024
 TOKEN_KEYS = ("input_tokens", "cached_input_tokens", "output_tokens")
 MODEL_ORDER = {label: index for index, label in enumerate(("Sol", "Terra", "Luna", "Spark"))}
@@ -696,8 +696,35 @@ def requested_turn_id(arguments: list[str]) -> str | None:
     return None
 
 
+def argument_value(arguments: list[str], name: str) -> str | None:
+    """Read a small explicit CLI option without accepting stdin payloads."""
+
+    for index, argument in enumerate(arguments):
+        if argument.startswith(name + "="):
+            return argument.split("=", 1)[1].strip() or None
+        if argument == name and index + 1 < len(arguments):
+            return arguments[index + 1].strip() or None
+    return None
+
+
+def record_explicit_baseline(arguments: list[str]) -> None:
+    session_id = argument_value(arguments, "--session-id")
+    turn_id = argument_value(arguments, "--turn-id")
+    transcript_path = argument_value(arguments, "--transcript")
+    if not session_id or not turn_id:
+        raise ValueError("--record-baseline requires --session-id and --turn-id")
+    with connect(resolve_data_root(session_id)) as connection:
+        record_baseline(connection, {
+            "session_id": session_id,
+            "turn_id": turn_id,
+            "model": argument_value(arguments, "--model") or "unknown",
+            "transcript_path": transcript_path or "",
+        })
+
+
 def main() -> None:
-    if "--current" in sys.argv[1:]:
+    arguments = sys.argv[1:]
+    if "--current" in arguments:
         try:
             receipt = current_receipt(
                 os.environ.get("CODEX_THREAD_ID", ""),
@@ -716,27 +743,11 @@ def main() -> None:
         ):
             pass
         return
-    event = ""
     try:
-        payload = json.load(sys.stdin)
-        event = str(payload.get("hook_event_name") or "")
-        if os.environ.get("GOLDILOCKS_WORKER") == "1":
-            if event == "Stop":
-                print("{}")
-            return
-        if event == "Stop":
-            print("{}")
-            return
-        if event != "UserPromptSubmit":
-            return
-        configured = os.environ.get("PLUGIN_DATA")
-        if not configured:
-            return
-        with connect(Path(configured).expanduser()) as connection:
-            record_baseline(connection, payload)
-    except (OSError, sqlite3.Error, TypeError, ValueError, json.JSONDecodeError):
-        if event == "Stop":
-            print("{}")
+        if "--record-baseline" in arguments:
+            record_explicit_baseline(arguments)
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        pass
 
 
 if __name__ == "__main__":

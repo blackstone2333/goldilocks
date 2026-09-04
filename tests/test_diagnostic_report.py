@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "plugins/goldilocks/scripts/diagnostic_report.py"
 
-def test_recent_assistant_only_hook_health_and_readonly(tmp_path: Path) -> None:
+def test_recent_assistant_only_and_readonly(tmp_path: Path) -> None:
     now=datetime.now(timezone.utc).isoformat(); old=(datetime.now(timezone.utc)-timedelta(days=9)).isoformat()
     data=tmp_path/"data"; data.mkdir()
     with sqlite3.connect(data/"orchestration.db") as db:
@@ -17,9 +17,6 @@ def test_recent_assistant_only_hook_health_and_readonly(tmp_path: Path) -> None:
         db.execute("INSERT INTO decisions VALUES ('fast','0.5.3-beta','started','secret-turn-12345678',?)",(now,))
         db.execute("CREATE TABLE gate_injections (injected_at TEXT)")
         db.execute("INSERT INTO gate_injections VALUES (?)",(now,))
-        db.execute("CREATE TABLE hook_health (event_name TEXT,status TEXT,elapsed_ms INTEGER,policy_version TEXT,finished_at TEXT)")
-        db.execute("INSERT INTO hook_health VALUES ('PostCompact','error',9,'0.5.3-beta',?)",(now,))
-        db.execute("INSERT INTO hook_health VALUES ('Old','ok',2,'old',?)",(old,))
     sessions=tmp_path/"sessions"; sessions.mkdir()
     (sessions/"rollout.jsonl").write_text("\n".join((
         '{"timestamp":"'+now+'","type":"event_msg","payload":{"type":"task_started","turn_id":"x"}}',
@@ -33,7 +30,7 @@ def test_recent_assistant_only_hook_health_and_readonly(tmp_path: Path) -> None:
     assert "含 final-answer 回执 turn / 回执数 / 重复：1 / 1 / 0" in result.stdout
     assert "可见回执路线：{'standard': 1}" in result.stdout
     assert "原生委派决策 / tier：1 / {'fast': 1}" in result.stdout
-    assert "Hook 健康：记录 / 失败 / 平均耗时：1 / 1 / 9.0ms" in result.stdout
+    assert "Hook" not in result.stdout
     assert "secret-turn" not in result.stdout
     assert (data/"orchestration.db").read_bytes()==before
 
@@ -43,7 +40,7 @@ def test_no_data_is_readable(tmp_path: Path) -> None:
 
 def main() -> None:
     with tempfile.TemporaryDirectory() as raw:
-        root=Path(raw); test_recent_assistant_only_hook_health_and_readonly(root)
+        root=Path(raw); test_recent_assistant_only_and_readonly(root)
     with tempfile.TemporaryDirectory() as raw:
         root=Path(raw); test_no_data_is_readable(root)
 

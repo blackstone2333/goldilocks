@@ -19,27 +19,17 @@ def require(path: Path, *phrases: str) -> None:
 
 def main() -> None:
     require(
-        PLUGIN / "scripts" / "recovery_reminder.py",
-        "For defects",
-        "evidence-backed cause",
-        "explicitly unknown",
-        "fix and verification",
-        "when asked",
-    )
-    require(
         PLUGIN / "skills" / "goldilocks" / "SKILL.md",
-        "Defects add",
-        "evidence-backed cause",
-        "explicitly unknown",
-        "fix and verification",
-        "expand when asked",
+        "Defect 报 evidence-backed CAUSE",
+        "（或 unknown）",
+        "fix 与当前 decisive verification evidence",
     )
     require(
         PLUGIN / "skills" / "goldilocks" / "references" / "diagnose.md",
         "diagnosis-driven fix",
         "evidence-backed cause",
         "explicitly unknown",
-        "fix and verification",
+        "fix, and verification",
         "expand causal detail when the user asks",
     )
     require(
@@ -48,14 +38,6 @@ def main() -> None:
         "evidence-backed `CAUSE`",
         "explicitly mark it unknown",
         "Expand causal detail when asked",
-    )
-    require(
-        PLUGIN / "skills" / "goldilocks" / "scripts" / "dispatch_codex_worker.py",
-        "Defects add",
-        "evidence-backed CAUSE",
-        "explicitly unknown",
-        "fix and verification",
-        "expand when asked",
     )
     print("Goldilocks causal-transparency contract passed.")
 

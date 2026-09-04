@@ -69,7 +69,10 @@ LEGACY_TEMPLATE_DIGESTS = {
         "ab7f7df4df07b83ea003781f960b4e5340812af122e835a52a49fc594e956e6e",
     },
 }
-USAGE_VISIBILITY_MODES = ("on-demand", "automatic")
+KNOWN_GOLDILOCKS_COMPACT_DIGESTS = {
+    "96ac7a2b1e0250be67e62125ab7edb0969a6ec624a886842e702e04a6b5aa22c",
+    "f402bebaede52b710e0cf67ea5d0909ee9854b83373a7004467f42c0992966c6",
+}
 
 
 def parser() -> argparse.ArgumentParser:
@@ -86,9 +89,8 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--native-plugin-dir", type=Path)
     value.add_argument("--state-dir", type=Path)
     value.add_argument(
-        "--usage-visibility",
-        choices=USAGE_VISIBILITY_MODES,
-        help="Visible Usage policy: on-demand (default) or automatic.",
+        "--clean-install", action="store_true",
+        help="Preview/apply a one-time Goldilocks-only cleanup (Codex only).",
     )
     return value
 
@@ -139,66 +141,6 @@ def default_state_dir() -> Path:
     if os.name == "nt":
         return Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "goldilocks-bootstrap"
     return Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "goldilocks-bootstrap"
-
-
-def usage_preference_file(state_dir: Path) -> Path:
-    return state_dir / "usage-visibility.json"
-
-
-def read_usage_preference(state_dir: Path) -> str | None:
-    path = usage_preference_file(state_dir)
-    if not path.is_file() or path.is_symlink():
-        return None
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-        mode = value.get("mode") if isinstance(value, dict) else None
-        return mode if mode in USAGE_VISIBILITY_MODES else None
-    except (OSError, ValueError, TypeError):
-        return None
-
-
-def usage_visibility(state_dir: Path, requested: str | None = None) -> dict[str, Any]:
-    override = os.environ.get("GOLDILOCKS_USAGE_VISIBILITY", "").strip().lower()
-    if override in USAGE_VISIBILITY_MODES:
-        mode, source = override, "environment"
-    elif requested in USAGE_VISIBILITY_MODES:
-        mode, source = requested, "argument"
-    elif (stored := read_usage_preference(state_dir)) is not None:
-        mode, source = stored, "recorded"
-    else:
-        mode, source = "on-demand", "default"
-    return {
-        "mode": mode,
-        "source": source,
-        "automatic": mode == "automatic",
-        "choices": [
-            {"id": "on-demand", "label": "On-demand (default)", "recommended": True},
-            {"id": "automatic", "label": "Automatic", "recommended": False},
-        ],
-    }
-
-
-def write_usage_preference(state_dir: Path, mode: str) -> None:
-    if mode not in USAGE_VISIBILITY_MODES:
-        raise ValueError(f"unknown Usage visibility mode: {mode}")
-    state_dir.mkdir(parents=True, exist_ok=True)
-    if state_dir.is_symlink() or not state_dir.is_dir():
-        raise ValueError(f"state directory is unsafe: {state_dir}")
-    destination = usage_preference_file(state_dir)
-    descriptor, raw_stage = tempfile.mkstemp(prefix=".goldilocks-usage-", dir=str(state_dir))
-    stage = Path(raw_stage)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            json.dump({"mode": mode}, handle, sort_keys=True, separators=(",", ":"))
-            handle.write("\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(stage, destination)
-    finally:
-        try:
-            stage.unlink()
-        except FileNotFoundError:
-            pass
 
 
 def canonical(path: Path) -> Path:
@@ -578,7 +520,7 @@ def assert_config_unchanged(
 
 
 def append_registrations(config: Path, target: Path) -> list[str]:
-    """Append only absent role tables; never rewrite user TOML or trust state."""
+    """Append only missing owned role tables; preserve all prompt settings."""
     # Re-read immediately before staging, rather than trusting an earlier --plan
     # result or the pre-template apply preflight.
     decoded, raw = read_config(config)
@@ -626,7 +568,7 @@ def append_registrations(config: Path, target: Path) -> list[str]:
 
 
 def native_plugin(path: Path | None) -> bool:
-    """Accept only a real Goldilocks Codex manifest, never a loose hooks directory."""
+    """Accept only a real Goldilocks Codex manifest, never a loose directory."""
     if path is None or path.is_symlink() or not path.is_dir():
         return False
     manifest = path / ".codex-plugin" / "plugin.json"
@@ -639,15 +581,24 @@ def native_plugin(path: Path | None) -> bool:
     return isinstance(payload, dict) and str(payload.get("name") or "").lower() == "goldilocks"
 
 
+def native_plugin_version(path: Path | None) -> str | None:
+    if not native_plugin(path) or path is None:
+        return None
+    try:
+        value = json.loads((path / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    version = value.get("version") if isinstance(value, dict) else None
+    return str(version) if isinstance(version, str) else None
+
+
 def native_components(path: Path | None) -> dict[str, bool]:
     if not native_plugin(path):
-        return {"core_skill": False, "hooks": False, "usage": False, "update": False}
+        return {"core_skill": False, "usage": False}
     assert path is not None
     required = {
         "core_skill": path / "skills" / "goldilocks" / "SKILL.md",
-        "hooks": path / "hooks" / "hooks.json",
         "usage": path / "scripts" / "usage_reporter.py",
-        "update": path / "scripts" / "update_checker.py",
     }
     return {
         name: candidate.is_file() and not candidate.is_symlink()
@@ -691,7 +642,7 @@ def ancestor_native_plugin() -> Path | None:
     return None
 
 
-def discover_registry_native_plugin() -> Path | None:
+def discover_registry_goldilocks() -> dict[str, Any] | None:
     """Inspect the enabled Codex registry; do not treat a bundled source as installed."""
     executable = shutil.which("codex")
     if not executable:
@@ -720,7 +671,14 @@ def discover_registry_native_plugin() -> Path | None:
             continue
         candidate = canonical(Path(source["path"]))
         if native_pack(candidate):
-            return candidate
+            return {"path": candidate, "plugin_id": plugin_id or "goldilocks@goldilocks-local", "source": source}
+    return None
+
+
+def discover_registry_native_plugin() -> Path | None:
+    record = discover_registry_goldilocks()
+    if record is not None:
+        return Path(record["path"])
     return None
 
 
@@ -755,29 +713,37 @@ def capabilities(host: str, plugin_dir: Path | None, verified: bool) -> dict[str
         return {
             "agent_templates": "unsupported",
             "naming_contract": "unsupported",
-            "hooks": "unsupported",
             "usage": "unsupported",
-            "update": "unsupported",
         }
     return {
         "agent_templates": "supported",
         "naming_contract": "supported",
-        "hooks": "review-required" if verified and components["hooks"] else "unsupported",
         "usage": "reused" if verified and components["usage"] else "unsupported",
-        "update": "reused" if verified and components["update"] else "unsupported",
     }
 
 
-def plugin_actions(host: str, verified_plugin: bool) -> list[list[str]]:
-    if host != "codex" or verified_plugin:
+def plugin_actions(host: str, verified_plugin: bool, clean_install: bool = False, registry: dict[str, Any] | None = None) -> list[list[str]]:
+    if host != "codex" or (verified_plugin and not clean_install):
         return []
-    return [
+    actions: list[list[str]] = []
+    if verified_plugin and clean_install:
+        # Let Codex unregister the active plugin rather than mutating registry
+        # state ourselves; the subsequent add installs the sole v0.6.0 entry.
+        plugin_id = str((registry or {}).get("plugin_id") or "goldilocks@goldilocks-local")
+        actions.append(["codex", "plugin", "remove", plugin_id, "--json"])
+        # A local marketplace already has a registered source; refresh its
+        # entry directly, never replace it with an unreleased Git tag.
+        if plugin_id.endswith("@goldilocks-local"):
+            actions.append(["codex", "plugin", "add", plugin_id, "--json"])
+            return actions
+    actions.extend([
         [
             "codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks",
-            "--ref", "v0.5.3-beta.9", "--json",
+            "--ref", "v0.6.0", "--json",
         ],
         ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
-    ]
+    ])
+    return actions
 
 
 def portable_cleanup(host: str) -> dict[str, Any]:
@@ -802,41 +768,242 @@ def portable_cleanup(host: str) -> dict[str, Any]:
     }
 
 
-def hook_trust_handoff(host: str, plugin_dir: Path | None, verified: bool) -> dict[str, Any]:
-    if host != "codex" or not verified or not native_components(plugin_dir)["hooks"]:
-        return {"status": "skipped", "reason": "requires a verified Codex Goldilocks hooks pack"}
-    return {
-        "status": "host-review-required",
-        "selection_required": True,
-        "confirmation": "Ask the installing user to choose exactly one Hook trust option; Bootstrap will not execute it.",
-        "choices": [
-            {
-                "id": "persistent_goldilocks",
-                "label": "Persist Goldilocks trust",
-                "recommended": True,
-                "action": "In Codex's startup hook-review UI, select Trust all and continue.",
-                "scope": "current Goldilocks hooks definition only",
-                "persistence": "persistent until the hooks definition changes",
-            },
-            {
-                "id": "bypass_once_all_hooks",
-                "label": "Bypass all hooks once",
-                "recommended": False,
-                "next_launch_command": ["codex", "--dangerously-bypass-hook-trust"],
-                "scope": "all enabled hooks",
-                "persistence": "single invocation",
-            },
-            {
-                "id": "skip",
-                "label": "Skip Hook trust",
-                "recommended": False,
-                "scope": "no Hook trust change",
-                "persistence": "none",
-            },
-        ],
-        "fallback": "/hooks",
-        "executed_by_bootstrap": False,
-    }
+def hook_state_tables(config: Path | None) -> list[dict[str, Any]]:
+    if config is None or not path_exists(config) or config.is_symlink() or not config.is_file():
+        return []
+    raw = config.read_text(encoding="utf-8")
+    lines = raw.splitlines(keepends=True)
+    found: list[dict[str, Any]] = []
+    starts: list[tuple[int, str]] = []
+    for i, line in enumerate(lines):
+        value = strip_toml_comment(line).strip()
+        if not value.startswith("[") or value.startswith("[["):
+            continue
+        try:
+            path, _ = parse_table_header(line)
+        except ValueError:
+            continue
+        if len(path) == 3 and path[0] == "hooks" and path[1] == "state":
+            key = path[2]
+            if key.startswith("goldilocks@") and "hooks/" in key:
+                starts.append((i, key))
+    for n, (start, key) in enumerate(starts):
+        end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
+        # Stop at the next *any* table header, not merely another owned one.
+        for j in range(start + 1, end):
+            candidate = strip_toml_comment(lines[j]).strip()
+            if candidate.startswith("[") and not candidate.startswith("[["):
+                end = j
+                break
+        found.append({"key": key, "start": start, "end": end})
+    return found
+
+
+def goldilocks_compact_prompt(config: Path | None) -> bool:
+    if config is None or not path_exists(config) or config.is_symlink() or not config.is_file():
+        return False
+    decoded, _ = read_config(config)
+    value = decoded.get("compact_prompt")
+    return (
+        "experimental_compact_prompt_file" not in decoded
+        and isinstance(value, str)
+        and digest(value.encode("utf-8")) in KNOWN_GOLDILOCKS_COMPACT_DIGESTS
+    )
+
+
+def top_level_compact_prompt_span(raw: str) -> tuple[int, int]:
+    """Return the sole top-level prompt assignment line span, or fail closed."""
+    current: list[str] | None = None
+    matches: list[tuple[int, int]] = []
+    lines = raw.splitlines(keepends=True)
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = strip_toml_comment(line).strip()
+        if not stripped or stripped.startswith("#"):
+            index += 1; continue
+        if stripped.startswith("["):
+            try:
+                current, _ = parse_table_header(line)
+            except ValueError as error:
+                raise ValueError("invalid TOML while locating compact_prompt") from error
+            index += 1; continue
+        assignment = split_toml_assignment(line)
+        if assignment is None or current is not None:
+            index += 1; continue
+        try:
+            key = parse_toml_key_path(assignment[0].strip())
+        except ValueError as error:
+            raise ValueError("invalid TOML key while locating compact_prompt") from error
+        if key == ["compact_prompt"]:
+            rhs = assignment[1].lstrip()
+            if rhs.startswith('"""') or rhs.startswith("'''"):
+                delimiter = rhs[:3]
+                if rhs.find(delimiter, 3) >= 0:
+                    matches.append((index, index + 1))
+                else:
+                    end = index + 1
+                    while end < len(lines) and delimiter not in lines[end]:
+                        end += 1
+                    if end == len(lines):
+                        raise ValueError("unterminated Goldilocks compact prompt")
+                    matches.append((index, end + 1))
+                    index = end
+            else:
+                matches.append((index, index + 1))
+        index += 1
+    if len(matches) != 1:
+        raise ValueError("refusing to remove ambiguous Goldilocks compact prompt")
+    return matches[0]
+
+
+def remove_hook_state_tables(config: Path, expected: list[dict[str, Any]]) -> list[str]:
+    if not expected:
+        return []
+    decoded, raw = read_config(config)
+    _ = decoded
+    current = hook_state_tables(config)
+    wanted = [item["key"] for item in expected]
+    if [item["key"] for item in current] != wanted:
+        raise ValueError(f"Codex config changed during clean-install: {config}")
+    lines = raw.splitlines(keepends=True)
+    remove_ranges = [(item["start"], item["end"]) for item in current]
+    kept = [line for i, line in enumerate(lines) if not any(a <= i < b for a, b in remove_ranges)]
+    new_raw = "".join(kept)
+    snapshot = config_snapshot(config, raw)
+    mode = config.stat().st_mode & 0o777
+    descriptor, raw_stage = tempfile.mkstemp(prefix=".goldilocks-config-clean-", dir=str(config.parent))
+    stage = Path(raw_stage)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(new_raw); handle.flush(); os.fsync(handle.fileno())
+        os.chmod(stage, mode)
+        assert_config_unchanged(config, raw, snapshot)
+        os.replace(stage, config)
+    finally:
+        try: stage.unlink()
+        except FileNotFoundError: pass
+    return wanted
+
+
+def clean_install_targets(host: str, selected_plugin: Path | None = None, config: Path | None = None) -> dict[str, Any]:
+    """Conservatively enumerate Goldilocks-owned one-time cleanup targets."""
+    if host != "codex":
+        return {"status": "skipped", "remove": [], "preserve": [], "unprocessed": ["non-Codex host"], "executed_by_bootstrap": False}
+    root = canonical(Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")))
+    remove: list[str] = []
+    for name in ("goldilocks", "goldilocks-bootstrap"):
+        candidate = root / "skills" / name
+        if path_exists(candidate):
+            remove.append(str(candidate))
+    plugins = root / "plugins"
+    if plugins.is_dir() and not plugins.is_symlink():
+        # Codex stores marketplace caches below plugins/cache/<marketplace>/
+        # <plugin>/<version>. Walk without following links, because a link may
+        # point at user-owned content outside CODEX_HOME.
+        for current, directories, _ in os.walk(plugins, followlinks=False):
+            directory = Path(current)
+            directories[:] = [
+                name for name in directories
+                if not (directory / name).is_symlink()
+            ]
+            if selected_plugin is not None and canonical(directory) == canonical(selected_plugin):
+                directories[:] = []
+                continue
+            if native_plugin(directory):
+                remove.append(str(directory))
+                directories[:] = []
+    hooks = root / "hooks"
+    if hooks.is_dir() and not hooks.is_symlink():
+        for candidate in hooks.iterdir():
+            if candidate.name.lower().startswith("goldilocks") and path_exists(candidate):
+                remove.append(str(candidate))
+    preserve = [str(SKILL_DIR), str(Path.cwd() / ".goldilocks" / "ACTIVE.md"), str(Path.cwd() / "docs"), str(Path.cwd() / "backups")]
+    hook_states = hook_state_tables(config)
+    return {"status": "ready", "remove": sorted(set(remove)), "hook_state_tables": hook_states,
+            "compact_prompt": "remove" if goldilocks_compact_prompt(config) else "preserve",
+            "config_file": str(config) if config else None, "preserve": preserve,
+            "unprocessed": ["unrecognized Codex trust/UI state", "other plugins", "unrelated host configuration"],
+            "executed_by_bootstrap": True}
+
+
+def apply_clean_install(cleanup: dict[str, Any], *, already_removed: set[str] | None = None) -> list[str]:
+    removed: list[str] = []
+    already_removed = already_removed or set()
+    for raw in cleanup.get("remove", []):
+        candidate = canonical(Path(raw))
+        if str(candidate) in already_removed and not path_exists(candidate):
+            # Codex's successful official remove may have removed this exact
+            # manifest-proven cache after the read-only plan. This exception is
+            # intentionally unavailable for portable, hook, or unknown targets.
+            removed.append(f"already-removed:{candidate}")
+            continue
+        if candidate.parent.name == "skills" and candidate.name in {"goldilocks", "goldilocks-bootstrap"}:
+            owned = path_exists(candidate)
+        elif "plugins" in candidate.parts:
+            root = canonical(Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")))
+            plugins = root / "plugins"
+            try:
+                candidate.relative_to(plugins)
+            except ValueError:
+                owned = False
+            else:
+                # A cache directory must still be a real, manifest-proven
+                # Goldilocks plugin at deletion time. Never follow a symlink.
+                owned = not candidate.is_symlink() and native_plugin(candidate)
+        elif candidate.parent.name == "hooks" and candidate.name.lower().startswith("goldilocks"):
+            owned = path_exists(candidate)
+        else:
+            owned = False
+        if not owned:
+            raise ValueError(f"clean-install target changed or is not Goldilocks-owned: {candidate}")
+        if candidate.is_dir() and not candidate.is_symlink():
+            shutil.rmtree(candidate)
+        else:
+            candidate.unlink()
+        removed.append(str(candidate))
+    config_raw = cleanup.get("config_file")
+    if config_raw:
+        removed.extend(f"{config_raw}:[hooks.state.{key}]" for key in remove_hook_state_tables(Path(str(config_raw)), cleanup.get("hook_state_tables", [])))
+        if cleanup.get("compact_prompt") == "remove":
+            config = Path(str(config_raw))
+            decoded, raw = read_config(config)
+            prompt = decoded.get("compact_prompt")
+            if (
+                "experimental_compact_prompt_file" in decoded
+                or not isinstance(prompt, str)
+                or digest(prompt.encode("utf-8")) not in KNOWN_GOLDILOCKS_COMPACT_DIGESTS
+            ):
+                raise ValueError("Goldilocks compact prompt changed during clean-install")
+            lines = raw.splitlines(keepends=True)
+            prompt_start, prompt_end = top_level_compact_prompt_span(raw)
+            kept = [line for index, line in enumerate(lines) if not prompt_start <= index < prompt_end]
+            snapshot = config_snapshot(config, raw)
+            descriptor, staged = tempfile.mkstemp(prefix=".goldilocks-config-clean-", dir=str(config.parent))
+            stage = Path(staged)
+            try:
+                with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                    handle.write("".join(kept)); handle.flush(); os.fsync(handle.fileno())
+                os.chmod(stage, config.stat().st_mode & 0o777)
+                assert_config_unchanged(config, raw, snapshot)
+                os.replace(stage, config)
+            finally:
+                stage.unlink(missing_ok=True)
+            removed.append(f"{config}:compact_prompt")
+    return removed
+
+
+def cache_cleanup_targets(cleanup: dict[str, Any]) -> set[str]:
+    plugins = canonical(Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))) / "plugins"
+    targets: set[str] = set()
+    for raw in cleanup.get("remove", []):
+        candidate = canonical(Path(raw))
+        try:
+            candidate.relative_to(plugins)
+        except ValueError:
+            continue
+        targets.add(str(candidate))
+    return targets
 
 
 def host_key(host: str) -> str:
@@ -924,7 +1091,7 @@ def plan(
     config: Path | None,
     plugin_dir: Path | None,
     state_dir: Path,
-    requested_usage_visibility: str | None = None,
+    clean_install: bool = False,
 ) -> dict[str, Any]:
     templates = [TEMPLATE_DIR / name for name in TEMPLATE_FILES]
     if any(template.is_symlink() or not template.is_file() for template in templates):
@@ -942,7 +1109,8 @@ def plan(
         else ({}, {})
     )
     hashes = {template.name: digest(template.read_bytes()) for template in templates}
-    actions = plugin_actions(host, verified_plugin)
+    registry = discover_registry_goldilocks() if host == "codex" else None
+    actions = plugin_actions(host, verified_plugin, clean_install and registry is not None, registry)
     agents_ready = bool(states) and all(state == "current" for state in states.values())
     registrations_ready = bool(registrations) and all(
         state == "current" for state in registrations.values()
@@ -951,8 +1119,9 @@ def plan(
         "partial" if host == "codex" else "portable"
     )
     cleanup = portable_cleanup(host)
-    hook_handoff = hook_trust_handoff(host, plugin_dir, verified_plugin)
-    visibility = usage_visibility(state_dir, requested_usage_visibility)
+    clean = clean_install_targets(host, plugin_dir, config) if clean_install else {
+        "status": "not-requested", "remove": [], "preserve": [], "unprocessed": [], "executed_by_bootstrap": False,
+    }
     preferred_experience = "native_plugin" if host == "codex" else "portable_skills"
     fingerprint_input = {
         "host": host,
@@ -966,8 +1135,6 @@ def plan(
         "portable_skills_role": "fallback" if host == "codex" else "preferred",
         "plugin_actions": actions,
         "portable_cleanup": cleanup,
-        "hook_trust_handoff": hook_handoff,
-        "usage_visibility": {"mode": visibility["mode"]},
     }
     fingerprint = digest(json.dumps(fingerprint_input, sort_keys=True).encode("utf-8"))
     approvals = read_approvals(state_dir)
@@ -987,21 +1154,19 @@ def plan(
         "plugin_repair": (
             "handoff-required" if host == "codex" and native_plugin(plugin_dir) and not verified_plugin else "not-needed"
         ),
-        "hooks_review": "required" if caps["hooks"] == "review-required" else caps["hooks"],
         "agents": states,
         "registrations": registrations,
         "role_definitions": registration_definitions,
         "template_hashes": hashes,
         "plugin_actions": actions,
         "portable_cleanup": cleanup,
-        "hook_trust_handoff": hook_handoff,
-        "usage_visibility": visibility,
+        "clean_install": clean,
         "fingerprint": fingerprint,
         "approval_required": caps["agent_templates"] == "supported" and not approved,
     }
 
 
-def install_plugin(actions: list[list[str]]) -> tuple[bool, list[dict[str, Any]], str | None]:
+def install_plugin(actions: list[list[str]], *, verify: bool = True) -> tuple[bool, list[dict[str, Any]], str | None]:
     executable = shutil.which("codex")
     if not executable:
         return False, [], "Codex CLI is unavailable; portable agents remain installed."
@@ -1018,10 +1183,23 @@ def install_plugin(actions: list[list[str]]) -> tuple[bool, list[dict[str, Any]]
         if result.returncode != 0:
             detail = (result.stderr or result.stdout).strip()[:500]
             return False, results, f"plugin command failed ({' '.join(action)}): {detail or 'no diagnostic'}"
+    if not verify:
+        return True, results, None
     installed = discover_registry_native_plugin()
     if installed is None:
         return False, results, "plugin commands returned successfully but no enabled, valid Goldilocks source was verified."
     return True, results, None
+
+
+def clean_plugin_postcondition(record: dict[str, Any] | None, old_targets: list[str]) -> str | None:
+    if record is None:
+        return "Codex registry has no enabled Goldilocks plugin after clean-install refresh."
+    source = Path(record["path"])
+    if not native_pack(source):
+        return "Codex registry source is no longer a valid Goldilocks plugin after refresh."
+    if native_plugin_version(source) != "0.6.0":
+        return "enabled Goldilocks plugin is not version 0.6.0 after refresh."
+    return None
 
 
 def record_approval(value: dict[str, Any], state_dir: Path) -> None:
@@ -1035,18 +1213,18 @@ def record_approval(value: dict[str, Any], state_dir: Path) -> None:
 
 def completed_plan(
     value: dict[str, Any], target: Path, config: Path, state_dir: Path,
-    requested_usage_visibility: str | None = None,
+    clean_install: bool = False,
 ) -> dict[str, Any]:
     raw_plugin = value.get("native_plugin_dir")
     plugin_dir = Path(str(raw_plugin)) if raw_plugin else None
     return plan(
         str(value["host"]), target, config, plugin_dir, state_dir,
-        requested_usage_visibility,
+        clean_install,
     )
 
 
 def with_apply_changes(
-    value: dict[str, Any], *, installed: list[str], migrated: list[str], registered: list[str]
+    value: dict[str, Any], *, installed: list[str], migrated: list[str], registered: list[str],
 ) -> dict[str, Any]:
     return {
         **value,
@@ -1062,6 +1240,7 @@ def apply(value: dict[str, Any], state_dir: Path) -> dict[str, Any]:
         return {**value, "status": "skipped", "installed": [], "migrated": []}
     target = Path(str(value["target"]))
     config = Path(str(value["config_file"]))
+    clean_requested = value.get("clean_install", {}).get("status") == "ready"
     if target == Path(target.anchor):
         raise ValueError("refusing to use the filesystem root as the agent target")
     if path_exists(target) and (target.is_symlink() or not target.is_dir()):
@@ -1112,35 +1291,79 @@ def apply(value: dict[str, Any], state_dir: Path) -> dict[str, Any]:
     current_registrations, _ = classify_registrations(target, config)
     if any(state != "current" for state in current_registrations.values()):
         raise ValueError("Bootstrap post-registration exactness check failed")
-    selected_mode = str(value["usage_visibility"]["mode"])
-    completed = completed_plan(value, target, config, state_dir, selected_mode)
+    completed = completed_plan(value, target, config, state_dir, clean_requested)
     actions = value["plugin_actions"]
+    removed: list[str] = []
+    # A local marketplace registry can point directly at the cache scheduled for
+    # deletion. Unregister it, clear the old Goldilocks-only targets, then add
+    # again; never add and subsequently delete its newly installed backing cache.
+    local_refresh = clean_requested and len(actions) >= 2 and actions[0][2:4] == ["remove", "goldilocks@goldilocks-local"] and actions[1][2:4] == ["add", "goldilocks@goldilocks-local"]
+    pre_results: list[dict[str, Any]] = []
+    if local_refresh:
+        success, pre_results, error = install_plugin(actions[:1], verify=False)
+        if not success:
+            return {**with_apply_changes(completed, installed=installed, migrated=migrated, registered=registered),
+                    "status": "partial", "plugin_action_results": pre_results, "plugin_error": error}
+        removed = apply_clean_install(
+            value["clean_install"],
+            already_removed=cache_cleanup_targets(value["clean_install"]),
+        )
+        actions = actions[1:]
     if not actions:
-        if value["usage_visibility"]["source"] != "environment":
-            write_usage_preference(state_dir, selected_mode)
+        if clean_requested:
+            postcondition_error = clean_plugin_postcondition(
+                discover_registry_goldilocks(), value["clean_install"]["remove"]
+            )
+            if postcondition_error:
+                return {**with_apply_changes(completed, installed=installed, migrated=migrated, registered=registered),
+                        "status": "partial", "plugin_error": postcondition_error, "plugin_action_results": []}
         record_approval(completed, state_dir)
-        final = completed_plan(completed, target, config, state_dir)
-        return with_apply_changes(final, installed=installed, migrated=migrated, registered=registered)
+        final = completed_plan(completed, target, config, state_dir, clean_requested)
+        removed = removed or (apply_clean_install(final["clean_install"]) if clean_requested else [])
+        if clean_requested:
+            post = completed_plan(final, target, config, state_dir, clean_requested)
+            record_approval(post, state_dir)
+            final = post
+        return {**with_apply_changes(final, installed=installed, migrated=migrated, registered=registered), "removed": removed}
     success, action_results, error = install_plugin(actions)
+    action_results = pre_results + action_results
     if not success:
-        final = completed_plan(value, target, config, state_dir)
+        final = completed_plan(
+            value, target, config, state_dir, clean_requested
+        )
         record_approval(final, state_dir)
-        final = completed_plan(final, target, config, state_dir)
+        final = completed_plan(
+            final, target, config, state_dir, clean_requested
+        )
         return {
             **with_apply_changes(final, installed=installed, migrated=migrated, registered=registered),
             "status": "partial",
             "plugin_action_results": action_results,
             "plugin_error": error,
         }
-    full_plugin = discover_registry_native_plugin()
-    completed = plan(str(value["host"]), target, config, full_plugin, state_dir, selected_mode)
-    if value["usage_visibility"]["source"] != "environment":
-        write_usage_preference(state_dir, selected_mode)
+    registry_record = discover_registry_goldilocks()
+    postcondition_error = clean_plugin_postcondition(registry_record, value["clean_install"]["remove"]) if clean_requested else None
+    if postcondition_error:
+        final = completed_plan(value, target, config, state_dir, clean_requested)
+        return {
+            **with_apply_changes(final, installed=installed, migrated=migrated, registered=registered),
+            "status": "partial", "plugin_action_results": action_results, "plugin_error": postcondition_error,
+        }
+    full_plugin = Path(registry_record["path"]) if registry_record is not None else None
+    completed = plan(str(value["host"]), target, config, full_plugin, state_dir, clean_requested)
     record_approval(completed, state_dir)
-    final = plan(str(value["host"]), target, config, full_plugin, state_dir)
+    final = plan(str(value["host"]), target, config, full_plugin, state_dir, clean_requested)
+    removed = removed or (apply_clean_install(final["clean_install"]) if clean_requested else [])
+    if clean_requested:
+        post = plan(str(value["host"]), target, config, full_plugin, state_dir, clean_requested)
+        approval_plugin = Path(str(value["native_plugin_dir"])) if value.get("native_plugin_dir") else full_plugin
+        approval_state = plan(str(value["host"]), target, config, approval_plugin, state_dir, False)
+        record_approval(approval_state, state_dir)
+        final = post
     return {
         **with_apply_changes(final, installed=installed, migrated=migrated, registered=registered),
         "plugin_action_results": action_results,
+        "removed": removed,
     }
 
 
@@ -1162,7 +1385,10 @@ def main() -> None:
         if args.native_plugin_dir
         else discover_native_plugin(host)
     )
-    value = plan(host, target, config, plugin_dir, state_dir, args.usage_visibility)
+    value = plan(
+        host, target, config, plugin_dir, state_dir,
+        args.clean_install,
+    )
     if args.plan:
         emit(value, args.json)
         return
@@ -1180,16 +1406,8 @@ def main() -> None:
             raise ValueError("Bootstrap plan is not globally approved for this target")
         if value["experience"] != "full":
             raise ValueError("Bootstrap remains portable/partial: an enabled, valid native Goldilocks plugin is required for full experience")
-        active_visibility = usage_visibility(state_dir)
-        if args.usage_visibility:
-            if active_visibility["mode"] != args.usage_visibility:
-                raise ValueError(
-                    "Bootstrap Usage visibility is not active as requested: "
-                    f"requested {args.usage_visibility}, active {active_visibility['mode']} "
-                    f"({active_visibility['source']})"
-                )
         emit(
-            {**value, "usage_visibility": active_visibility, "status": "current"},
+            {**value, "status": "current"},
             args.json,
         )
         return

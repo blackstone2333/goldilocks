@@ -12,6 +12,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AUDIT = ROOT / "plugins" / "goldilocks" / "scripts" / "audit_routing_rationales.py"
+ECONOMICS = (
+    ROOT
+    / "plugins"
+    / "goldilocks"
+    / "skills"
+    / "goldilocks"
+    / "assets"
+    / "model-economics.json"
+)
 
 
 def response(turn_id: str, text: str) -> str:
@@ -27,6 +36,40 @@ def response(turn_id: str, text: str) -> str:
         },
         ensure_ascii=False,
     )
+
+
+def frozen_pricing_snapshot(model: str, channel: str) -> dict[str, object]:
+    """Return the official price evidence that a production route stores."""
+
+    registry = json.loads(ECONOMICS.read_text(encoding="utf-8"))
+    entry = registry["models"][model]
+    rate = next(
+        item
+        for item in entry["rates"]
+        if item["billing_channel"] == channel
+    )
+    source = registry["sources"][rate["source_id"]]
+    return {
+        "model": model,
+        "provider": entry["provider"],
+        "capabilities": entry["capabilities"],
+        "billing_channel": channel,
+        "currency": rate["currency"],
+        "unit": rate["unit"],
+        "input": rate["input"],
+        "cached_input": rate["cached_input"],
+        "output": rate["output"],
+        "conditions": rate.get("conditions", {}),
+        "rankable": True,
+        "price_current": True,
+        "source": {
+            "id": rate["source_id"],
+            "url": source["url"],
+            "kind": source["kind"],
+            "retrieved_at": source["retrieved_at"],
+            "expires_at": source["expires_at"],
+        },
+    }
 
 
 def main() -> None:
@@ -82,7 +125,12 @@ def main() -> None:
                         1000,
                         "pass",
                         "openai-chatgpt-credits-standard",
-                        None,
+                        json.dumps(
+                            frozen_pricing_snapshot(
+                                "gpt-5.6-luna",
+                                "openai-chatgpt-credits-standard",
+                            )
+                        ),
                     ),
                     (
                         "session-a",
@@ -98,7 +146,12 @@ def main() -> None:
                         2000,
                         None,
                         "openai-chatgpt-credits-standard",
-                        None,
+                        json.dumps(
+                            frozen_pricing_snapshot(
+                                "gpt-5.6-sol",
+                                "openai-chatgpt-credits-standard",
+                            )
+                        ),
                     ),
                 ],
             )

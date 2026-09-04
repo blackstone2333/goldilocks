@@ -2,13 +2,15 @@
 
 Preserve the minimum durable context another competent human or agent needs to continue correctly. Use the project's existing documentation convention first. Do not create a parallel Goldilocks hierarchy when the repository already has suitable specs, ADRs, plans, issue notes, or changelogs.
 
-## Choose the persistence depth
+The event and read/write source of truth is [task-lifecycle.md](task-lifecycle.md). This reference supplies persistence mechanics. Spec and Plan belong to an acceptance-bearing work unit, not each user message and not one ever-growing project file.
+
+## Determine project records
 
 | Work shape | Durable record |
 |---|---|
-| Direct | No workflow continuity record by default. Create or update normal project documentation when it is the deliverable or necessary for correctness. |
-| Guarded | One compact work packet only when work spans stages or sessions, carries meaningful decisions, or needs handoff. |
-| Critical, Orchestrated, or cross-session handoff | Separate current spec, plan, and handoff when one packet would obscure ownership, risk, or status. |
+| Clear simple Direct | No workflow continuity record by default. Create or update normal project documentation when it is the deliverable or necessary for correctness. |
+| Non-simple, medium, single-owner | One compact work packet containing explicit Spec, Plan, and Status; add Handoff only when a transfer actually occurs. |
+| Critical, Orchestrated, or cross-session | Separate work-unit Spec and Plan when one packet would obscure ownership, risk, or status; add Handoff only for an actual transfer. |
 | New project or architecture-level change | Create or update a project structure contract before implementation. |
 
 Direct work may autonomously create or update documentation when documentation is the requested artifact, an established project convention requires it, or omission would leave behavior, operation, or ownership misleading. It should not create speculative spec/plan/handoff files, empty folders, placeholders, or paperwork that merely repeats the conversation.
@@ -37,7 +39,7 @@ Large work may replace the single packet with:
 docs/work/YYYY-MM-DD-<topic>/
 ├── spec.md
 ├── plan.md
-└── handoff.md
+└── handoff.md  # only when an actual transfer occurs
 ```
 
 Use [project-map.md](../assets/project-map.md), [work-packet.md](../assets/work-packet.md), [debug-note.md](../assets/debug-note.md), and [execution-pattern.md](../assets/execution-pattern.md) as section menus, not forms that must be filled completely. Delete irrelevant headings.
@@ -50,7 +52,7 @@ Update `docs/PROJECT.md` only when the durable structure or boundaries change. I
 
 ## Keep work state current
 
-A work packet contains only the end state, scope and non-goals, decisions and assumptions, relevant code map, ordered work, acceptance evidence, current status, and deferred ideas needed for continuation. Mark units pending, active, blocked, or complete; update the packet at coherent milestones, not after every command.
+A work packet contains only the end state, scope and non-goals, decisions and assumptions, relevant code map, ordered work, acceptance evidence, current status, and deferred ideas needed for continuation. Its Spec states what must become true; its Plan states how this unit will be delivered. Mark units pending, active, blocked, superseded, or complete; update the packet at coherent milestones, not after every command. Implementation-only changes update Plan; outcome, scope, constraint, authority, or acceptance changes update Spec first and then Plan.
 
 For handoff, remove stale speculation and name:
 
@@ -64,21 +66,21 @@ Never treat a stale plan as truth. The receiver checks it against the current co
 
 ## Survive steering and compaction
 
-When work is likely to cross a context boundary, receives mid-flight steering, or must resume after waiting or delegation, keep one live execution frontier. Reuse a predictable existing state file when it carries the same contract; otherwise copy [active-task.md](../assets/active-task.md) to `.goldilocks/ACTIVE.md`. This is a short-lived pointer and ledger, not a second documentation hierarchy. Link to the real spec or plan instead of duplicating it, keep it under 100 lines and about 4 KB, and remove it after durable outcomes are transferred at completion. Keep `.goldilocks/ACTIVE.md` out of version control; add it to the project's ignore mechanism when safe, and warn instead of rewriting an established ignore policy without authority.
+When work must survive a context/session boundary, known compaction, explicit PAUSE/RESUME, long wait, delegation/handoff, or a steer whose return point would otherwise be lost, keep one live execution frontier. Do not create ACTIVE for every prompt, ordinary question, or short in-session task. Reuse a predictable existing state file when it carries the same contract; otherwise copy [active-task.md](../assets/active-task.md) to `.goldilocks/ACTIVE.md`. This is a short-lived pointer and ledger, not a second documentation hierarchy. Link to the real spec or plan instead of duplicating it, keep it under 100 lines and about 4 KB, and remove or mark it inactive after durable outcomes are transferred at completion. Keep `.goldilocks/ACTIVE.md` out of version control; add it to the project's ignore mechanism when safe, and warn instead of rewriting an established ignore policy without authority.
 
 Record the current host `session_id` in the frontier frontmatter. Recovery prefers a frontier in the current cwd or its repository ancestors. If work continues from a sibling worktree, it may inspect only Git's registered worktree entries and select the single `status: active` frontier whose `session_id` exactly matches the host session. Never recursively scan arbitrary children, choose an unrelated active frontier, or guess when more than one match exists.
 
-Keep the original objective stable. Classify each later user message as `ADD / REPLACE / CANCEL / QUESTION`; record its effect and mark it `pending, applied, or superseded`. A recent message does not replace the objective unless the user explicitly changes or cancels it. After handling a steer, mark it applied before doing more work.
+Keep the original objective stable. Classify later messages under the lifecycle's `QUESTION / ADD / CONFIRM / PAUSE / RESUME / REPLACE / CANCEL` contract. Record only effects that must survive a boundary and mark them `pending, applied, or superseded`. A recent message does not replace the objective unless the user explicitly changes or cancels it. Answer a QUESTION and return to the mainline; apply a compatible ADD, defer a questionable non-blocking ADD for recommendation, and re-align a result-changing ADD. After handling a persisted steer, mark it applied before doing more work.
 
 The frontier names only the current objective, boundaries, current work, remaining work, one **Exact next action**, repository and verification state, blockers or authority, a **Do not repeat** boundary, and the terminal condition. Move completed detail and reusable evidence to the existing work/debug record or archive; do not keep growing the live prompt. Update it after a steer is consumed, at coherent milestones, before long waits or delegation, and before handoff or known compaction—not after every command.
 
 Treat a second user-confirmed recurrence, a reverted fix, or a third disproven hypothesis as a hard continuity boundary. Before another patch, create or refresh the frontier and the project's existing debug or validation record. Preserve failed approaches and their evidence once, name the exact next distinguishing test, and do not force the next agent to reconstruct them from chat.
 
-On startup, resume, or compaction recovery, read the frontier first; inspect `git status`, relevant diffs, commits, and files; then reconcile it. The repository state wins when they disagree. Continue from the Exact next action and do not reopen completed work unless its evidence is stale or contradicted. Codex users may optionally use [codex-compact-prompt.md](../assets/codex-compact-prompt.md); bundled hooks are reminders only, never the source of truth.
+On an explicit continuation startup/resume/compaction/wait/delegation/handoff recovery for the same task, inspect only ACTIVE frontmatter/size first; read its body only when `status: active`, repository/objective, and current host `session_id` match exactly. Without an exact session match, do not recover from it. Mere file existence is never a recovery signal; a new task or ordinary prompt must not read stale ACTIVE. Inspect `git status`, relevant diffs, commits, and files, then reconcile; repository state wins. Continue from the Exact next action and do not reopen completed work unless its evidence is stale or contradicted. Goldilocks does not override the host's compaction prompt or maintain a second summary layer; the verified matching ACTIVE frontier is its sole execution-state source of truth.
 
 ## Preserve ideas without expanding scope
 
-Keep required work in the current packet. Put valuable but unnecessary ideas in the project's existing backlog or `docs/ideas.md`, with the value, revisit trigger, and dependency in a few lines. Do not pre-design or scaffold deferred work.
+Keep required work in the current packet. Put valuable but unnecessary ideas that are explicitly deferred in the project's existing backlog or `docs/ideas.md`, with the value, revisit trigger, and dependency in a few lines. Accepted additions stay in Spec/Plan, not Ideas. Do not pre-design or scaffold deferred work.
 
 ## Build a debug memory selectively
 
@@ -88,7 +90,7 @@ After a fix, add a focused regression test when practical. Create or update a de
 
 Do not create a debug note for obvious typos, routine dependency drift, transient noise, or a failure already explained by a clear regression test and commit. A useful note records symptom, reproduction, root cause, fix, verification commands, failed attempts, related regression test or commit, prevention, and current status. Link rather than paste large logs. Never store credentials, tokens, private user data, or production secrets.
 
-Keep `CHANGELOG.md` separate: it records user-visible release changes, not internal debugging history. Keep unverified fixes out of the changelog; after fresh verification, record only confirmed user-visible release changes in the repository's existing format. Internal routing history remains in the plugin audit database.
+Keep `CHANGELOG.md` separate: it records user-visible release changes, not internal debugging or routing history. Keep unverified fixes out of the changelog; after fresh verification, record only confirmed user-visible release changes in the repository's existing format.
 
 ## Reuse execution routes selectively
 

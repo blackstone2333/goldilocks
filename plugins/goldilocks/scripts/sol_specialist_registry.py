@@ -2,9 +2,8 @@
 
 """Reserve and reconcile host-visible Sol-specialist work without creating threads.
 
-This registry is deliberately caller-driven.  It records permission to create a
-visible child and the child returned by the host, but it does not claim that a
-Hook can intercept every host thread-creation route.
+This registry is deliberately caller-driven. It records permission to create a
+visible child and the child returned by the host.
 """
 
 from __future__ import annotations
@@ -23,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 
-POLICY_VERSION = "0.5.3-beta.9"
+POLICY_VERSION = "0.6.0"
 VISIBLE_SOL_ROLE = "visible_sol_specialist"
 MODEL = "gpt-5.6-sol"
 EFFORT = "high"

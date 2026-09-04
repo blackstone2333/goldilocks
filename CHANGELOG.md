@@ -2,6 +2,18 @@
 
 [中文更新记录](CHANGELOG.zh-CN.md)
 
+## 0.6.0 — 2026-09-04
+
+### Lean no-Hook workflow with event-triggered project evidence
+
+- Remove the Goldilocks lifecycle Hook product surface and its recurring prompt, session, compaction, stop, Usage, update, and audit work. Routing and recovery stay in the Skill; Usage, diagnostics, and route inspection remain available explicitly instead of running in the task hot path.
+- Make the lifecycle order explicit: classify the incoming message, align the intended end state, choose the minimum project record, plan and route, execute with continuity, then accept and update. Direct means less orchestration after alignment; it does not suppress task-matching domain Skills.
+- Treat Spec and Plan as work-unit evidence, keep ACTIVE as a compact execution frontier, and write PROJECT, handoff, debug, ideas, and CHANGELOG only when their real events occur. Completed work must not remain an active instruction or be reread merely because a file exists.
+- Leave compaction to the host instead of installing a global Goldilocks `compact_prompt`. An explicit clean install removes only an exact recognized Goldilocks legacy prompt; custom and experimental prompt settings remain untouched.
+- Preserve the native Spark/Luna/Terra/Sol roles, Night Shift, model fallback, user-selected host permissions, and minimum-sufficient verification. The short description handles selection for an unambiguous routine Direct task without loading the full root Skill or manufacturing activity/receipt for visibility; a real Goldilocks load still produces its factual route receipt.
+- Promote the verified release candidate as the stable `v0.6.0` line. On its single frozen three-arm smoke task, all arms passed quality and the candidate observed 11.017% lower wall time and 23.740% fewer Raw Tokens than Direct; this remains task-specific evidence, not a universal performance promise.
+- Keep the ACTIVE contract intentionally host-native: static, clean-install, and no-Hook boundaries passed. One additional live compaction/continuation probe was inconclusive because the host's first turn did not complete, so it is recorded as unknown rather than pass or fail and will be followed through normal field use.
+
 ## 0.5.3-beta.9 — 2026-09-03
 
 ### Domain Skills remain active on Direct

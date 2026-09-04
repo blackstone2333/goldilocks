@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -18,9 +17,7 @@ SOL_SPECIALISTS = PLUGIN / "skills" / "goldilocks" / "references" / "sol-special
 ARTIFACTS = PLUGIN / "skills" / "goldilocks" / "references" / "artifacts.md"
 PRESENTATIONS = PLUGIN / "skills" / "goldilocks" / "references" / "presentations.md"
 REPORT = ROOT / "evals" / "results" / "2026-07-25-v040-structured-artifact-pilot.md"
-HOOKS = PLUGIN / "hooks" / "hooks.json"
 REGISTRY = PLUGIN / "skills" / "goldilocks" / "assets" / "model-registry.json"
-EXPECTED_HOOK_HASH = "766c441bc8981ab2d68e046b63fb44e4ca627d259a271e90d15f43cea95c428e"
 
 
 failures: list[str] = []
@@ -102,9 +99,6 @@ require(
         "create another Sol specialist",
         "Require a concise result",
         "goldilocks_sol_reviewer",
-        "Project Hub",
-        "cross-project event bus",
-        "automatic synchronization",
     ],
 )
 require(
@@ -133,10 +127,6 @@ require(
         "not raw total tokens",
     ],
 )
-
-actual_hook_hash = hashlib.sha256(HOOKS.read_bytes()).hexdigest()
-if actual_hook_hash != EXPECTED_HOOK_HASH:
-    failures.append("hooks/hooks.json changed without updating the explicit trust-review fixture")
 
 registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
 models = {model["id"]: model for model in registry["models"]}

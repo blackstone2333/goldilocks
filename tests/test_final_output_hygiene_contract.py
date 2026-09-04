@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 
@@ -13,7 +12,6 @@ PLUGIN = ROOT / "plugins" / "goldilocks"
 SKILL = PLUGIN / "skills" / "goldilocks" / "SKILL.md"
 REFERENCE = PLUGIN / "skills" / "goldilocks" / "references" / "final-output-hygiene.md"
 NOTICE = PLUGIN / "THIRD_PARTY_NOTICES.md"
-HOOKS = PLUGIN / "hooks" / "hooks.json"
 
 
 def main() -> None:
@@ -50,12 +48,6 @@ def main() -> None:
     ):
         assert required in notice, required
 
-    hooks_before = json.loads(HOOKS.read_text(encoding="utf-8"))
-    assert set(hooks_before["hooks"]) == {
-        "PreToolUse", "SubagentStart", "SubagentStop", "SessionStart", "PostCompact",
-        "UserPromptSubmit", "Stop",
-    }
-    assert "final-output" not in json.dumps(hooks_before).lower()
     assert not list(PLUGIN.rglob("*scanner*"))
     assert not list(PLUGIN.rglob("*final-output*agent*"))
     assert "Do not add a freeze, scanner, automatic agent" in reference

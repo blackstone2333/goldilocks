@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "cell_id": "synthetic-v053-beta9-001",
+  "arm": "v053_beta9",
+  "version": "0.5.3-beta.9",
+  "runtime": {
+    "model": "gpt-5.6-sol",
+    "effort": "high",
+    "service_tier": "standard"
+  },
+  "attempts": 1,
+  "host_retries": 0,
+  "returncode": 0,
+  "wall_time_ms": 110000,
+  "completion": {
+    "turn_completed": true
+  },
+  "quality": {
+    "passed": true,
+    "checks": [
+      {"name": "synthetic external acceptance", "kind": "hidden_acceptance", "grader_sha256": "a4bce307a50e6aa40147e9e446d60889eb18bfb11c69b41177792ff78731dfb8", "passed": true}
+    ]
+  },
+  "telemetry": {
+    "input_tokens": 80000,
+    "cached_input_tokens": 50000,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2500,
+    "tool_calls": 6,
+    "process_steps": 8,
+    "verification_calls": 2,
+    "duplicate_verification_calls": 0
+  },
+  "route": {
+    "selected": "direct",
+    "child_starts": 0,
+    "user_roundtrips": 0,
+    "unnecessary_state_writes": 0,
+    "workflow_documents_created": 0,
+    "background_actions": 2
+  },
+  "measurement": {
+    "cost_comparable": true,
+    "contamination": [],
+    "pricing_provenance": "goldilocks-normalized-rates-2026-09-04"
+  },
+  "protocol": {
+    "source_frozen": true,
+    "source_sha256": "fixture-v053-beta9-source",
+    "prompt_sha256": "e5e96e8ea1680574613d5acf96121688c5d2b09b6048770b83f57978c40dbe43",
+    "fixture_sha256": "a4a09ff01c9ddc7af2a962c10477906ad8d935ac6b2930c8109404f78f5911be",
+    "grader_sha256": "a4bce307a50e6aa40147e9e446d60889eb18bfb11c69b41177792ff78731dfb8",
+    "runtime_identity_verified": true,
+    "root_session_count": 1,
+    "child_session_count": 0,
+    "usage_deduplicated": true,
+    "same_host": true,
+    "same_toolset": true,
+    "cold_context": true,
+    "approval_policy": "never",
+    "sandbox": "danger-full-access",
+    "full_access": true,
+    "plugin_identity_verified": true
+  },
+  "errors": [],
+  "synthetic": true
+}

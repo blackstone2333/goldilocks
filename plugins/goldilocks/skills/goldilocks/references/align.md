@@ -1,10 +1,12 @@
 # Align
 
-Use alignment only when unresolved choices can materially change the end state, architecture, user experience, trust boundary, scope, acceptance, or authority. A clear low-risk task needs no interview.
+Alignment precedes routing, including Direct. Use an interview only when unresolved choices can materially change the end state, architecture, user experience, trust boundary, scope, acceptance, or authority. A clear low-risk task is already aligned from the user's request plus inspected facts and needs no ceremonial question or approval.
 
 ## Inspect before asking
 
 Read the relevant code, docs, existing decisions, constraints, and project patterns first. Facts are the agent's job to investigate; preferences, trade-offs, and authority belong to the user.
+
+Use a task-matching domain or brainstorming skill when it is available and materially improves discovery; do not invoke one merely to demonstrate process. Brainstorming explores plausible outcomes before commitment. Alignment converts the chosen outcome into an executable contract.
 
 Summarize a compact end-state contract:
 
@@ -35,8 +37,8 @@ Require explicit approval when a choice changes the requested end state, commits
 
 Credentials, tool access, urgency, or “use your judgment” are not authority for production, financial, destructive, permission, communication, or irreversible actions.
 
-Stop alignment when the frontier is empty or remaining branches are explicit non-goals. Restate the chosen end state, assumptions, evidence, risks, and deferred decisions, then return to execution. Do not implement while a material choice is silently assumed; do not demand ceremonial approval for an already clear Direct task.
+Stop alignment when the frontier is empty or remaining branches are explicit non-goals. Restate the chosen end state, assumptions, evidence, risks, and deferred decisions, then proceed to record selection, planning, and routing. Do not implement while a material choice is silently assumed; do not demand ceremonial approval for an already clear Direct task. A user's confirmation applies the settled decision; a request to keep discussing is not execution authorization.
 
-For a new project, costly architecture, cross-session decision, or handoff, read [continuity.md](continuity.md) and preserve the end-state contract, structure, and only costly-to-reverse rationale. Otherwise keep alignment inline.
+For non-simple project work, a new project, costly architecture, cross-session decision, or handoff, read [task-lifecycle.md](task-lifecycle.md) and [continuity.md](continuity.md), then preserve the work-unit Spec and only costly-to-reverse rationale. Otherwise keep alignment inline.
 
 If a useful adjacent idea appears but is not required for current acceptance, do not follow it. Preserve it for final handoff; read [evolve.md](evolve.md) only when classification or durable capture is needed.

@@ -7,10 +7,10 @@ description: Use only when installing, upgrading, or repairing the Goldilocks Sk
 
 Use only when installing, upgrading, or repairing Goldilocks. Read
 [bootstrap.md](references/bootstrap.md), run `scripts/bootstrap.py --plan --json`, and
-obtain explicit approval before apply. Never use for ordinary tasks. Hook trust remains
-host-controlled.
+obtain explicit approval before apply. Never use for ordinary tasks. Routing and
+continuity remain carried by the Skill and `ACTIVE.md`; Goldilocks ships no Hook feature,
+compact prompt, source, or trust path. Bootstrap is
+an explicit, one-time install/upgrade/repair operation; it is not a runtime service and
+does not run on ordinary turns.
 
-Bootstrap JSON exposes `usage_visibility`. Choose `on-demand` (default) or `automatic`
-with `--usage-visibility`; successful apply records it. Automatic adds one fail-silent
-read per executable turn; on-demand reads only after an explicit request. The environment
-override is `GOLDILOCKS_USAGE_VISIBILITY`.
+Bootstrap never injects or changes a user compact prompt during ordinary installation.

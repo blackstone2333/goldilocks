@@ -65,7 +65,7 @@ Install native templates with `../../../scripts/install_agents.py`, then start a
 Cache visibility is not route readiness. Confirm the model on the native host. Name
 spawns exactly `fast__<name>_<model>`, `standard__<name>_<model>`, or
 `lead__<name>_<model>`; do not add an `owner` name prefix. Set `fork_turns` explicitly.
-The Hook fails closed for a missing tier/semantic prefix and derives `_luna`, `_spark`,
+Routing fails closed for a missing tier/semantic prefix and derives `_luna`, `_spark`,
 `_terra`, or `_sol` from the selected model:
 
 - Fast: normally `none` plus a task-local contract.
@@ -76,7 +76,7 @@ Fixed employees require explicit `agent_type`: `goldilocks_spark_worker`,
 `goldilocks_luna_economy`, `goldilocks_terra_engineer`, or
 `goldilocks_sol_reviewer`. Model overrides and suffixes never select them; generic fixed
 model starts fail closed. Use the Adapter or keep work local when a role is invisible.
-Only a justified Lead handoff may inherit Lead, and Fast cannot delegate. The Hook
+Only a justified Lead handoff may inherit Lead, and Fast cannot delegate. The router
 accepts `Agent`, `spawn_agent`, and `collaboration.spawn_agent`; unplanned Sol returns
 immediately, and a Fast/Standard disguise is unusable. Ambiguous concurrent or nested starts stay unverifiable.
 
@@ -85,7 +85,7 @@ immediately, and a Fast/Standard disguise is unusable. Ambiguous concurrent or n
 After authorization, read [Sol Specialists](sol-specialists.md). Its visible Sol/high
 path is separate from the native reviewer and hidden subagents: two slots, no nested
 Sol, and mandatory origin return. Execution may delegate Terra/Spark/Luna; audit stays
-read-only. Capability failure falls back openly. This is not Project Hub.
+read-only. Capability failure falls back openly.
 
 ## External Fast adapter
 
@@ -109,7 +109,7 @@ Use `--work-type spark-coding --reasoning-effort xhigh` only for a qualifying co
 
 The adapter derives the visible model suffix; callers may pass only the semantic base name.
 
-`project` isolates global plugins, Apps, MCP, Skills, and Hooks while preserving repository rules. `minimal` also ignores execpolicy rules. `inherit` keeps the full environment only when the contract names a required installed capability. Clean profiles preserve authentication, provider, `models_cache.json`, and runtime.
+`project` isolates global plugins, Apps, MCP, and Skills while preserving repository rules. `minimal` also ignores execpolicy rules. `inherit` keeps the full environment only when the contract names a required installed capability. Clean profiles preserve authentication, provider, `models_cache.json`, and runtime.
 
 Startup/context is fixed overhead. Always start with one Fast session and one coherent batch; add sessions only for measured parallel savings. Keep implementation and focused checks together. Do not debug transport inside product work.
 

@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.5.2-2ea44f" alt="版本 0.5.2">
+  <img src="https://img.shields.io/badge/version-0.6.0-2563eb" alt="版本 0.6.0">
   <a href="https://skills.sh/blackstone2333/goldilocks/goldilocks"><img src="https://skills.sh/b/blackstone2333/goldilocks" alt="从 skills.sh 安装"></a>
   <img src="https://img.shields.io/badge/license-MIT-2563eb" alt="MIT 许可证">
 </p>
@@ -31,22 +31,22 @@ Goldilocks 是面向 Codex、Claude Code 和其他兼容 Skills 宿主的 Direct
 ## 安装
 
 > [!CAUTION]
-> **不要同时启用 Goldilocks 和 Superpowers。** 两者都会接管工作流层；同时启用可能造成提示、Hook、状态、委派和审查重复。
+> **不要同时启用 Goldilocks 和 Superpowers。** 两者都会接管工作流层；同时启用可能造成提示、状态、委派和审查重复。
 
 ### 让 AI 帮你安装
 
 把下面这段直接发给你正在使用的 Agent：
 
 ```text
-请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.5.2，并锁定 Git ref v0.5.2。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
+请从 https://github.com/blackstone2333/goldilocks 安装 Goldilocks v0.6.0 正式版，并锁定 Git ref v0.6.0。先识别当前宿主：Codex CLI 或 Desktop 使用原生 Plugin，Claude Code 使用原生 Plugin，其他兼容宿主使用 portable Skills。不要与 Superpowers 同时启用。仅在首次安装、升级或修复时调用 $goldilocks-bootstrap；先展示计划，只在确实需要授权时向我确认，然后执行 apply 和 check。不支持的宿主能力标为 skipped，不修改无关配置。
 ```
 
 ### Codex CLI 或 Desktop
 
-优先安装原生 Plugin。它会带上根门禁、生命周期 Hook、Usage 统计、更新检查，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。
+优先安装原生 Plugin。它会带上根门禁、按需 Usage 统计，以及 Sol、Terra、Spark、Luna 四个伴随 Agent。路由、连续性和恢复由 Skill 及其事件触发 ACTIVE 状态承载。Goldilocks 不安装 Hook，也不设置全局压缩提示；Codex 继续使用原生压缩行为。
 
 ```bash
-codex plugin marketplace add blackstone2333/goldilocks@v0.5.2
+codex plugin marketplace add blackstone2333/goldilocks@v0.6.0
 codex plugin add goldilocks@goldilocks-local
 ```
 
@@ -72,15 +72,9 @@ Codex 中的 portable Skills 仅作为 fallback 或临时 Bootstrap 来源，日
 `goldilocks-bootstrap` 是独立的一次性安装 Skill，普通任务不会加载。升级、卸载、全局 portable 安装和修复流程见[完整安装说明](docs/installation.zh-CN.md)。
 
 <details>
-<summary>Codex Hook 信任、更新检查与可选并发配置</summary>
+<summary>Codex 可选并发配置</summary>
 
-安装或升级后，Bootstrap 会在下一个新任务交接一次 Hook 选择：
-
-- 审核来源后，持久信任当前 Goldilocks Hook 定义。
-- 使用 `codex --dangerously-bypass-hook-trust` 仅绕过一次。它会影响本次启动中的全部已启用 Hook，不会形成永久信任。
-- 暂不信任。文字 Skill 仍可使用，依赖 Hook 的自动化保持关闭。
-
-Bootstrap 不会写入 `hooks.state`、trusted hash、alias 或无关用户配置。得到明确批准后，它只会向 `config.toml` 追加缺失的四个官方 `[agents.*]` 注册；发现冲突则不写入。启动审核未出现或需要事后检查时使用 `/hooks`。设置 `GOLDILOCKS_UPDATE_CHECK=0` 可以关闭原生 Plugin 的每日版本检查。
+Bootstrap 仅用于首次安装、升级或修复，不会在普通任务中运行。
 
 > [!IMPORTANT]
 > **并发数量由用户控制。** Goldilocks 只遵守宿主上限，绝不会修改这里的并发配置。你可以把单任务子线程上限设置为 **6（建议起始值）**；当 Codex 版本、机器性能、任务隔离和审核能力都足够时，也可以继续提高。
@@ -148,9 +142,9 @@ flowchart TD
 
 ## 默认 Direct
 
-根路由器不到 300 词。如果没有实质决策、未知根因、连续性需求、外部风险或值得委派的就绪工作，Goldilocks 会以 Direct 冷启动，不加载任何工作流参考。它只检查任务本地事实，完成最小完整改动，并运行一项“结果有错就会失败”的最小检查。Direct 不是锁死的路线：如果执行中途才发现真正独立的工作单元、未知根因，或需要跨阶段留存，它会按需升级，只加载对应的路由、编排、诊断或连续性参考。Direct 的本地化路由回执仍由根合同直接提供，不依赖这些文件。
+Skill 目录中的短描述承担常量级选择门。终态明确的例行任务会直接留在宿主 Direct：不加载 Goldilocks 根 Skill，不读取工作流参考，也不为展示自身而输出活动或路由回执；任务匹配的设计、文档等领域 Skill 仍可正常加载。执行中若出现实质决策、未知根因、连续性需求或值得委派的工作，才加载不到 300 词的根路由器，并按需进入对应参考。
 
-原生 Hook 会加入一条精简沟通约束，理念来自 Caveman 和 i-have-adhd（ADHD）：结果先行、省略开工前言、只报告状态变化、日志只留决定性片段；涉及安全、歧义或用户明确要求详细说明时恢复完整解释。它减少叙述噪声，不会让模型扮演某种人设，也不会删掉必要证据。
+Skill 自身保持精简沟通：结果先行、只报告状态变化、保留决定性证据；涉及安全、歧义或用户明确要求详细说明时使用完整说明。
 
 ## 修复过程不再是黑盒
 
@@ -190,7 +184,7 @@ Goldilocks 把委派视为经济决策和组织决策，但不会让每项任务
 
 ## 看懂路由回执
 
-现在每个可执行任务都会按用户语言显示一条短回执。Direct 只承担这条常量级的可见性成本；进入编排后，则在派发尝试完成后显示真实启动结果：
+只有 Goldilocks 实际加载并影响执行时，才按用户语言显示一条短回执；清晰 Direct 不制造一次假调用来证明插件存在。进入编排后，在派发尝试完成后显示真实启动结果：
 
 ```text
 路由=直接｜团队=主模型｜并发=0/?｜委派=无｜主模型=执行与验收｜理由=主模型更快｜详情=单一工作单元
@@ -204,15 +198,15 @@ Goldilocks 把委派视为经济决策和组织决策，但不会让每项任务
 
 ## Usage 用量统计
 
-Codex 原生 Plugin 会在宿主侧记录起始基线。可见 Usage **默认按需**：只有用户明确索要时，才会在最终回复前运行一次本地只读统计器。Bootstrap 可以显式启用 `automatic`；开启后，每个可执行任务会进行同样的一次性读取。两种模式都不会额外调用模型：
+Codex 原生 Plugin 提供本地只读 Usage 统计器。可见 Usage **仅按需**：只有用户明确索要时，Agent 才会在最终回复前调用一次，不会额外调用模型。只有同一 session 和 turn 先前已经显式建立可用基线，才能计算当前任务增量；否则统计器会返回暂不可用，Agent 可以省略回执：
 
 ```text
 用量：Sol …（输入 … / 缓存 … / 输出 …） | Terra … | Luna … | Spark … | 总计 … tokens · 用时 …
 ```
 
-它会按真实模型身份汇总 Lead、原生子智能体和外部 Worker，分别统计输入、缓存输入、输出，并在宿主能取得有效基线时显示总耗时。DeepSeek、Kimi、Qwen、Gemini 等第三方模型只要宿主提供真实身份，也会保留可读名称，不会全部算到 Sol 下面。
+存在上述可用基线时，它会按真实模型身份汇总 Lead、原生子智能体和外部 Worker，分别统计输入、缓存输入、输出，并在数据可用时显示总耗时。DeepSeek、Kimi、Qwen、Gemini 等第三方模型只要宿主提供真实身份，也会保留可读名称，不会全部算到 Sol 下面。
 
-部分 Worker 的遥测缺失时，会在已有合计旁显示“暂不可用”；整轮没有可用数据或读取失败时则保持静默。它绝不会伪装成 0，也不会在任务里重试或排查数据库。读取会绑定当前轮次 ID；即使本轮基线 Hook 失败，也不会误用上一轮数据。原生 fork 子智能体只计算继承检查点之后的增量，不再把复制来的父对话生命周期总量算到本次任务。portable Skills 仍能保留文字工作流，但自动 Usage 依赖宿主支持原生 Hook 和会话数据。
+部分 Worker 的遥测缺失时，会在已有合计旁显示“暂不可用”；整轮没有可用数据或读取失败时则保持静默。它绝不会伪装成 0，也不会在任务里重试或排查数据库。原生 fork 子智能体只计算继承检查点之后的增量，不再把复制来的父对话生命周期总量算到本次任务。统计器读取宿主会话数据和此前显式建立的基线；没有 Hook 或后台流程自动记录基线。
 
 ## Night Shift 夜班模式
 
@@ -326,6 +320,6 @@ Spark 没有公开数值费率。统一比较采用官方已知模型价格，�
 
 ## 当前状态
 
-Goldilocks `v0.5.2` 是稳定版。这是针对 Python 3.9 上合法重复 `[[skills.config]]` TOML array-of-tables 的 Bootstrap 兼容性补丁，不宣称性能变化。[v0.5.1 最终质量合格的对比](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md)仍作为历史证据保留，并维持其原有 Pareto 边界。
+当前包是 Goldilocks `v0.6.0` 正式版，采用无 Hook、按事件触发的轻量工作流。发布候选在同一冻结任务上与 Beta9、Direct 均通过质量门，并相对 Direct 观察到耗时降低 11.017%、Raw Token 降低 23.740%；这只是该任务的实测结果，不构成普遍提速承诺。更早的 [v0.5.1](benchmarks/V051-RELEASE-EVIDENCE.zh-CN.md) 与 [v0.5.0](benchmarks/V050-RELEASE-EVIDENCE.zh-CN.md) 对比仍按原边界保留为历史证据。
 
 MIT 许可证。由 Charles Roc 和贡献者开发。Goldilocks 是独立实现，受到 Superpowers、Grill 式决策前沿提问、Ponytail、Caveman 和 ADHD 的启发；这些项目并未为 Goldilocks 背书。

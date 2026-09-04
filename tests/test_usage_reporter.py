@@ -15,7 +15,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTER = ROOT / "plugins" / "goldilocks" / "scripts" / "usage_reporter.py"
-HOOKS = ROOT / "plugins" / "goldilocks" / "hooks" / "hooks.json"
 
 
 def append_usage(
@@ -101,9 +100,14 @@ def run_hook(
     }
     if worker:
         env["GOLDILOCKS_WORKER"] = "1"
+    command = [sys.executable, str(REPORTER)]
+    if event == "UserPromptSubmit":
+        command += ["--record-baseline", "--session-id", "session-1", "--turn-id", turn_id]
+        if transcript is not None:
+            command += ["--transcript", str(transcript)]
+        command += ["--model", "gpt-5.6-sol"]
     return subprocess.run(
-        [sys.executable, str(REPORTER)],
-        input=json.dumps(payload),
+        command,
         text=True,
         capture_output=True,
         check=False,
@@ -356,7 +360,7 @@ def main() -> None:
         assert recovered == (None, None, None), "visible Usage reads must not backfill execution rows"
         stopped = run_hook(data, transcript, "Stop")
         assert stopped.returncode == 0, stopped.stderr
-        assert json.loads(stopped.stdout) == {}, "Usage reporter is not a second Stop receipt"
+        assert stopped.stdout == "", "standalone reporter has no Hook Stop output"
 
         missing_start = run_hook(data, None, "UserPromptSubmit", turn_id="turn-2")
         assert missing_start.returncode == 0 and missing_start.stdout == ""
@@ -395,7 +399,7 @@ def main() -> None:
         assert stale_zh.returncode == 0 and stale_zh.stderr == ""
         assert stale_zh.stdout == "当前任务用量暂不可用\n", stale_zh.stdout
         missing_stop = run_hook(data, None, "Stop", turn_id="turn-2")
-        assert json.loads(missing_stop.stdout) == {}
+        assert missing_stop.stdout == ""
 
         # A new native fork may lack a transcript checkpoint even though the
         # posthoc inspector recorded its child-only Usage.  Accept that DB
@@ -493,7 +497,7 @@ def main() -> None:
         )
         worker_stop = run_hook(data, transcript, "Stop", turn_id="worker-turn", worker=True)
         assert worker_start.stdout == ""
-        assert json.loads(worker_stop.stdout) == {}
+        assert worker_stop.stdout == ""
 
         assert b"secret implementation prompt" not in (data / "orchestration.db").read_bytes()
 
@@ -505,14 +509,6 @@ def main() -> None:
         assert failed_current.stdout == ""
         assert failed_current.stderr == "", "--current must fail silently for invalid ledgers"
 
-    hooks = json.loads(HOOKS.read_text(encoding="utf-8"))["hooks"]
-    assert "Stop" in hooks
-    user_commands = json.dumps(hooks["UserPromptSubmit"], ensure_ascii=False)
-    stop_commands = json.dumps(hooks["Stop"], ensure_ascii=False)
-    assert "usage_reporter.py" in user_commands
-    assert "codex','plugin','list','--json" in user_commands
-    assert "usage_reporter.py" not in stop_commands
-    assert "route_auditor.py" in stop_commands
     print("Goldilocks host-side live usage receipt contract passed.")
 
 

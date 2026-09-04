@@ -44,15 +44,12 @@ def output(result: subprocess.CompletedProcess[str]) -> dict:
 
 def make_native_plugin(root: Path) -> Path:
     native = root / "native-plugin"
-    (native / "hooks").mkdir(parents=True)
-    (native / "hooks" / "hooks.json").write_text("{}\n")
-    (native / ".codex-plugin").mkdir()
-    (native / ".codex-plugin" / "plugin.json").write_text('{"name":"goldilocks"}\n')
+    (native / ".codex-plugin").mkdir(parents=True)
+    (native / ".codex-plugin" / "plugin.json").write_text('{"name":"goldilocks","version":"0.6.0"}\n')
     (native / "skills" / "goldilocks").mkdir(parents=True)
     (native / "skills" / "goldilocks" / "SKILL.md").write_text("# Goldilocks\n")
     (native / "scripts").mkdir()
     (native / "scripts" / "usage_reporter.py").write_text("# usage\n")
-    (native / "scripts" / "update_checker.py").write_text("# update\n")
     return native
 
 
@@ -80,7 +77,67 @@ def fake_codex(root: Path, native: Path, *, fail_marketplace: bool = False) -> d
     return environment
 
 
+def stateful_marketplace_codex(root: Path, cache: Path, source: Path, *, rebuild: bool) -> dict[str, str]:
+    """A deterministic local-marketplace registry whose add may rebuild cache."""
+    bin_dir = root / "bin"; bin_dir.mkdir()
+    state, log = root / "registry-state", root / "registry.log"
+    state.write_text("old", encoding="utf-8")
+    executable = bin_dir / "codex"
+    executable.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, pathlib, shutil, sys\n"
+        f"state = pathlib.Path({str(state)!r}); log = pathlib.Path({str(log)!r})\n"
+        f"cache = pathlib.Path({str(cache)!r}); source = pathlib.Path({str(source)!r})\n"
+        f"rebuild = {rebuild!r}\n"
+        "args = sys.argv[1:]; log.write_text(log.read_text() + ' '.join(args) + '\\n' if log.exists() else ' '.join(args) + '\\n')\n"
+        "if args == ['plugin', 'list', '--json']:\n"
+        "  active = state.read_text().strip()\n"
+        "  payload = {'installed': []} if active == 'none' else {'installed': [{'name':'goldilocks','pluginId':'goldilocks@goldilocks-local','enabled':True,'source':{'path':str(cache)}}]}\n"
+        "  print(json.dumps(payload)); raise SystemExit(0)\n"
+        "if args[:3] == ['plugin', 'remove', 'goldilocks@goldilocks-local']:\n"
+        "  shutil.rmtree(cache); state.write_text('none'); raise SystemExit(0)\n"
+        "if args[:3] == ['plugin', 'add', 'goldilocks@goldilocks-local']:\n"
+        "  if rebuild: shutil.copytree(source, cache)\n"
+        "  state.write_text('new'); raise SystemExit(0)\n"
+        "raise SystemExit(0)\n",
+        encoding="utf-8",
+    )
+    executable.chmod(0o755)
+    env = os.environ.copy(); env["PATH"] = str(bin_dir) + os.pathsep + env.get("PATH", "")
+    return env
+
+
 def main() -> None:
+    assert bootstrap_module().plugin_actions("codex", True, True)[0] == [
+        "codex", "plugin", "remove", "goldilocks@goldilocks-local", "--json",
+    ]
+    # A known legacy prompt can be TOML multiline; clean-install removes its
+    # complete top-level assignment, never a nested/custom/experimental value.
+    module = bootstrap_module()
+    multiline_prompt = 'line one with "quotes"\nline two'
+    fixture_digest = module.digest(multiline_prompt.encode("utf-8"))
+    module.KNOWN_GOLDILOCKS_COMPACT_DIGESTS.add(fixture_digest)
+    try:
+        with tempfile.TemporaryDirectory() as raw:
+            config = Path(raw) / "config.toml"
+            config.write_text(
+                'compact_prompt = """line one with \\"quotes\\"\nline two"""\n'
+                "[user]\ncompact_prompt = \"nested custom\"\n",
+                encoding="utf-8",
+            )
+            assert module.goldilocks_compact_prompt(config)
+            removed = module.apply_clean_install({
+                "remove": [], "config_file": str(config), "hook_state_tables": [], "compact_prompt": "remove",
+            })
+            assert removed == [f"{config}:compact_prompt"]
+            decoded, raw_config = module.read_config(config)
+            assert "compact_prompt" not in decoded and decoded["user"]["compact_prompt"] == "nested custom"
+            assert 'compact_prompt = "nested custom"' in raw_config
+            for raw_value in ('compact_prompt = "custom"\n', 'experimental_compact_prompt_file = "user.md"\n'):
+                config.write_text(raw_value, encoding="utf-8")
+                assert not module.goldilocks_compact_prompt(config)
+    finally:
+        module.KNOWN_GOLDILOCKS_COMPACT_DIGESTS.remove(fixture_digest)
     for template in sorted(AGENTS.glob("*.toml")):
         assert template.read_bytes() == (ASSETS / template.name).read_bytes(), template.name
     terra = (AGENTS / "goldilocks-terra-engineer.toml").read_text(encoding="utf-8")
@@ -102,9 +159,7 @@ def main() -> None:
             )
         )
         assert plan["status"] == "planned"
-        assert plan["usage_visibility"]["mode"] == "on-demand"
-        assert plan["usage_visibility"]["source"] == "default"
-        assert plan["usage_visibility"]["choices"][0]["id"] == "on-demand"
+        assert "usage_visibility" not in plan
         assert plan["approval_required"] is True
         assert set(plan["agents"].values()) == {"missing"}
         # Regression: byte-identical templates alone must never be reported as a
@@ -115,26 +170,21 @@ def main() -> None:
         assert plan["preferred_experience"] == "native_plugin"
         assert plan["portable_skills_role"] == "fallback"
         assert plan["portable_cleanup"]["status"] == "not-needed"
-        trust = plan["hook_trust_handoff"]
-        assert trust["status"] == "host-review-required"
-        assert trust["selection_required"] is True
-        assert "choose exactly one" in trust["confirmation"]
-        assert trust["fallback"] == "/hooks" and trust["executed_by_bootstrap"] is False
-        assert trust["choices"] == [
-            {
-                "id": "persistent_goldilocks", "label": "Persist Goldilocks trust", "recommended": True,
-                "action": "In Codex's startup hook-review UI, select Trust all and continue.",
-                "scope": "current Goldilocks hooks definition only",
-                "persistence": "persistent until the hooks definition changes",
-            },
-            {
-                "id": "bypass_once_all_hooks", "label": "Bypass all hooks once", "recommended": False,
-                "next_launch_command": ["codex", "--dangerously-bypass-hook-trust"],
-                "scope": "all enabled hooks", "persistence": "single invocation",
-            },
-            {"id": "skip", "label": "Skip Hook trust", "recommended": False, "scope": "no Hook trust change", "persistence": "none"},
-        ]
+        assert "hook_trust_handoff" not in plan
+        assert "hooks_review" not in plan
+        assert "hooks" not in plan["capabilities"]
+        assert "update" not in plan["capabilities"]
         assert not target.exists() and not state.exists(), "plan must be zero-write"
+
+        preserve_target, preserve_config = root / "preserve-lean-agents", root / "preserve-lean.toml"
+        preserved_experimental = 'experimental_compact_prompt_file = "/user/prompt.md"\n# preserve\n'
+        preserve_config.write_text(preserved_experimental, encoding="utf-8")
+        output(command(
+            "--apply", "--yes", "--json", "--host", "codex", "--target-dir", str(preserve_target),
+            "--config-file", str(preserve_config), "--state-dir", str(root / "preserve-lean-state"),
+            env=trusted_environment,
+        ))
+        assert preserve_config.read_text(encoding="utf-8").startswith(preserved_experimental)
 
         no_approval = command(
             "--apply", "--json", "--host", "codex", "--target-dir", str(target),
@@ -215,61 +265,6 @@ def main() -> None:
                 "--state-dir", str(state), env=trusted_environment,
             )
         )["approval_required"] is False
-
-        automatic = output(
-            command(
-                "--plan", "--json", "--host", "codex", "--target-dir", str(target),
-                "--state-dir", str(state), "--usage-visibility", "automatic", env=trusted_environment,
-            )
-        )
-        assert automatic["usage_visibility"]["mode"] == "automatic"
-        automatic_applied = output(
-            command(
-                "--apply", "--yes", "--json", "--host", "codex", "--target-dir", str(target),
-                "--state-dir", str(state), "--usage-visibility", "automatic", env=trusted_environment,
-            )
-        )
-        assert automatic_applied["usage_visibility"]["mode"] == "automatic"
-        assert json.loads((state / "usage-visibility.json").read_text()) == {"mode": "automatic"}
-        assert output(
-            command(
-                "--check", "--json", "--host", "codex", "--target-dir", str(target),
-                "--state-dir", str(state), "--usage-visibility", "automatic", env=trusted_environment,
-            )
-        )["status"] == "current"
-        # A requested mode is a check target, not evidence that it is active.
-        (state / "usage-visibility.json").unlink()
-        absent_preference = command(
-            "--check", "--json", "--host", "codex", "--target-dir", str(target),
-            "--state-dir", str(state), "--usage-visibility", "automatic", env=trusted_environment,
-        )
-        assert absent_preference.returncode != 0 and "active on-demand (default)" in absent_preference.stderr
-        default_visibility = output(
-            command(
-                "--plan", "--json", "--host", "codex", "--target-dir", str(target),
-                "--state-dir", str(state), env=trusted_environment,
-            )
-        )["usage_visibility"]
-        assert default_visibility["mode"] == "on-demand" and default_visibility["source"] == "default"
-        (state / "usage-visibility.json").write_text("{not json}\n", encoding="utf-8")
-        corrupt_preference = command(
-            "--check", "--json", "--host", "codex", "--target-dir", str(target),
-            "--state-dir", str(state), "--usage-visibility", "automatic", env=trusted_environment,
-        )
-        assert corrupt_preference.returncode != 0 and "active on-demand (default)" in corrupt_preference.stderr
-        environment_automatic = trusted_environment.copy()
-        environment_automatic["GOLDILOCKS_USAGE_VISIBILITY"] = "automatic"
-        assert output(
-            command(
-                "--check", "--json", "--host", "codex", "--target-dir", str(target),
-                "--state-dir", str(state), "--usage-visibility", "automatic", env=environment_automatic,
-            )
-        )["usage_visibility"]["source"] == "environment"
-        overridden_request = command(
-            "--check", "--json", "--host", "codex", "--target-dir", str(target),
-            "--state-dir", str(state), "--usage-visibility", "on-demand", env=environment_automatic,
-        )
-        assert overridden_request.returncode != 0 and "active automatic (environment)" in overridden_request.stderr
 
         legacy = root / "legacy"
         legacy.mkdir()
@@ -687,7 +682,6 @@ def main() -> None:
         assert unsupported["approval_required"] is False
         assert unsupported["preferred_experience"] == "portable_skills"
         assert unsupported["portable_skills_role"] == "preferred"
-        assert unsupported["hook_trust_handoff"]["status"] == "skipped"
         assert not unsupported_target.exists() and not unsupported_state.exists()
         unknown = output(command("--plan", "--json", "--host", "unknown"))
         assert unknown["capabilities"]["agent_templates"] == "unsupported"
@@ -699,13 +693,10 @@ def main() -> None:
             )
         )
         assert reused["native_plugin"] == "detected"
-        assert reused["hooks_review"] == "required"
         assert reused["capabilities"]["usage"] == "reused"
-        assert reused["capabilities"]["update"] == "reused"
 
         loose_hooks = root / "loose-hooks"
-        (loose_hooks / "hooks").mkdir(parents=True)
-        (loose_hooks / "hooks" / "hooks.json").write_text("{}\n")
+        loose_hooks.mkdir()
         not_plugin = output(
             command(
                 "--plan", "--json", "--host", "codex", "--target-dir", str(root / "loose"),
@@ -713,7 +704,7 @@ def main() -> None:
             )
         )
         assert not_plugin["native_plugin"] == "absent"
-        assert not_plugin["capabilities"]["hooks"] == "unsupported"
+        assert "hooks" not in not_plugin["capabilities"]
 
         incomplete = root / "incomplete-plugin"
         (incomplete / ".codex-plugin").mkdir(parents=True)
@@ -728,7 +719,7 @@ def main() -> None:
         assert repair["plugin_repair"] == "handoff-required"
         assert repair["plugin_actions"]
         assert repair["native_components"] == {
-            "core_skill": False, "hooks": False, "usage": False, "update": False
+            "core_skill": False, "usage": False
         }
 
         fake_bin = root / "bin"
@@ -824,9 +815,9 @@ print(module.discover_native_plugin('codex') or '')
         )
         assert partial_plan["experience"] == "partial"
         assert partial_plan["native_plugin"] == "absent"
-        assert partial_plan["hook_trust_handoff"]["status"] == "skipped"
+        assert "hook_trust_handoff" not in partial_plan
         assert partial_plan["plugin_actions"] == [
-            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.5.3-beta.9", "--json"],
+            ["codex", "plugin", "marketplace", "add", "blackstone2333/goldilocks", "--ref", "v0.6.0", "--json"],
             ["codex", "plugin", "add", "goldilocks@goldilocks-local", "--json"],
         ]
         assert partial_plan["portable_cleanup"]["executed_by_bootstrap"] is False
@@ -834,11 +825,13 @@ print(module.discover_native_plugin('codex') or '')
             ["npx", "skills", "remove", "--global", "--agent", "codex", "--skill", "goldilocks", "--yes"],
             ["npx", "skills", "remove", "--global", "--agent", "codex", "--skill", "goldilocks-bootstrap", "--yes"],
         ]
+        (root / "codex.log").unlink(missing_ok=True)
         first_refusal = command(
             "--apply", "--json", "--host", "codex", "--target-dir", str(target),
             "--state-dir", str(state), "--native-plugin-dir", str(loose), env=environment,
         )
-        assert first_refusal.returncode != 0 and not (root / "codex.log").exists()
+        assert first_refusal.returncode != 0
+        assert "plugin add" not in (root / "codex.log").read_text(encoding="utf-8")
         upgraded = output(
             command(
                 "--apply", "--yes", "--json", "--host", "codex", "--target-dir", str(target),
@@ -848,7 +841,7 @@ print(module.discover_native_plugin('codex') or '')
         assert upgraded["experience"] == "full" and upgraded["status"] == "installed"
         assert [row["command"] for row in upgraded["plugin_action_results"]] == partial_plan["plugin_actions"]
         calls = (root / "codex.log").read_text(encoding="utf-8")
-        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.5.3-beta.9 --json" in calls
+        assert "plugin marketplace add blackstone2333/goldilocks --ref v0.6.0 --json" in calls
         assert "plugin add goldilocks@goldilocks-local --json" in calls
         assert "npx" not in calls
         assert output(
@@ -876,12 +869,114 @@ print(module.discover_native_plugin('codex') or '')
             "--check", "--json", "--host", "codex", "--target-dir", str(failed_root / "agents"),
             "--state-dir", str(failed_root / "state"), "--native-plugin-dir", str(failed_loose), env=failing_environment,
         )
-        assert partial_check.returncode != 0 and "portable/partial" in partial_check.stderr
+        assert partial_check.returncode != 0
+        preserved_failure_plan = output(command(
+            "--plan", "--json", "--host", "codex", "--target-dir", str(failed_root / "agents"),
+            "--state-dir", str(failed_root / "state"), "--native-plugin-dir", str(failed_loose), env=failing_environment,
+        ))
+        assert preserved_failure_plan["approval_required"] is False
 
         before_unknown = (root / "codex.log").read_text(encoding="utf-8")
         unknown = output(command("--apply", "--json", "--host", "unknown", env=environment))
         assert unknown["status"] == "skipped"
         assert (root / "codex.log").read_text(encoding="utf-8") == before_unknown
+
+    # Clean install is an explicit, Goldilocks-only transaction. Its preview is
+    # zero-write and its apply leaves user/project and other-plugin boundaries intact.
+    with tempfile.TemporaryDirectory() as raw:
+        root = Path(raw)
+        native = make_native_plugin(root / "current")
+        codex_home = root / "codex-home"
+        old_cache = make_native_plugin(codex_home / "plugins" / "cache" / "marketplace" / "goldilocks" / "0.5.3-beta.9")
+        unknown_cache = codex_home / "plugins" / "cache" / "marketplace" / "other" / "1.0"
+        unknown_cache.mkdir(parents=True)
+        unknown_link = codex_home / "plugins" / "cache" / "marketplace" / "link"
+        unknown_link.symlink_to(root / "current", target_is_directory=True)
+        portable = codex_home / "skills" / "goldilocks"
+        portable_bootstrap = codex_home / "skills" / "goldilocks-bootstrap"
+        hook = codex_home / "hooks" / "goldilocks-legacy.json"
+        for path in (portable, portable_bootstrap):
+            path.mkdir(parents=True)
+        hook.parent.mkdir(parents=True)
+        hook.write_text('{"display":"legacy"}\n', encoding="utf-8")
+        other_plugin = codex_home / "plugins" / "unrelated"
+        other_plugin.mkdir(parents=True)
+        active = root / ".goldilocks" / "ACTIVE.md"
+        active.parent.mkdir()
+        active.write_text("user work\n", encoding="utf-8")
+        environment = fake_codex(root, native)
+        (root / "installed").touch()
+        environment["CODEX_HOME"] = str(codex_home)
+        environment["PLUGIN_ROOT"] = str(native)
+        target, state = root / "agents", root / "state"
+        config = root / "config.toml"
+        retained_hook_state = (
+            "# keep this comment\n"
+            "[hooks.state]\n"
+            "enabled = true\n\n"
+            '[hooks.state."browser@builtin:hooks/browser.json:stable"]\n'
+            "enabled = true\n\n"
+            '[hooks.state."goldilocks@goldilocks-local:assets/keep.json:stable"]\n'
+            "enabled = true\n\n"
+            "[chrome]\n"
+            "enabled = true\n"
+            'compact_prompt = "nested user value"\n'
+        )
+        config.write_text(
+            retained_hook_state
+            + '\n[hooks.state."goldilocks@goldilocks-local:hooks/hooks.json:legacy"]\n'
+            + "enabled = true\n# old display state\n",
+            encoding="utf-8",
+        )
+        preview = output(command(
+            "--plan", "--json", "--clean-install", "--host", "codex",
+            "--target-dir", str(target), "--config-file", str(config), "--state-dir", str(state), env=environment,
+        ))
+        assert preview["clean_install"]["status"] == "ready"
+        assert [item["key"] for item in preview["clean_install"]["hook_state_tables"]] == [
+            "goldilocks@goldilocks-local:hooks/hooks.json:legacy"
+        ]
+        assert set(preview["clean_install"]["remove"]) == {
+            str(old_cache), str(portable), str(portable_bootstrap), str(hook),
+        }
+        assert str(Path.cwd() / ".goldilocks" / "ACTIVE.md") in preview["clean_install"]["preserve"]
+        assert old_cache.exists() and portable.exists() and hook.exists()
+        assert not target.exists() and not state.exists(), "clean preview must be zero-write"
+        clean = output(command(
+            "--apply", "--yes", "--json", "--clean-install", "--host", "codex",
+            "--target-dir", str(target), "--config-file", str(config), "--state-dir", str(state), env=environment,
+        ))
+        assert set(preview["clean_install"]["remove"]).issubset(set(clean["removed"]))
+        assert f'{config}:[hooks.state.goldilocks@goldilocks-local:hooks/hooks.json:legacy]' in clean["removed"]
+        assert not old_cache.exists() and not portable.exists() and not hook.exists()
+        assert other_plugin.exists() and unknown_cache.exists() and unknown_link.is_symlink()
+        assert active.read_text(encoding="utf-8") == "user work\n"
+        cleaned_config = config.read_text(encoding="utf-8")
+        assert retained_hook_state in cleaned_config
+        assert 'goldilocks@goldilocks-local:hooks/hooks.json:legacy' not in cleaned_config
+        assert output(command(
+            "--check", "--json", "--host", "codex", "--target-dir", str(target),
+            "--config-file", str(config), "--state-dir", str(state), env=environment,
+        ))["status"] == "current"
+
+    # P1: an enabled local-marketplace entry may use the same cache path after
+    # refresh. It must be rebuilt and verified, not rejected merely by path.
+    for rebuild, expected in ((True, "installed"), (False, "partial")):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); home = root / "codex"
+            cache = make_native_plugin(home / "plugins" / "cache" / "goldilocks-local" / "goldilocks" / "0.6.0")
+            source = make_native_plugin(root / "marketplace-source")
+            env = stateful_marketplace_codex(root, cache, source, rebuild=rebuild)
+            env["CODEX_HOME"] = str(home); env["PLUGIN_ROOT"] = str(source)
+            target, state = root / "agents", root / "state"
+            result = output(command("--apply", "--yes", "--json", "--clean-install", "--host", "codex", "--target-dir", str(target), "--state-dir", str(state), env=env))
+            assert result["status"] == expected, result
+            if rebuild:
+                assert cache.exists() and bootstrap_module().native_plugin_version(cache) == "0.6.0"
+                checked = output(command("--check", "--json", "--host", "codex", "--target-dir", str(target), "--state-dir", str(state), env=env))
+                assert checked["status"] == "current" and checked["experience"] == "full"
+            else:
+                assert "no enabled, valid Goldilocks source" in result["plugin_error"]
 
     print("Goldilocks portable Bootstrap contract passed.")
 

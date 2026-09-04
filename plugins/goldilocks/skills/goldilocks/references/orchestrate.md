@@ -1,6 +1,8 @@
 # Orchestrate
 
-Run a routing pass after planning, or check clear Direct work in constant time. Give a
+Run a routing pass only after the requested outcome is aligned: after planning when the
+work needs a Plan, or in constant time for clear simple Direct work. Routing must not
+resolve product ambiguity. Give a
 delegated mutable chain one narrow primary owner: Standard owns its bounded domain end
 to end, while Fast receives fixed-decision leaf contracts. Lead keeps intent,
 architecture, authority, safety, shared critical interfaces, and a single proportional
@@ -17,7 +19,7 @@ Before an expensive model starts implementation, make one quick comparison:
 - Use Standard when bounded domain judgment remains; it may contract Fast.
 - Keep Critical judgment, cross-domain interfaces, authority, and final judgment with Lead.
 
-This make-or-delegate check is constant-time for clear work. Reuse verified project patterns after checking invalidators; read [execution-memory.md](execution-memory.md) only for reusable routes. Do not write a plan merely to choose Direct.
+This make-or-delegate check is constant-time for clear work. Reuse verified project patterns after checking invalidators; read [execution-memory.md](execution-memory.md) only for reusable routes. Follow [task-lifecycle.md](task-lifecycle.md) for non-simple or steered work. Do not write a plan merely to choose Direct; do write or update the work-unit Plan when execution itself is non-simple.
 
 ## Explain the route briefly
 
@@ -32,9 +34,9 @@ This is not a delegation quota; Direct remains valid. With an active project gra
 
 With that grant, evaluate every ready unit for Fast before Standard. A missing native Luna role is a transport choice, not `route_unavailable`, while the packaged external adapter remains verified. If all delegated units use Terra, `DETAIL` names why Fast is ineligible because residual judgment, tools, authority, or acceptance cannot be externalized. This is an explanation requirement, not a Fast quota.
 
-Judge project-level organization. Count unowned executable and read-only units in `WRITE_READY` and `READ_READY`. `EXISTING` counts only host-confirmed running ownership; ignore UI labels, idle/completed handles, unverified artifacts, and lone historical `task_started`. On conflict use host status/list, then current runtime evidence. `PLANNED_DISPATCH` is intended starts; Hooks observe starts. A shared mutable surface blocks concurrent writers only, not diagnosis or review. Existing ownership plus Lead work is `ROUTE=mixed`. Direct names the real transfer, review, authority, or coupling reason. `route_unavailable` requires a retained native/Adapter start failure in this turn; zero attempts or an unexecuted plan cannot use it.
+Judge project-level organization. Count unowned executable and read-only units in `WRITE_READY` and `READ_READY`. `EXISTING` counts only host-confirmed running ownership; ignore UI labels, idle/completed handles, unverified artifacts, and lone historical `task_started`. On conflict use host status/list, then current runtime evidence. `PLANNED_DISPATCH` is intended starts; runtime evidence observes starts. A shared mutable surface blocks concurrent writers only, not diagnosis or review. Existing ownership plus Lead work is `ROUTE=mixed`. Direct names the real transfer, review, authority, or coupling reason. `route_unavailable` requires a retained native/Adapter start failure in this turn; zero attempts or an unexecuted plan cannot use it.
 
-The route line may be silently compared with existing Hook, session, and SQLite data. Do not create proof, probes, documents, tests, model calls, or narration for this review; findings are soft and never block delivery.
+The route line may be silently compared with existing session and SQLite data. Do not create proof, probes, documents, tests, model calls, or narration for this review; findings are soft and never block delivery.
 
 Close every wave with the host wait/status mechanism, consume finals, and reconcile once. Never make the user open a finished child. Completed, idle, stale, or unverified records are not `EXISTING`; only confirmed running ownership counts. `task_complete` overrides stale UI; lifecycle-expired records are cleanup debt, not capacity.
 
@@ -58,7 +60,7 @@ Use the shallowest organization that shortens the critical path or reduces quota
 
 After authorization, read [Sol Specialists](sol-specialists.md): the host-visible
 Sol/high path has two slots, no nesting, and mandatory return. Execution may delegate
-Terra/Spark/Luna; audit stays read-only. It is not the native reviewer or Project Hub.
+Terra/Spark/Luna; audit stays read-only. It is not the native reviewer.
 
 Fast is a leaf and does not delegate. Standard may delegate a non-conflicting Fast leaf
 only within its domain; it cannot expand scope, change shared interfaces, or cross

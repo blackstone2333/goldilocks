@@ -83,8 +83,6 @@ def window(c: sqlite3.Connection, table: str, cutoff: str, gaps: list[str]) -> t
         "external_routes": ("started_at",),
         "task_usage_baselines": ("started_at",),
         "night_shift_reminders": ("reminded_at",),
-        "hook_health": ("finished_at", "started_at"),
-        "gate_injections": ("injected_at",),
     }.get(table, ("started_at", "finished_at"))
     name = next((x for x in preferred if x in cols(c, table)), None)
     if not name:
@@ -111,17 +109,15 @@ def safe_roles(values: list[object]) -> dict[str, int]:
     return dict(result)
 
 def db_summary(root: Path | None, cutoff: str, gaps: list[str]) -> dict[str, Any]:
-    out: dict[str, Any] = {"version": local_version(gaps) or "证据不足", "gates": 0, "decisions": 0, "starts": 0, "attempts": [0,0,0], "routes": Counter(), "roles": {}, "failed": 0, "usage": [0,"证据不足","证据不足"], "night": {}, "update": "无记录", "hook": [0,0,"证据不足",{},[]], "errors": 0, "tables": False}
+    out: dict[str, Any] = {"version": local_version(gaps) or "证据不足", "decisions": 0, "starts": 0, "attempts": [0,0,0], "routes": Counter(), "roles": {}, "failed": 0, "errors": 0, "tables": False}
     if not root or not (root/"orchestration.db").is_file():
         gaps.append("指定的数据目录中没有 orchestration.db")
         return out
     try:
         with ro(root/"orchestration.db") as c:
             table_set = {str(r[0]) for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}; out["tables"] = True
-            for table in ("gate_injections","decisions","executions","external_routes","task_usage_baselines","night_shift_reminders","update_state","hook_health"):
+            for table in ("decisions","executions","external_routes"):
                 if table not in table_set: gaps.append(f"缺少表 {table}（可能是旧版 schema）")
-            if "gate_injections" in table_set and (w := window(c,"gate_injections",cutoff,gaps)):
-                out["gates"] = n(c,"gate_injections",*w)
             if "decisions" in table_set and (w := window(c,"decisions",cutoff,gaps)):
                 out["decisions"] = n(c,"decisions",*w); cs=cols(c,"decisions")
                 if "tier" in cs: out["routes"].update(str(r[0]).lower() for r in c.execute(f"SELECT tier FROM decisions{w[0]} AND tier IS NOT NULL",w[1]))
@@ -140,23 +136,6 @@ def db_summary(root: Path | None, cutoff: str, gaps: list[str]) -> dict[str, Any
                     out["usage"] = [total, n(c,"task_usage_baselines",w[0]+" AND baseline_available=1",w[1]), n(c,"task_usage_baselines",w[0]+" AND baseline_available=0",w[1])]
                 else:
                     out["usage"] = [total,"证据不足","证据不足"]
-            if "night_shift_reminders" in table_set and (w := window(c,"night_shift_reminders",cutoff,gaps)):
-                cs=cols(c,"night_shift_reminders")
-                if "kind" in cs: out["night"] = dict(c.execute(f"SELECT kind,COUNT(*) FROM night_shift_reminders{w[0]} GROUP BY kind",w[1]))
-            if "update_state" in table_set:
-                cs=cols(c,"update_state")
-                if {"singleton","checked_at","latest_version"}.issubset(cs):
-                    row=c.execute("SELECT checked_at,latest_version FROM update_state WHERE singleton=1").fetchone()
-                    if row and row[0]: out["update"] = f"检查尝试已记录；远端版本证据：{str(row[1]) if row[1] else '无'}"
-                else: gaps.append("表 update_state 缺少诊断列")
-            if "hook_health" in table_set and (w := window(c,"hook_health",cutoff,gaps)):
-                cs=cols(c,"hook_health"); total=n(c,"hook_health",*w); fail=n(c,"hook_health",w[0]+" AND status!='ok'",w[1]) if "status" in cs else 0
-                elapsed="证据不足"
-                if "elapsed_ms" in cs:
-                    row=c.execute(f"SELECT AVG(elapsed_ms) FROM hook_health{w[0]}",w[1]).fetchone(); elapsed=f"{float(row[0]):.1f}ms" if row and row[0] is not None else "无样本"
-                events=dict(c.execute(f"SELECT event_name||'/'||status,COUNT(*) FROM hook_health{w[0]} GROUP BY event_name,status",w[1])) if {"event_name","status"}.issubset(cs) else {}
-                versions=[str(r[0]) for r in c.execute(f"SELECT DISTINCT policy_version FROM hook_health{w[0]} AND policy_version IS NOT NULL",w[1])] if "policy_version" in cs else []
-                out["hook"]=[total,fail,elapsed,events,versions]
     except (OSError,sqlite3.Error,ValueError) as e: gaps.append(f"无法只读打开 SQLite 数据：{type(e).__name__}")
     return out
 
@@ -210,7 +189,6 @@ def render(d:dict[str,Any],r:dict[str,Any],gaps:list[str],days:int,en:bool)->str
         "window": "Window" if en else "覆盖窗口",
         "activity": "## Activity" if en else "## 活动统计",
         "version": "Installed version" if en else "本地安装版本",
-        "gate": "Root-gate deliveries / host task_started turns (includes subagents and root tasks)" if en else "根门禁记录 / 宿主 task_started turn（含 subagent 与主任务）",
         "receipt": "Turns with final-answer receipt / receipts / duplicates" if en else "含 final-answer 回执 turn / 回执数 / 重复",
         "visible": "Visible receipt routes" if en else "可见回执路线",
         "decision": "Native route decisions / tiers" if en else "原生委派决策 / tier",
@@ -218,8 +196,6 @@ def render(d:dict[str,Any],r:dict[str,Any],gaps:list[str],days:int,en:bool)->str
         "external": "External attempts / completed / child-thread confirmed (not native starts)" if en else "external 尝试 / 已完成 / child-thread 已确认（不计入原生启动）",
         "failed": "Failed external records" if en else "失败 external 记录",
         "usage": "requests / available / unavailable" if en else "请求 / 可用 / 不可用",
-        "update": "Update check attempt / remote-version evidence" if en else "更新检查尝试 / 远端版本证据",
-        "health": "Hook health: rows / failures / average elapsed" if en else "Hook 健康：记录 / 失败 / 平均耗时",
         "errors": "Read errors" if en else "读取错误",
         "gaps": "## Evidence gaps" if en else "## 证据缺口",
     }
@@ -228,19 +204,13 @@ def render(d:dict[str,Any],r:dict[str,Any],gaps:list[str],days:int,en:bool)->str
         f"{labels['window']}：{'recent ' if en else '最近 '}{days}{' days' if en else ' 天'}。",
         "", labels["activity"],
         f"- {labels['version']}：{d['version']}",
-        f"- {labels['gate']}：{d['gates']} / {r['turns']}",
         f"- {labels['receipt']}：{r['receipt_turns']} / {r['receipts']} / {r['duplicates']}",
         f"- {labels['visible']}：{dict(r['routes']) or '证据不足'}",
         f"- {labels['decision']}：{d['decisions']} / {dict(d['routes']) or '证据不足'}",
         f"- {labels['start']}：{d['starts']} / {d['roles'] or '证据不足'}",
         f"- {labels['external']}：{' / '.join(map(str,d['attempts']))}",
         f"- {labels['failed']}：{d['failed']}",
-        f"- Usage baseline {labels['usage']}：{' / '.join(map(str,d['usage']))}",
-        f"- Night Shift：{d['night'] or '证据不足'}",
-        f"- {labels['update']}：{d['update']}",
-        f"- {labels['health']}：{' / '.join(map(str,d['hook'][:3]))}",
-        f"- Hook event/status：{d['hook'][3] or '证据不足'}",
-        f"- Hook policy version：{', '.join(d['hook'][4]) or '证据不足'}",
+        f"- Usage baseline {labels['usage']}：{' / '.join(map(str,d.get('usage',[0,'证据不足','证据不足'])))}",
         f"- {labels['errors']}：{d['errors']+r['errors']}",
         "", labels["gaps"],
     ]
