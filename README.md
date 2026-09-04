@@ -106,36 +106,22 @@ This is the complete workflow surface, not seven separate public Skills. The sin
 
 ```mermaid
 flowchart TD
-    A["Task"] --> B{"Material uncertainty, continuity, risk, or useful decomposition?"}
-    B -- "No" --> C["Direct cold start<br/>No workflow reference + decisive check"]
-    B -- "End state unclear" --> D["Align"]
-    B -- "Cause unknown" --> E["Diagnose"]
-    B -- "Multi-stage work" --> F["Build"]
-    B -- "Independent ready units" --> G["Orchestrate"]
-    B -- "Release or higher risk" --> H["Prove"]
-    B -- "Explicit structured artifact" --> I["Artifacts"]
-    D --> F
-    E --> F
-    F --> J{"Cheapest valid owner?"}
-    G --> J
-    J -- "Clear and faster inline" --> K["Lead / Sol implements"]
-    J -- "Bounded judgment or mixed chain" --> L["Standard owner / Terra Medium"]
-    J -- "Deterministic coding leaf" --> M["Fast / Spark XHigh"]
-    J -- "Latency-tolerant economy leaf" --> N["Economy / Luna Max"]
-    C --> T{"Did new uncertainty, persistence,<br/>or independent units appear?"}
-    T -- "No" --> O["Fresh acceptance evidence"]
-    T -- "Yes" --> B
-    K --> O
-    L --> O
-    M --> O
-    N --> O
-    I --> O
-    H --> O
-    O --> P["Lead integrates and accepts once"]
-    P --> Q{"Will the knowledge matter later?"}
-    Q -- "Yes" --> R["Keep only useful spec, plan, handoff, debug lesson, idea, or execution pattern"]
-    Q -- "No" --> S["Finish without workflow residue"]
-    R --> S
+    A["Incoming message"] --> B["Classify NEW / QUESTION / ADD / …<br/>Match applicable domain Skills independently"]
+    B --> C{"End state, authority, and acceptance clear;<br/>no material uncertainty, continuity, risk,<br/>or useful delegation?"}
+    C -- "Yes" --> D["Host Direct<br/>Do not load Goldilocks root;<br/>domain Skills remain active"]
+    C -- "No" --> E["Load Goldilocks"]
+    E --> F["Align unresolved choices"]
+    F --> G["Choose records only when their events fire:<br/>PROJECT / Spec / Plan / ACTIVE / Handoff / Debug / Ideas / CHANGELOG"]
+    G --> H["Plan and route only as needed:<br/>Lead, Standard, Fast, Economy, or Direct"]
+    D --> I["Execute"]
+    H --> I
+    I --> J{"Did new uncertainty, persistence,<br/>or useful delegation appear?"}
+    J -- "Yes" --> E
+    J -- "No" --> K["Minimum-sufficient acceptance"]
+    K --> L{"Did a durable record event fire?"}
+    L -- "Yes" --> M["Update only the matching record<br/>and close ACTIVE if present"]
+    L -- "No" --> N["Finish without workflow residue"]
+    M --> N
 ```
 
 The invariant is final quality, not process volume or who typed the code. Goldilocks will not create a spec, plan, worktree, subagent, or continuity file merely because one exists in the toolkit.

@@ -106,36 +106,22 @@ max_concurrent_threads_per_session = 6
 
 ```mermaid
 flowchart TD
-    A["收到任务"] --> B{"存在实质不确定性、连续性、风险或值得拆分的就绪工作吗？"}
-    B -- "没有" --> C["Direct 冷启动<br/>不读流程参考 + 决定性检查"]
-    B -- "终局不清楚" --> D["Align"]
-    B -- "根因未知" --> E["Diagnose"]
-    B -- "多阶段工作" --> F["Build"]
-    B -- "存在独立就绪单元" --> G["Orchestrate"]
-    B -- "发布或较高风险" --> H["Prove"]
-    B -- "明确的结构化产物" --> I["Artifacts"]
-    D --> F
-    E --> F
-    F --> J{"由谁完成最划算且可靠？"}
-    G --> J
-    J -- "直接做更快" --> K["Lead / Sol 实现"]
-    J -- "混合链或仍有有界判断" --> L["Standard 主负责人 / Terra Medium"]
-    J -- "确定性纯编程叶子" --> M["Fast / Spark XHigh"]
-    J -- "不赶时间的经济叶子" --> N["Economy / Luna Max"]
-    C --> T{"中途是否出现新的不确定性、<br/>持久化需求或独立单元？"}
-    T -- "没有" --> O["新鲜验收证据"]
-    T -- "出现" --> B
-    K --> O
-    L --> O
-    M --> O
-    N --> O
-    I --> O
-    H --> O
-    O --> P["Lead 整合并只做一次最终验收"]
-    P --> Q{"这些知识以后还会有用吗？"}
-    Q -- "会" --> R["只保留有用的 spec、plan、handoff、debug 经验、idea 或执行路径"]
-    Q -- "不会" --> S["完成，不留下流程垃圾"]
-    R --> S
+    A["收到消息"] --> B["归类 NEW / QUESTION / ADD / …<br/>独立匹配适用的领域 Skill"]
+    B --> C{"终态、权限和验收是否清楚，且没有<br/>实质不确定性、连续性、风险或有效委派？"}
+    C -- "是" --> D["宿主 Direct<br/>不加载 Goldilocks 根 Skill；<br/>领域 Skill 继续生效"]
+    C -- "否" --> E["加载 Goldilocks"]
+    E --> F["对齐尚未解决的选择"]
+    F --> G["只在事件触发时选择记录：<br/>PROJECT / Spec / Plan / ACTIVE / Handoff / Debug / Ideas / CHANGELOG"]
+    G --> H["只按需要计划和路由：<br/>Lead、Standard、Fast、Economy 或 Direct"]
+    D --> I["执行"]
+    H --> I
+    I --> J{"中途是否出现新的不确定性、<br/>持久化需求或有效委派？"}
+    J -- "是" --> E
+    J -- "否" --> K["最小充分验收"]
+    K --> L{"是否触发了持久记录事件？"}
+    L -- "是" --> M["只更新对应记录；<br/>如存在 ACTIVE 则关闭"]
+    L -- "否" --> N["完成，不留下流程垃圾"]
+    M --> N
 ```
 
 不变的是最终质量，而不是流程数量，也不是谁亲手写代码。Goldilocks 不会因为工具箱里有 spec、plan、worktree、子智能体或连续性文档，就强行创建它们。
